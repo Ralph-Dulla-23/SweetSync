@@ -5,7 +5,7 @@
 
 export const extractScheduleFromImage = async (base64Image: string) => {
   // Placeholder for Gemini Pro Vision API call
-  console.log('Extracting schedule from image...');
+  console.log('Extracsdsdsdsdting schedule from image...');
   return [];
 };
 
