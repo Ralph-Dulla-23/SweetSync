@@ -15,16 +15,19 @@ export type ButtonVariant = 'primary' | 'secondary' | 'indigo' | 'ghost';
 
 interface ButtonProps {
   onPress: () => void;
-  title: string;
+  title?: string;
   variant?: ButtonVariant;
   loading?: boolean;
   disabled?: boolean;
   style?: ViewStyle;
   textStyle?: TextStyle;
   icon?: React.ReactNode;
+  children?: React.ReactNode;
+  accessibilityLabel?: string;
+  accessibilityHint?: string;
 }
 
-export function Button({
+export const Button = React.memo(({
   onPress,
   title,
   variant = 'primary',
@@ -33,7 +36,10 @@ export function Button({
   style,
   textStyle,
   icon,
-}: ButtonProps) {
+  children,
+  accessibilityLabel,
+  accessibilityHint,
+}: ButtonProps) => {
   const isPrimary = variant === 'primary';
   const isSecondary = variant === 'secondary';
   const isIndigo = variant === 'indigo';
@@ -65,18 +71,23 @@ export function Button({
       disabled={disabled || loading}
       activeOpacity={0.85}
       style={buttonStyles}
+      accessibilityRole="button"
+      accessibilityState={{ disabled: disabled || loading, busy: loading }}
+      accessibilityLabel={accessibilityLabel || title}
+      accessibilityHint={accessibilityHint}
     >
       {loading ? (
-        <ActivityIndicator color={isSecondary || isGhost ? colors.peachPunch : '#FFFFFF'} />
+        <ActivityIndicator color={isSecondary || isGhost ? colors.peachPunch : colors.white} />
       ) : (
         <>
           {icon && <View style={styles.iconContainer}>{icon}</View>}
-          <Text style={titleStyles}>{title}</Text>
+          {title ? <Text style={titleStyles}>{title}</Text> : null}
+          {children}
         </>
       )}
     </TouchableOpacity>
   );
-}
+});
 
 const styles = StyleSheet.create({
   base: {
@@ -113,19 +124,19 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   textPrimary: {
-    color: '#FFFFFF',
+    color: colors.white,
   },
   textSecondary: {
     color: colors.peachPunch,
   },
   textIndigo: {
-    color: '#FFFFFF',
+    color: colors.white,
   },
   textGhost: {
     color: colors.textSecondary,
   },
   textDisabled: {
-    color: '#FFFFFF',
+    color: colors.white,
   },
   iconContainer: {
     marginRight: spacing[2],

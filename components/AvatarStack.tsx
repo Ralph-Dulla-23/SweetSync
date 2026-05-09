@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, StyleSheet, Text } from 'react-native';
+import { View, StyleSheet, Text, ViewStyle } from 'react-native';
 import { Avatar } from './Avatar';
 import { colors, fonts, radius } from '@/constants/theme';
 
@@ -7,27 +7,29 @@ interface AvatarStackProps {
   avatars: { uri?: string; name?: string }[];
   size?: number;
   max?: number;
+  overlap?: number;
+  style?: ViewStyle;
 }
 
-export function AvatarStack({ avatars, size = 32, max = 4 }: AvatarStackProps) {
+export function AvatarStack({ avatars, size = 32, max = 4, overlap, style }: AvatarStackProps) {
   const visibleAvatars = avatars.slice(0, max);
   const remaining = avatars.length - max;
+  const actualOverlap = overlap !== undefined ? overlap : size / 3;
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, style]}>
       {visibleAvatars.map((avatar, index) => (
         <Avatar
           key={index}
           uri={avatar.uri}
           name={avatar.name}
           size={size}
-          style={[
-            styles.avatar,
-            {
-              marginLeft: index === 0 ? 0 : -size / 3,
-              zIndex: max - index,
-            },
-          ]}
+          style={{
+            borderWidth: 2,
+            borderColor: colors.surface,
+            marginLeft: index === 0 ? 0 : -actualOverlap,
+            zIndex: max - index,
+          } as any}
         />
       ))}
       {remaining > 0 && (
@@ -38,7 +40,7 @@ export function AvatarStack({ avatars, size = 32, max = 4 }: AvatarStackProps) {
               width: size,
               height: size,
               borderRadius: size / 2,
-              marginLeft: -size / 3,
+              marginLeft: -actualOverlap,
               zIndex: 0,
             },
           ]}
@@ -56,10 +58,6 @@ const styles = StyleSheet.create({
   container: {
     flexDirection: 'row',
     alignItems: 'center',
-  },
-  avatar: {
-    borderWidth: 2,
-    borderColor: colors.surface,
   },
   more: {
     backgroundColor: colors.indigoBase,

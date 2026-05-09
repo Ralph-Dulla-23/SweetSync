@@ -14,6 +14,7 @@ import {
   PlusJakartaSans_600SemiBold,
 } from '@expo-google-fonts/plus-jakarta-sans';
 import { colors } from '@/constants/theme';
+import { AuthProvider } from '@/hooks/useAuth';
 
 SplashScreen.preventAutoHideAsync();
 
@@ -36,16 +37,18 @@ export default function RootLayout() {
   }
 
   return (
-    <SafeAreaProvider>
-      <StatusBar style="dark" />
-      <View style={{ flex: 1, backgroundColor: colors.pageBg }}>
-        <Stack
-          screenOptions={{
-            headerShown: false,
-            contentStyle: { backgroundColor: colors.pageBg },
-          }}
-        />
-      </View>
-    </SafeAreaProvider>
+    <AuthProvider>
+      <SafeAreaProvider>
+        <StatusBar style="dark" />
+        <View style={{ flex: 1, backgroundColor: colors.pageBg }}>
+          <Stack
+            screenOptions={{
+              headerShown: false,
+              contentStyle: { backgroundColor: colors.pageBg },
+            }}
+          />
+        </View>
+      </SafeAreaProvider>
+    </AuthProvider>
   );
 }

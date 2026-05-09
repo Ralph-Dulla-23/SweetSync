@@ -13,26 +13,26 @@ interface VotePillProps {
 
 const voteStyles: Record<VoteType, { background: string; border: string; text: string; label: string }> = {
   free: { 
-    background: '#E1F5EE', 
-    border: '#9FE1CB', 
-    text: '#085041',
+    background: colors.voteFreeBg, 
+    border: colors.voteFreeBorder, 
+    text: colors.voteFreeText,
     label: 'Free'
   },
   prefer: { 
-    background: '#EEEDFE', 
-    border: '#AFA9EC', 
-    text: '#3C3489',
+    background: colors.votePreferBg, 
+    border: colors.votePreferBorder, 
+    text: colors.votePreferText,
     label: 'Prefer'
   },
   cant: { 
-    background: '#FCEBEB', 
-    border: '#F09595', 
-    text: '#791F1F',
+    background: colors.voteCantBg, 
+    border: colors.voteCantBorder, 
+    text: colors.voteCantText,
     label: "Can't"
   },
 };
 
-export function VotePill({ type, selected = false, onPress, count }: VotePillProps) {
+export const VotePill = React.memo(({ type, selected = false, onPress, count }: VotePillProps) => {
   const { background, border, text, label } = voteStyles[type];
 
   return (
@@ -49,15 +49,18 @@ export function VotePill({ type, selected = false, onPress, count }: VotePillPro
           opacity: selected ? 1 : 0.6
         }
       ]}
+      accessibilityRole="button"
+      accessibilityState={{ selected }}
+      accessibilityLabel={`${label} ${count !== undefined ? `(${count} votes)` : ''}`}
     >
       <Text style={[styles.text, { color: text }]}>
         {label} {count !== undefined && `(${count})`}
       </Text>
     </TouchableOpacity>
   );
-}
+});
 
-export function VotePills({ 
+export const VotePills = React.memo(({ 
   onVote, 
   selectedVote,
   counts 
@@ -65,7 +68,7 @@ export function VotePills({
   onVote?: (type: VoteType) => void;
   selectedVote?: VoteType;
   counts?: Record<VoteType, number>;
-}) {
+}) => {
   return (
     <View style={styles.container}>
       {(['free', 'prefer', 'cant'] as VoteType[]).map((type) => (
@@ -79,7 +82,7 @@ export function VotePills({
       ))}
     </View>
   );
-}
+});
 
 const styles = StyleSheet.create({
   container: {

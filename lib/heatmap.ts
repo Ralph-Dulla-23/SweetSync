@@ -2,6 +2,7 @@ import { colors } from '@/constants/theme';
 
 /**
  * Calculates the heat map shade based on availability ratio.
+ * INVERTED LOGIC: Free time is the Signal (Indigo), Busy time is the Background.
  * 
  * @param freeCount Number of members free in this slot
  * @param totalMembers Total number of members in the room
@@ -10,10 +11,10 @@ import { colors } from '@/constants/theme';
 export function getHeatShade(freeCount: number, totalMembers: number): string {
   const ratio = freeCount / totalMembers;
   
-  if (ratio === 1)   return colors.pageBg;    // everyone free
-  if (ratio >= 0.8)  return colors.indigoBase; // most people free
-  if (ratio >= 0.6)  return colors.indigoSoft; // mixed availability
-  if (ratio >= 0.4)  return colors.indigoMid;  // mostly busy
+  if (ratio === 1)   return colors.indigoPunch; // SIGNAL: Everyone is free
+  if (ratio >= 0.8)  return colors.indigoMid;   // Strong signal
+  if (ratio >= 0.6)  return colors.indigoSoft;  // Weak signal
+  if (ratio >= 0.4)  return colors.indigoBase;  // Trace signal
   
-  return colors.indigoPunch;                    // nearly everyone busy
+  return colors.pageBg;                          // BACKGROUND: Everyone busy
 }

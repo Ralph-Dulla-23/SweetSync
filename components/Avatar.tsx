@@ -6,13 +6,15 @@ interface AvatarProps {
   uri?: string;
   name?: string;
   size?: number;
+  color?: string;
   style?: ViewStyle;
 }
 
-export function Avatar({ uri, name, size = 40, style }: AvatarProps) {
+export function Avatar({ uri, name, size = 40, color, style }: AvatarProps) {
   const initials = name
     ? name
-        .split(' ')
+        .trim()
+        .split(/\s+/)
         .map((n) => n[0])
         .join('')
         .toUpperCase()
@@ -44,6 +46,7 @@ export function Avatar({ uri, name, size = 40, style }: AvatarProps) {
               width: size,
               height: size,
               borderRadius: size / 2,
+              backgroundColor: color || colors.peachSoft,
             },
           ]}
         >
@@ -71,7 +74,6 @@ const styles = StyleSheet.create({
   placeholder: {
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: colors.peachSoft,
   },
   initials: {
     fontFamily: fonts.bodySemibold,
