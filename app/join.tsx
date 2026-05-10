@@ -1,109 +1,112 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { 
   View, 
   Text, 
   StyleSheet, 
   SafeAreaView, 
   TextInput, 
+  KeyboardAvoidingView, 
+  Platform,
   TouchableOpacity,
-  KeyboardAvoidingView,
-  Platform
+  ActivityIndicator
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { colors, fonts, spacing, radius } from '@/constants/theme';
 import { Header } from '@/components/Header';
 import { Button } from '@/components/Button';
+import { Users, CaretRight, ShieldCheck } from 'phosphor-react-native';
+import Animated, { FadeInDown, FadeIn } from 'react-native-reanimated';
+import { styles } from './join.styles';
 
 export default function JoinRoomScreen() {
-  const [code, setCode] = useState('');
   const router = useRouter();
+  const [code, setCode] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const handleJoin = () => {
-    // Logic to join room would go here
-    if (code.length === 6) {
-      router.push('/(tabs)');
+    if (code.length < 4) {
+      setError("Please enter a valid 4-digit code");
+      return;
     }
+    setError(null);
+    setLoading(true);
+    
+    // Simulate finding room
+    setTimeout(() => {
+      setLoading(false);
+      // Link to a mock room
+      router.replace(`/room/1`);
+    }, 1500);
   };
 
   return (
     <SafeAreaView style={styles.container}>
       <Header 
-        title="Join a Room" 
+        title="Join a Squad" 
         showBack 
-        backLabel="Create" 
       />
-      
+
       <KeyboardAvoidingView 
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-        style={styles.content}
+        style={styles.keyboardView}
       >
-        <View style={styles.form}>
-          <Text style={styles.label}>Enter Room Code</Text>
-          <Text style={styles.description}>
-            Ask the room host for the 6-digit invite code.
-          </Text>
-          
-          <TextInput
-            style={styles.input}
-            placeholder="X X X X X X"
-            placeholderTextColor={colors.textTertiary}
-            value={code}
-            onChangeText={setCode}
-            autoCapitalize="characters"
-            maxLength={6}
-            autoFocus
-          />
+        <View style={styles.content}>
+          <Animated.View entering={FadeInDown.duration(600)}>
+            <View style={styles.hero}>
+              <View style={styles.iconCircle}>
+                <Users size={32} color={colors.peachPunch} weight="duotone" />
+              </View>
+              <Text style={styles.heroTitle}>Enter Group Code</Text>
+              <Text style={styles.heroSubtitle}>
+                Your squad leader should have shared a 4-digit code with you.
+              </Text>
+            </View>
+          </Animated.View>
 
-          <Button 
-            title="Join Room" 
-            onPress={handleJoin}
-            disabled={code.length < 6}
-            style={code.length < 6 ? styles.disabledButton : undefined}
-          />
+          <View style={styles.form}>
+            <View style={[styles.inputContainer, error && styles.inputError]}>
+              <TextInput
+                style={styles.input}
+                placeholder="0000"
+                placeholderTextColor={colors.textTertiary}
+                value={code}
+                onChangeText={(text) => {
+                  setCode(text.toUpperCase());
+                  setError(null);
+                }}
+                maxLength={4}
+                autoFocus
+                keyboardType="default"
+                autoCapitalize="characters"
+              />
+            </View>
+
+            {error && (
+              <Animated.View entering={FadeIn}>
+                <Text style={styles.errorText}>{error}</Text>
+              </Animated.View>
+            )}
+
+            <Button 
+              title="Find my Squad" 
+              variant="primary"
+              onPress={handleJoin}
+              loading={loading}
+              disabled={code.length < 4 || loading}
+              style={styles.joinButton}
+            />
+          </View>
+
+          <View style={styles.privacyNote}>
+            <ShieldCheck size={16} color={colors.textTertiary} />
+            <Text style={styles.privacyText}>
+              Codes keep your group's schedule private to the squad.
+            </Text>
+          </View>
         </View>
       </KeyboardAvoidingView>
     </SafeAreaView>
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: colors.pageBg,
-  },
-  content: {
-    flex: 1,
-    paddingHorizontal: spacing[5],
-    paddingTop: spacing[8],
-  },
-  form: {
-    gap: spacing[2],
-  },
-  label: {
-    fontFamily: fonts.bodySemibold,
-    fontSize: 16,
-    color: colors.textPrimary,
-  },
-  description: {
-    fontFamily: fonts.body,
-    fontSize: 14,
-    color: colors.textSecondary,
-    marginBottom: spacing[4],
-  },
-  input: {
-    backgroundColor: colors.surface,
-    borderWidth: 1,
-    borderColor: colors.borderDefault,
-    borderRadius: radius.md,
-    padding: spacing[4],
-    fontSize: 24,
-    fontFamily: fonts.display,
-    textAlign: 'center',
-    letterSpacing: 4,
-    color: colors.indigoPunch,
-    marginBottom: spacing[4],
-  },
-  disabledButton: {
-    opacity: 0.5,
-  },
-});

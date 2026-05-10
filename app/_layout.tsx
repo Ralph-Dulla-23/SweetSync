@@ -1,3 +1,4 @@
+import 'react-native-gesture-handler';
 import { useCallback, useEffect } from 'react';
 import { View } from 'react-native';
 import { Stack } from 'expo-router';
@@ -15,6 +16,7 @@ import {
 } from '@expo-google-fonts/plus-jakarta-sans';
 import { colors } from '@/constants/theme';
 import { AuthProvider } from '@/hooks/useAuth';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
 SplashScreen.preventAutoHideAsync();
 
@@ -37,18 +39,20 @@ export default function RootLayout() {
   }
 
   return (
-    <AuthProvider>
-      <SafeAreaProvider>
-        <StatusBar style="dark" />
-        <View style={{ flex: 1, backgroundColor: colors.pageBg }}>
-          <Stack
-            screenOptions={{
-              headerShown: false,
-              contentStyle: { backgroundColor: colors.pageBg },
-            }}
-          />
-        </View>
-      </SafeAreaProvider>
-    </AuthProvider>
+    <GestureHandlerRootView style={{ flex: 1 }}>
+      <AuthProvider>
+        <SafeAreaProvider>
+          <StatusBar style="dark" />
+          <View style={{ flex: 1, backgroundColor: colors.pageBg }}>
+            <Stack
+              screenOptions={{
+                headerShown: false,
+                contentStyle: { backgroundColor: colors.pageBg },
+              }}
+            />
+          </View>
+        </SafeAreaProvider>
+      </AuthProvider>
+    </GestureHandlerRootView>
   );
 }

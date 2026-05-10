@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useEffect } from 'react';
 import { 
   View, 
   Text, 
@@ -9,6 +9,17 @@ import { colors, fonts, spacing, radius } from '@/constants/theme';
 import { getHeatShade } from '@/lib/heatmap';
 import { Sparkle, Users } from 'phosphor-react-native';
 import { TimeSlot, MyBlock } from '@/types';
+import Animated, { 
+  useSharedValue, 
+  useAnimatedStyle, 
+  withRepeat, 
+  withSequence, 
+  withTiming, 
+  Easing,
+  interpolateColor,
+  FadeInUp
+} from 'react-native-reanimated';
+import { styles } from './HeatMap.styles';
 
 interface HeatCellProps {
   slot: TimeSlot;
@@ -37,32 +48,79 @@ const HeatCell = React.memo(({
     ? (isMeBusy ? colors.indigoPunch : colors.pageBg)
     : getHeatShade(slot.freeCount, totalMembers);
 
+  // Pulse animation for Magic Slots
+  const pulse = useSharedValue(0);
+  useEffect(() => {
+    if (isMagic) {
+      pulse.value = withRepeat(
+        withTiming(1, { duration: 2000, easing: Easing.inOut(Easing.sin) }),
+        -1,
+        true
+      );
+    } else {
+      pulse.value = 0;
+    }
+  }, [isMagic]);
+
+  const magicAnimatedStyle = useAnimatedStyle(() => {
+    if (!isMagic) return {};
+    return {
+      borderColor: interpolateColor(
+        pulse.value,
+        [0, 1],
+        [colors.peachPunch, colors.peachSoft]
+      ),
+      borderWidth: 1.5 + pulse.value * 0.5,
+    };
+  });
+
+  // Pop animation for Selection
+  const scale = useSharedValue(1);
+  useEffect(() => {
+    if (isSelected) {
+      scale.value = withSequence(
+        withTiming(1.15, { duration: 150, easing: Easing.out(Easing.quad) }),
+        withTiming(1, { duration: 150, easing: Easing.in(Easing.quad) })
+      );
+    }
+  }, [isSelected]);
+
+  const selectedAnimatedStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: scale.value }],
+  }));
+
   return (
     <TouchableOpacity 
       activeOpacity={0.6}
       onPress={() => isEditMode ? onToggle(slot.dayIndex, slot.hourIndex) : onPress(slot)}
-      style={[
-        styles.cell, 
-        { backgroundColor },
-        isMagic && styles.magicSlotCell,
-        isSelected && styles.selectedCell,
-        isEditMode && isMeBusy && styles.myBusyCell
-      ]}
+      style={styles.cellWrapper}
     >
-      {isMagic && slot.hourIndex === 8 && (
-        <View style={styles.sparkleContainer}>
-          <Sparkle size={14} weight="fill" color={colors.peachPunch} />
-        </View>
-      )}
-      {isSelected && (
-        <View style={styles.selectionIndicator}>
-          <Users size={12} weight="bold" color={colors.white} />
-          <Text style={styles.selectionText}>{slot.freeCount}</Text>
-        </View>
-      )}
-      {isEditMode && isMeBusy && blockTitle && (
-        <Text style={styles.cellTitle} numberOfLines={1}>{blockTitle}</Text>
-      )}
+      <Animated.View
+        style={[
+          styles.cell, 
+          { backgroundColor },
+          isMagic && styles.magicSlotCell,
+          isSelected && styles.selectedCell,
+          isEditMode && isMeBusy && styles.myBusyCell,
+          magicAnimatedStyle,
+          selectedAnimatedStyle,
+        ]}
+      >
+        {isMagic && slot.hourIndex === 8 && (
+          <View style={styles.sparkleContainer}>
+            <Sparkle size={14} weight="fill" color={colors.peachPunch} />
+          </View>
+        )}
+        {isSelected && (
+          <View style={styles.selectionIndicator}>
+            <Users size={12} weight="bold" color={colors.white} />
+            <Text style={styles.selectionText}>{slot.freeCount}</Text>
+          </View>
+        )}
+        {isEditMode && isMeBusy && blockTitle && (
+          <Text style={styles.cellTitle} numberOfLines={1}>{blockTitle}</Text>
+        )}
+      </Animated.View>
     </TouchableOpacity>
   );
 });
@@ -93,7 +151,10 @@ const DayColumn = React.memo(({
   onToggleCell,
 }: DayColumnProps) => {
   return (
-    <View style={styles.column}>
+    <Animated.View 
+      entering={FadeInUp.delay(dayIndex * 50).duration(400)}
+      style={styles.column}
+    >
       {slots.map((slot, hourIndex) => {
         const isMagic = !isEditMode && magicSlots.some(s => s.dayIndex === dayIndex && s.hourIndex === hourIndex);
         const isSelected = !isEditMode && selectedSlot?.dayIndex === dayIndex && selectedSlot?.hourIndex === hourIndex;
@@ -115,7 +176,7 @@ const DayColumn = React.memo(({
           />
         );
       })}
-    </View>
+    </Animated.View>
   );
 });
 
@@ -192,122 +253,3 @@ export const HeatMap: React.FC<HeatMapProps> = ({
   );
 };
 
-const styles = StyleSheet.create({
-  gridContainer: {
-    marginTop: spacing[2],
-    paddingHorizontal: spacing[4],
-  },
-  dayHeaderRow: {
-    flexDirection: "row",
-    marginBottom: spacing[3],
-  },
-  timeLabelSpacer: {
-    width: 44,
-  },
-  dayHeaderCell: {
-    flex: 1,
-    alignItems: "center",
-  },
-  dayLabel: {
-    fontFamily: fonts.bodySemibold,
-    fontSize: 11,
-    color: colors.textTertiary,
-    textTransform: "uppercase",
-    letterSpacing: 0.5,
-  },
-  todayLabel: {
-    color: colors.peachPunch,
-  },
-  gridBody: {
-    flexDirection: "row",
-  },
-  timeColumn: {
-    width: 44,
-    justifyContent: "space-between",
-  },
-  timeLabelCell: {
-    height: 64, 
-    justifyContent: "flex-start",
-  },
-  timeLabel: {
-    fontFamily: fonts.bodySemibold,
-    fontSize: 10,
-    color: colors.textTertiary,
-    textAlign: "right",
-    paddingRight: 8,
-    marginTop: -6,
-  },
-  cellsArea: {
-    flex: 1,
-    flexDirection: "row",
-    gap: 1.5,
-  },
-  column: {
-    flex: 1,
-    gap: 1.5,
-  },
-  cell: {
-    height: 32,
-    borderRadius: 2,
-    borderWidth: 0.5,
-    borderColor: "rgba(0,0,0,0.03)",
-    justifyContent: 'center',
-    alignItems: 'center',
-    overflow: 'hidden',
-    paddingHorizontal: 2,
-  },
-  magicSlotCell: {
-    backgroundColor: colors.peachBase,
-    borderColor: colors.peachPunch,
-    borderWidth: 1.5,
-    zIndex: 1,
-  },
-  selectedCell: {
-    borderColor: colors.indigoPunch,
-    borderWidth: 2,
-    zIndex: 2,
-    shadowColor: colors.indigoPunch,
-    shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.5,
-    shadowRadius: 4,
-  },
-  myBusyCell: {
-    borderColor: colors.indigoMid,
-    borderWidth: 0.5,
-  },
-  selectionIndicator: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: colors.indigoPunch,
-    paddingHorizontal: 4,
-    paddingVertical: 2,
-    borderRadius: 4,
-    gap: 2,
-  },
-  selectionText: {
-    color: 'white',
-    fontSize: 10,
-    fontFamily: fonts.bodySemibold,
-  },
-  sparkleContainer: {
-    position: "absolute",
-    top: -8,
-    right: -8,
-    backgroundColor: colors.surface,
-    borderRadius: radius.full,
-    padding: 3,
-    borderWidth: 1,
-    borderColor: colors.peachPunch,
-    zIndex: 2,
-    shadowColor: colors.peachPunch,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-  },
-  cellTitle: {
-    fontSize: 8,
-    fontFamily: fonts.bodySemibold,
-    color: colors.white,
-    textAlign: 'center',
-  },
-});

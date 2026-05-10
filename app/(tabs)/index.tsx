@@ -12,8 +12,13 @@ import { colors, fonts, spacing, radius } from "@/constants/theme";
 import { Card } from "@/components/Card";
 import { StatusPill, StatusVariant } from "@/components/StatusPill";
 import { AvatarStack } from "@/components/AvatarStack";
-import { DashboardHero } from "@/components/DashboardHero";
 import { Header } from "@/components/Header";
+import { DashboardHero } from "@/components/DashboardHero";
+import Animated, { 
+  FadeInUp, 
+  FadeInDown,
+} from "react-native-reanimated";
+import { styles } from "./index.styles";
 
 interface Room {
   id: string;
@@ -74,7 +79,6 @@ export default function Home() {
 
   return (
     <SafeAreaView style={styles.container}>
-      {/* Upgraded Brand Header */}
       <Header 
         title="SweetSync" 
         subtitle="Socially Synced"
@@ -86,46 +90,52 @@ export default function Home() {
         contentContainerStyle={styles.list}
         showsVerticalScrollIndicator={false}
       >
-        <DashboardHero 
-          userName="Raphael" 
-          roomCount={mockRooms.length}
-          pendingVotes={2} 
-          onCreateRoom={() => {}}
-        />
+        <Animated.View entering={FadeInDown.duration(600).delay(100)}>
+          <DashboardHero 
+            userName="Raphael" 
+            roomCount={mockRooms.length}
+            pendingVotes={2} 
+            onCreateRoom={() => {}}
+          />
+        </Animated.View>
         
         {mockRooms.length > 0 && (
-          <View style={styles.sectionHeader}>
+          <Animated.View entering={FadeInDown.duration(500).delay(300)} style={styles.sectionHeader}>
             <Text style={styles.sectionTitle}>Your Rooms</Text>
-          </View>
+          </Animated.View>
         )}
 
         <View style={styles.cardGapContainer}>
-          {mockRooms.map((room) => (
-            <TouchableOpacity 
+          {mockRooms.map((room, index) => (
+            <Animated.View 
               key={room.id}
-              activeOpacity={0.8}
-              onPress={() => router.push(`/room/${room.id}`)}
-              accessibilityRole="button"
-              accessibilityLabel={`Enter ${room.name} room. Status: ${room.status}. ${room.detail}`}
+              entering={FadeInUp.duration(500).delay(400 + index * 100)}
             >
-              <Card variant="peach" style={styles.roomCard}>
-                <View style={styles.cardTop}>
-                  <Text style={styles.roomName}>{room.name}</Text>
-                  <StatusPill label={room.status} variant={room.statusVariant} />
-                </View>
-                
-                <View style={styles.cardBottom}>
-                  <AvatarStack 
-                    avatars={room.members.map(m => ({ name: m.initial }))} 
-                    size={22}
-                    overlap={6}
-                  />
-                  <Text style={[styles.detailText, { color: room.detailColor }]}>
-                    {room.detail}
-                  </Text>
-                </View>
-              </Card>
-            </TouchableOpacity>
+              <TouchableOpacity 
+                activeOpacity={0.8}
+                onPress={() => router.push(`/room/${room.id}`)}
+                accessibilityRole="button"
+                accessibilityLabel={`Enter ${room.name} room. Status: ${room.status}. ${room.detail}`}
+              >
+                <Card variant="peach" style={styles.roomCard}>
+                  <View style={styles.cardTop}>
+                    <Text style={styles.roomName}>{room.name}</Text>
+                    <StatusPill label={room.status} variant={room.statusVariant} />
+                  </View>
+                  
+                  <View style={styles.cardBottom}>
+                    <AvatarStack 
+                      avatars={room.members.map(m => ({ name: m.initial }))} 
+                      size={22}
+                      overlap={6}
+                    />
+                    <Text style={[styles.detailText, { color: room.detailColor }]}>
+                      {room.detail}
+                    </Text>
+                  </View>
+                </Card>
+              </TouchableOpacity>
+            </Animated.View>
           ))}
         </View>
       </ScrollView>
@@ -133,52 +143,3 @@ export default function Home() {
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: colors.pageBg,
-  },
-  list: {
-    paddingTop: spacing[4], // Increased for better flow from header
-    paddingBottom: spacing[10],
-  },
-  sectionHeader: {
-    paddingHorizontal: spacing[5],
-    marginTop: spacing[8], // Increased from spacing[6]
-    marginBottom: spacing[4], // Increased from spacing[3]
-  },
-  sectionTitle: {
-    fontFamily: fonts.display,
-    fontSize: 22, // Slightly increased from 20px
-    color: colors.textPrimary,
-  },
-  cardGapContainer: {
-    paddingHorizontal: spacing[5],
-    gap: spacing[4], // Increased from spacing[3] for better breathing
-  },
-  roomCard: {
-    minHeight: 120, // Slightly increased from 110
-    justifyContent: "space-between",
-    padding: spacing[5], // Consistent with new room row padding
-  },
-  cardTop: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-  },
-  roomName: {
-    fontFamily: fonts.display,
-    fontSize: 20,
-    color: colors.peachDeep,
-  },
-  cardBottom: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    marginTop: spacing[4],
-  },
-  detailText: {
-    fontFamily: fonts.bodySemibold, // Changed to semibold for better legibility
-    fontSize: 12, // Slightly increased from 11px
-  },
-});

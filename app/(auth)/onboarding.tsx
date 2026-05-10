@@ -21,8 +21,16 @@ import {
 import { colors, fonts, spacing, radius } from '@/constants/theme';
 import Animated, { 
   FadeIn, 
-  FadeInRight 
+  FadeInRight,
+  FadeInDown,
+  useSharedValue,
+  useAnimatedStyle,
+  withRepeat,
+  withSequence,
+  withTiming,
+  Easing
 } from 'react-native-reanimated';
+import { styles } from './onboarding.styles';
 
 const { width } = Dimensions.get('window');
 
@@ -90,29 +98,52 @@ export default function Onboarding() {
     }
   };
 
-  const renderStep = ({ item }: { item: OnboardingStep; index: number }) => (
-    <View style={[styles.stepContainer, { width }]}>
-      <View style={styles.illustrationArea}>
-        <Animated.View 
-          entering={FadeIn.delay(200).duration(1000)}
-          style={[styles.iconCircle, { backgroundColor: item.iconColor + '15' }]}
-        >
-          <item.icon size={80} weight="duotone" color={item.iconColor} />
-          <View style={styles.sparkleOverlay}>
-            <Sparkle size={24} weight="fill" color={item.iconColor} />
-          </View>
-        </Animated.View>
-      </View>
+  const renderStep = ({ item }: { item: OnboardingStep; index: number }) => {
+    const floatValue = useSharedValue(0);
 
-      <View style={styles.contentArea}>
-        <Animated.View entering={FadeInRight.delay(300).duration(600)}>
-          <Text style={styles.title}>{item.title}</Text>
-          <Text style={styles.titleAccent}>{item.titleAccent}</Text>
-          <Text style={styles.description}>{item.description}</Text>
-        </Animated.View>
+    React.useEffect(() => {
+      floatValue.value = withRepeat(
+        withSequence(
+          withTiming(-10, { duration: 2000, easing: Easing.inOut(Easing.sin) }),
+          withTiming(0, { duration: 2000, easing: Easing.inOut(Easing.sin) })
+        ),
+        -1,
+        true
+      );
+    }, []);
+
+    const floatStyle = useAnimatedStyle(() => ({
+      transform: [{ translateY: floatValue.value }],
+    }));
+
+    return (
+      <View style={[styles.stepContainer, { width }]}>
+        <View style={styles.illustrationArea}>
+          <Animated.View 
+            entering={FadeIn.delay(200).duration(1000)}
+            style={[styles.iconCircle, { backgroundColor: item.iconColor + '15' }, floatStyle]}
+          >
+            <item.icon size={80} weight="duotone" color={item.iconColor} />
+            <View style={styles.sparkleOverlay}>
+              <Sparkle size={24} weight="fill" color={item.iconColor} />
+            </View>
+          </Animated.View>
+        </View>
+
+        <View style={styles.contentArea}>
+          <Animated.View entering={FadeInDown.delay(300).duration(600)}>
+            <Text style={styles.title}>{item.title}</Text>
+          </Animated.View>
+          <Animated.View entering={FadeInDown.delay(450).duration(600)}>
+            <Text style={styles.titleAccent}>{item.titleAccent}</Text>
+          </Animated.View>
+          <Animated.View entering={FadeInDown.delay(600).duration(600)}>
+            <Text style={styles.description}>{item.description}</Text>
+          </Animated.View>
+        </View>
       </View>
-    </View>
-  );
+    );
+  };
 
   return (
     <SafeAreaView style={styles.container}>
@@ -181,107 +212,3 @@ export default function Onboarding() {
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: colors.peachBase,
-  },
-  header: {
-    height: 60,
-    paddingHorizontal: spacing[6],
-    justifyContent: 'center',
-    alignItems: 'flex-end',
-  },
-  skipText: {
-    fontFamily: fonts.bodySemibold,
-    fontSize: 14,
-    color: colors.textTertiary,
-  },
-  stepContainer: {
-    flex: 1,
-  },
-  illustrationArea: {
-    flex: 0.5,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  iconCircle: {
-    width: 180,
-    height: 180,
-    borderRadius: 90,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  sparkleOverlay: {
-    position: 'absolute',
-    top: 30,
-    right: 30,
-  },
-  contentArea: {
-    flex: 0.5,
-    paddingHorizontal: spacing[8],
-  },
-  title: {
-    fontFamily: fonts.display,
-    fontSize: 40,
-    color: colors.textPrimary,
-    lineHeight: 46,
-  },
-  titleAccent: {
-    fontFamily: fonts.displayItalic,
-    fontSize: 40,
-    color: colors.peachPunch,
-    lineHeight: 46,
-    marginBottom: spacing[4],
-  },
-  description: {
-    fontFamily: fonts.body,
-    fontSize: 16,
-    color: colors.textSecondary,
-    lineHeight: 24,
-  },
-  footer: {
-    height: 120,
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingHorizontal: spacing[8],
-    paddingBottom: spacing[6],
-  },
-  pagination: {
-    flexDirection: 'row',
-    gap: 8,
-    width: 60,
-  },
-  dot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-    backgroundColor: colors.textTertiary,
-  },
-  activeDot: {
-    width: 20,
-  },
-  nextButton: {
-    width: 64,
-    height: 64,
-    borderRadius: 32,
-    justifyContent: 'center',
-    alignItems: 'center',
-    shadowColor: colors.black,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
-    elevation: 4,
-  },
-  nextButtonExpanded: {
-    width: 160,
-    borderRadius: 32,
-  },
-  nextButtonText: {
-    fontFamily: fonts.bodySemibold,
-    fontSize: 15,
-    color: colors.white,
-    paddingHorizontal: 12,
-  },
-});

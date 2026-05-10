@@ -1,15 +1,21 @@
 import React from 'react';
 import { 
-  TouchableOpacity, 
+  Pressable, 
   Text, 
-  StyleSheet, 
   ActivityIndicator,
   ViewStyle,
   TextStyle,
-  Platform,
   View
 } from 'react-native';
-import { colors, fonts, spacing, radius } from '@/constants/theme';
+import { colors } from '@/constants/theme';
+import { springConfigs } from '@/constants/animation';
+import Animated, { 
+  useSharedValue, 
+  useAnimatedStyle, 
+  withSpring,
+  withTiming,
+} from 'react-native-reanimated';
+import { styles } from './Button.styles';
 
 export type ButtonVariant = 'primary' | 'secondary' | 'indigo' | 'ghost';
 
@@ -26,6 +32,8 @@ interface ButtonProps {
   accessibilityLabel?: string;
   accessibilityHint?: string;
 }
+
+const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 
 export const Button = React.memo(({
   onPress,
@@ -44,6 +52,28 @@ export const Button = React.memo(({
   const isSecondary = variant === 'secondary';
   const isIndigo = variant === 'indigo';
   const isGhost = variant === 'ghost';
+
+  const scaleX = useSharedValue(1);
+  const scaleY = useSharedValue(1);
+
+  const animatedStyle = useAnimatedStyle(() => ({
+    transform: [
+      { scaleX: scaleX.value },
+      { scaleY: scaleY.value }
+    ],
+  }));
+
+  const handlePressIn = () => {
+    if (!disabled && !loading) {
+      scaleX.value = withTiming(1.04, { duration: 120 });
+      scaleY.value = withTiming(0.96, { duration: 120 });
+    }
+  };
+
+  const handlePressOut = () => {
+    scaleX.value = withSpring(1, springConfigs.bouncy);
+    scaleY.value = withSpring(1, springConfigs.bouncy);
+  };
 
   const buttonStyles = [
     styles.base,
@@ -66,11 +96,12 @@ export const Button = React.memo(({
   ] as TextStyle[];
 
   return (
-    <TouchableOpacity
+    <AnimatedPressable
       onPress={onPress}
+      onPressIn={handlePressIn}
+      onPressOut={handlePressOut}
       disabled={disabled || loading}
-      activeOpacity={0.85}
-      style={buttonStyles}
+      style={[buttonStyles, animatedStyle]}
       accessibilityRole="button"
       accessibilityState={{ disabled: disabled || loading, busy: loading }}
       accessibilityLabel={accessibilityLabel || title}
@@ -85,60 +116,6 @@ export const Button = React.memo(({
           {children}
         </>
       )}
-    </TouchableOpacity>
+    </AnimatedPressable>
   );
-});
-
-const styles = StyleSheet.create({
-  base: {
-    borderRadius: radius.md,
-    paddingVertical: 14,
-    paddingHorizontal: 24,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  primary: {
-    backgroundColor: colors.peachPunch,
-  },
-  secondary: {
-    backgroundColor: 'transparent',
-    borderWidth: 1,
-    borderColor: colors.peachPunch,
-  },
-  indigo: {
-    backgroundColor: colors.indigoPunch,
-  },
-  ghost: {
-    backgroundColor: 'transparent',
-    paddingVertical: 8,
-    paddingHorizontal: 12,
-  },
-  disabled: {
-    backgroundColor: colors.textTertiary,
-    borderColor: colors.textTertiary,
-  },
-  text: {
-    fontFamily: fonts.bodySemibold,
-    fontSize: 15,
-    textAlign: 'center',
-  },
-  textPrimary: {
-    color: colors.white,
-  },
-  textSecondary: {
-    color: colors.peachPunch,
-  },
-  textIndigo: {
-    color: colors.white,
-  },
-  textGhost: {
-    color: colors.textSecondary,
-  },
-  textDisabled: {
-    color: colors.white,
-  },
-  iconContainer: {
-    marginRight: spacing[2],
-  },
 });

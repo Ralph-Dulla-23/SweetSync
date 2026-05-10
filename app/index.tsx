@@ -1,10 +1,12 @@
 import React from 'react';
 import { Redirect, useRouter } from 'expo-router';
 import { useAuth } from '@/hooks/useAuth';
-import { View, ActivityIndicator, StyleSheet, Text, TouchableOpacity, SafeAreaView, ScrollView } from 'react-native';
-import { colors, fonts, spacing, radius } from '@/constants/theme';
+import { View, Text, TouchableOpacity, SafeAreaView, ScrollView } from 'react-native';
+import { colors } from '@/constants/theme';
 import { Sparkle, Scan, CalendarBlank, ListChecks } from 'phosphor-react-native';
+import Animated, { FadeIn } from 'react-native-reanimated';
 import { Button } from '@/components/Button';
+import { styles } from './index.styles';
 
 export default function Index() {
   const { session, loading: authLoading } = useAuth();
@@ -13,7 +15,10 @@ export default function Index() {
   if (authLoading) {
     return (
       <View style={styles.loadingContainer}>
-        <ActivityIndicator size="small" color={colors.peachPunch} />
+        <Animated.View entering={FadeIn.duration(800)} style={styles.loadingBrand}>
+          <Sparkle size={64} weight="fill" color={colors.indigoPunch} />
+          <Text style={styles.loadingText}>SweetSync</Text>
+        </Animated.View>
       </View>
     );
   }
@@ -93,92 +98,3 @@ export default function Index() {
     </SafeAreaView>
   );
 }
-
-const styles = StyleSheet.create({
-  loadingContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: colors.surface,
-  },
-  container: {
-    flex: 1,
-    backgroundColor: colors.peachBase,
-  },
-  scrollContent: {
-    flexGrow: 1,
-    paddingHorizontal: 24,
-    paddingTop: 60,
-    paddingBottom: 40,
-  },
-  header: {
-    alignItems: 'center',
-    marginBottom: 48,
-  },
-  logoText: {
-    marginTop: 16,
-    fontFamily: fonts.display,
-    fontSize: 36,
-    color: colors.textPrimary,
-  },
-  tagline: {
-    marginTop: 8,
-    fontFamily: fonts.body,
-    fontSize: 16,
-    color: colors.textSecondary,
-  },
-  featureList: {
-    gap: 32,
-    marginBottom: 64,
-  },
-  featureItem: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    gap: 16,
-  },
-  iconContainer: {
-    width: 48,
-    height: 48,
-    borderRadius: 12,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  featureText: {
-    flex: 1,
-    gap: 4,
-  },
-  featureTitle: {
-    fontFamily: fonts.bodySemibold,
-    fontSize: 17,
-    color: colors.textPrimary,
-  },
-  featureDesc: {
-    fontFamily: fonts.body,
-    fontSize: 14,
-    color: colors.textSecondary,
-    lineHeight: 20,
-  },
-  footer: {
-    gap: 16,
-    alignItems: 'center',
-    marginTop: 'auto',
-  },
-  button: {
-    width: '100%',
-    height: 54,
-    backgroundColor: colors.peachPunch,
-    borderRadius: 12,
-  },
-  signInLink: {
-    paddingVertical: 8,
-  },
-  signInText: {
-    fontFamily: fonts.body,
-    fontSize: 14,
-    color: colors.textSecondary,
-  },
-  signInTextBold: {
-    fontFamily: fonts.bodySemibold,
-    color: colors.indigoPunch,
-  },
-});

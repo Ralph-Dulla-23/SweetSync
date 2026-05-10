@@ -2,6 +2,7 @@ import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { colors, fonts, spacing, radius } from '@/constants/theme';
 import { Card } from './Card';
+import { styles } from './SlotCard.styles';
 
 interface SlotCardProps {
   time: string;
@@ -27,18 +28,3 @@ export const SlotCard: React.FC<SlotCardProps> = ({ time, freeCount, totalCount,
   );
 };
 
-const styles = StyleSheet.create({
-  container: {
-    padding: spacing[4],
-    gap: spacing[1],
-  },
-  time: {
-    fontFamily: fonts.display,
-    fontSize: 18,
-    color: colors.textPrimary,
-  },
-  stats: {
-    fontFamily: fonts.bodySemibold,
-    fontSize: 13,
-  },
-});

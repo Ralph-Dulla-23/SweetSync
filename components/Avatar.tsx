@@ -1,6 +1,8 @@
 import React from 'react';
-import { View, Image, Text, StyleSheet, ViewStyle } from 'react-native';
+import { View, Image, Text, ViewStyle } from 'react-native';
 import { colors, radius, fonts } from '@/constants/theme';
+
+import { styles } from './Avatar.styles';
 
 interface AvatarProps {
   uri?: string;
@@ -66,17 +68,3 @@ export function Avatar({ uri, name, size = 40, color, style }: AvatarProps) {
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    overflow: 'hidden',
-    backgroundColor: colors.indigoBase,
-  },
-  placeholder: {
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  initials: {
-    fontFamily: fonts.bodySemibold,
-    color: colors.peachDeep,
-  },
-});

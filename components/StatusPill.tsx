@@ -1,12 +1,12 @@
 import React from 'react';
-import { View, Text, StyleSheet, ViewStyle } from 'react-native';
-import { colors, fonts, radius, spacing } from '@/constants/theme';
+import { View, Text, ViewStyle } from 'react-native';
+import { colors } from '@/constants/theme';
 import { StatusVariant as GlobalStatusVariant } from '@/types';
+import { styles } from './StatusPill.styles';
 
 export type StatusVariant = GlobalStatusVariant;
 
 interface StatusPillProps {
-
   label: string;
   variant?: StatusVariant;
   style?: ViewStyle;
@@ -29,18 +29,4 @@ export const StatusPill = React.memo(({ label, variant = 'neutral', style }: Sta
       <Text style={[styles.text, { color: text }]}>{label}</Text>
     </View>
   );
-});
-
-const styles = StyleSheet.create({
-  pill: {
-    paddingHorizontal: spacing[2],
-    paddingVertical: spacing[1],
-    borderRadius: radius.sm,
-    alignSelf: 'flex-start',
-  },
-  text: {
-    fontFamily: fonts.bodySemibold,
-    fontSize: 11,
-    letterSpacing: 0.02 * 11,
-  },
 });

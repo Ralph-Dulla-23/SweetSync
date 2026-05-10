@@ -1,9 +1,10 @@
-﻿import React from "react";
-import { View, Text, StyleSheet, TouchableOpacity } from "react-native";
+import React from "react";
+import { View, Text, TouchableOpacity } from "react-native";
 import { useRouter } from "expo-router";
 import { CaretLeft } from "phosphor-react-native";
-import { colors, fonts, spacing } from "@/constants/theme";
+import { colors } from "@/constants/theme";
 import { Avatar } from "./Avatar";
+import { styles } from "./Header.styles";
 
 interface HeaderProps {
   title: string;
@@ -62,49 +63,3 @@ export function Header({
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "flex-start", // Changed from flex-end to allow vertical breathing
-    paddingHorizontal: spacing[5],
-    paddingTop: spacing[6], // Increased from spacing[4]
-    paddingBottom: spacing[4],
-    backgroundColor: colors.pageBg,
-  },
-  leftContainer: {
-    flex: 1,
-    gap: spacing[1], // Added consistent gap between elements
-  },
-  rightContainer: {
-    paddingTop: spacing[1],
-    justifyContent: "flex-start",
-  },
-  backButton: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginBottom: spacing[2], // Increased gap between back and title
-    marginLeft: -4,
-    paddingVertical: 8, // Ensure 44px+ hit area
-    paddingRight: 16,
-  },
-  backLabel: {
-    fontFamily: fonts.bodySemibold,
-    fontSize: 14, // Increased from 12px
-    color: colors.peachPunch,
-    marginLeft: 4,
-  },
-  subtitle: {
-    fontFamily: fonts.body,
-    fontSize: 13, // Increased from 12px
-    color: colors.textSecondary,
-    marginBottom: 2,
-  },
-  title: {
-    fontFamily: fonts.display,
-    fontSize: 28, // Slightly increased from 26px for better Fraunces impact
-    color: colors.textPrimary,
-    lineHeight: 34,
-  },
-});

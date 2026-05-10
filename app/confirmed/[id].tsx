@@ -1,0 +1,136 @@
+import React from 'react';
+import { 
+  View, 
+  Text, 
+  StyleSheet, 
+  SafeAreaView, 
+  ScrollView, 
+  TouchableOpacity,
+  Image
+} from 'react-native';
+import { useLocalSearchParams, useRouter } from 'expo-router';
+import { colors, fonts, spacing, radius } from '@/constants/theme';
+import { Header } from '@/components/Header';
+import { Button } from '@/components/Button';
+import { AvatarStack } from '@/components/AvatarStack';
+import { 
+  Calendar, 
+  MapPin, 
+  Users, 
+  CaretLeft, 
+  DotsThreeVertical,
+  CheckCircle,
+  QrCode
+} from 'phosphor-react-native';
+import Animated, { FadeInDown, FadeIn } from 'react-native-reanimated';
+import { styles } from './[id].styles';
+
+export default function ConfirmedEventScreen() {
+  const { id } = useLocalSearchParams();
+  const router = useRouter();
+
+  const mockEvent = {
+    title: "Friday Night Drinks",
+    roomName: "Friday Gang",
+    date: "Friday, May 15",
+    time: "6:00 PM",
+    location: "The Peach Pit, 123 Sweet St",
+    attendees: [
+      { name: "R" }, { name: "J" }, { name: "M" }, { name: "T" }, { name: "A" }
+    ],
+    isHost: true
+  };
+
+  return (
+    <SafeAreaView style={styles.container}>
+      <Header 
+        title="Event Details" 
+        showBack 
+        rightElement={
+          <TouchableOpacity>
+            <DotsThreeVertical size={24} color={colors.textPrimary} />
+          </TouchableOpacity>
+        }
+      />
+
+      <ScrollView 
+        contentContainerStyle={styles.content}
+        showsVerticalScrollIndicator={false}
+      >
+        <Animated.View entering={FadeInDown.duration(600)}>
+          <View style={styles.ticketCard}>
+            <View style={styles.ticketHeader}>
+              <View style={styles.roomBadge}>
+                <Text style={styles.roomBadgeText}>{mockEvent.roomName}</Text>
+              </View>
+              <View style={styles.statusBadge}>
+                <CheckCircle size={14} color={colors.mintPunch} weight="fill" />
+                <Text style={styles.statusText}>CONFIRMED</Text>
+              </View>
+            </View>
+
+            <Text style={styles.eventTitle}>{mockEvent.title}</Text>
+
+            <View style={styles.details}>
+              <View style={styles.detailRow}>
+                <View style={styles.iconBox}>
+                  <Calendar size={20} color={colors.peachPunch} weight="duotone" />
+                </View>
+                <View>
+                  <Text style={styles.detailValue}>{mockEvent.date}</Text>
+                  <Text style={styles.detailLabel}>{mockEvent.time}</Text>
+                </View>
+              </View>
+
+              <View style={styles.detailRow}>
+                <View style={styles.iconBox}>
+                  <MapPin size={20} color={colors.peachPunch} weight="duotone" />
+                </View>
+                <View>
+                  <Text style={styles.detailValue}>{mockEvent.location}</Text>
+                  <Text style={styles.detailLabel}>Tap for directions</Text>
+                </View>
+              </View>
+
+              <View style={styles.detailRow}>
+                <View style={styles.iconBox}>
+                  <Users size={20} color={colors.peachPunch} weight="duotone" />
+                </View>
+                <View>
+                  <Text style={styles.detailValue}>{mockEvent.attendees.length} attending</Text>
+                  <View style={styles.avatarRow}>
+                    <AvatarStack avatars={mockEvent.attendees} size={24} overlap={8} />
+                  </View>
+                </View>
+              </View>
+            </View>
+
+            <View style={styles.ticketDivider}>
+              <View style={styles.dot} />
+              <View style={styles.dashLine} />
+              <View style={styles.dot} />
+            </View>
+
+            <View style={styles.qrSection}>
+              <QrCode size={120} color={colors.textPrimary} weight="thin" />
+              <Text style={styles.qrNote}>Event ID: {id}</Text>
+            </View>
+          </View>
+        </Animated.View>
+
+        <Animated.View entering={FadeIn.delay(600)} style={styles.actions}>
+          <Button 
+            title="Edit Details" 
+            variant="secondary"
+            onPress={() => {}}
+            style={styles.actionButton}
+          />
+          <TouchableOpacity style={styles.cancelLink}>
+            <Text style={styles.cancelLinkText}>Cancel Event</Text>
+          </TouchableOpacity>
+        </Animated.View>
+      </ScrollView>
+    </SafeAreaView>
+  );
+}
+

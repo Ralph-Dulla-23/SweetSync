@@ -1,0 +1,232 @@
+import { StyleSheet } from 'react-native';
+import { colors, fonts, spacing, radius } from '@/constants/theme';
+import { globalStyles } from '@/styles/global';
+
+export const styles = StyleSheet.create({
+  container: globalStyles.screen,
+  content: {
+    paddingHorizontal: spacing[5],
+    paddingTop: spacing[2],
+    paddingBottom: spacing[8],
+  },
+  stepContainer: {
+    width: '100%',
+  },
+  heroCard: {
+    paddingVertical: spacing[8],
+    paddingHorizontal: spacing[6],
+    borderRadius: radius.lg,
+    borderWidth: 0.5,
+    marginBottom: spacing[8],
+    ...globalStyles.center,
+    gap: spacing[5],
+    backgroundColor: colors.white,
+  },
+  heroIconContainer: {
+    width: 72,
+    height: 72,
+    borderRadius: radius.xl,
+    ...globalStyles.center,
+  },
+  heroInfo: {
+    alignItems: "center",
+    gap: spacing[1],
+  },
+  heroTitle: {
+    fontFamily: fonts.display,
+    fontSize: 24,
+    color: colors.textPrimary,
+  },
+  heroDescription: {
+    fontFamily: fonts.body,
+    fontSize: 15,
+    color: colors.textSecondary,
+    textAlign: "center",
+  },
+  sectionLabel: {
+    fontFamily: fonts.bodySemibold,
+    fontSize: 13,
+    color: colors.textTertiary,
+    textTransform: "uppercase",
+    letterSpacing: 0.5,
+    marginBottom: spacing[3],
+    marginLeft: 2,
+  },
+  secondaryActions: {
+    gap: spacing[3],
+  },
+  optionCard: {
+    ...globalStyles.row,
+    padding: spacing[4],
+    borderRadius: radius.lg,
+    borderWidth: 0.5,
+    gap: spacing[4],
+  },
+  peachCard: {
+    backgroundColor: colors.peachBase,
+    borderColor: colors.peachSoft,
+  },
+  indigoCard: {
+    backgroundColor: colors.indigoBase,
+    borderColor: colors.indigoSoft,
+  },
+  mintCard: {
+    backgroundColor: colors.mintBase,
+    borderColor: colors.mintSoft,
+  },
+  iconContainer: {
+    width: 48,
+    height: 48,
+    borderRadius: radius.md,
+    ...globalStyles.center,
+  },
+  optionInfo: {
+    flex: 1,
+    gap: 2,
+  },
+  optionTitle: {
+    fontFamily: fonts.bodySemibold,
+    fontSize: 16,
+    color: colors.textPrimary,
+  },
+  optionDescription: {
+    fontFamily: fonts.body,
+    fontSize: 13,
+    color: colors.textSecondary,
+  },
+  formHero: {
+    marginBottom: spacing[8],
+  },
+  formTitle: {
+    fontFamily: fonts.display,
+    fontSize: 28,
+    color: colors.textPrimary,
+    marginBottom: 4,
+  },
+  formSubtitle: {
+    fontFamily: fonts.body,
+    fontSize: 16,
+    color: colors.textSecondary,
+    lineHeight: 22,
+  },
+  form: {
+    gap: spacing[6],
+  },
+  inputGroup: {
+    gap: spacing[2],
+  },
+  inputLabel: {
+    fontFamily: fonts.bodySemibold,
+    fontSize: 12,
+    color: colors.textTertiary,
+    letterSpacing: 1,
+  },
+  textInput: {
+    backgroundColor: colors.white,
+    borderRadius: radius.md,
+    borderWidth: 1,
+    borderColor: colors.borderDefault,
+    paddingHorizontal: spacing[4],
+    height: 56,
+    fontFamily: fonts.body,
+    fontSize: 16,
+    color: colors.textPrimary,
+  },
+  aiSuggestion: {
+    ...globalStyles.row,
+    gap: spacing[3],
+    backgroundColor: colors.indigoBase,
+    padding: spacing[4],
+    borderRadius: radius.md,
+    borderWidth: 0.5,
+    borderColor: colors.indigoSoft,
+  },
+  aiSuggestionText: {
+    flex: 1,
+    fontFamily: fonts.body,
+    fontSize: 13,
+    color: colors.indigoPunch,
+    lineHeight: 18,
+  },
+  createButton: {
+    height: 56,
+    marginTop: spacing[4],
+  },
+  backLink: {
+    alignItems: 'center',
+    paddingVertical: spacing[2],
+  },
+  backLinkText: {
+    fontFamily: fonts.bodySemibold,
+    fontSize: 14,
+    color: colors.textTertiary,
+  },
+  successHeader: {
+    alignItems: 'center',
+    marginBottom: spacing[8],
+  },
+  checkCircle: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    backgroundColor: colors.mintPunch,
+    ...globalStyles.center,
+    marginBottom: spacing[4],
+  },
+  successTitle: {
+    fontFamily: fonts.display,
+    fontSize: 28,
+    color: colors.textPrimary,
+    textAlign: 'center',
+  },
+  successSubtitle: {
+    fontFamily: fonts.body,
+    fontSize: 16,
+    color: colors.textSecondary,
+    textAlign: 'center',
+    marginTop: spacing[1],
+    paddingHorizontal: spacing[4],
+  },
+  codeCard: {
+    backgroundColor: colors.white,
+    borderRadius: radius.xl,
+    padding: spacing[8],
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: colors.peachSoft,
+    marginBottom: spacing[10],
+  },
+  codeLabel: {
+    fontFamily: fonts.bodySemibold,
+    fontSize: 12,
+    color: colors.textTertiary,
+    letterSpacing: 2,
+    marginBottom: 8,
+  },
+  codeValue: {
+    fontFamily: fonts.display,
+    fontSize: 42,
+    color: colors.peachPunch,
+    letterSpacing: 2,
+    marginBottom: 20,
+  },
+  copyButton: {
+    ...globalStyles.row,
+    gap: 8,
+    backgroundColor: colors.peachBase,
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    borderRadius: radius.full,
+  },
+  copyText: {
+    fontFamily: fonts.bodySemibold,
+    fontSize: 14,
+    color: colors.peachPunch,
+  },
+  successActions: {
+    gap: spacing[3],
+  },
+  finalButton: {
+    height: 56,
+  },
+});

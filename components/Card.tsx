@@ -1,6 +1,14 @@
 import React from 'react';
-import { View, StyleSheet, ViewStyle, TouchableOpacity } from 'react-native';
-import { colors, spacing, radius } from '@/constants/theme';
+import { View, ViewStyle, TouchableOpacity } from 'react-native';
+import { colors } from '@/constants/theme';
+import { springConfigs } from '@/constants/animation';
+import Animated, { 
+  useSharedValue, 
+  useAnimatedStyle, 
+  withSpring, 
+  withTiming 
+} from 'react-native-reanimated';
+import { styles } from './Card.styles';
 
 export type CardVariant = 'peach' | 'indigo' | 'mint' | 'neutral';
 
@@ -16,6 +24,8 @@ interface CardProps {
   children: React.ReactNode;
   style?: ViewStyle;
   onPress?: () => void;
+  sharedTransitionTag?: string;
+  sharedTransitionStyle?: any;
 }
 
 export function Card({
@@ -23,32 +33,93 @@ export function Card({
   children,
   style,
   onPress,
+  sharedTransitionTag,
+  sharedTransitionStyle,
 }: CardProps) {
   const { background, borderColor } = cardStyles[variant];
   
+  const scaleX = useSharedValue(1);
+  const scaleY = useSharedValue(1);
+
+  const animatedPressStyle = useAnimatedStyle(() => ({
+    transform: [
+      { scaleX: scaleX.value },
+      { scaleY: scaleY.value }
+    ],
+  }));
+
+  const handlePressIn = () => {
+    if (onPress) {
+      scaleX.value = withTiming(1.02, { duration: 150 });
+      scaleY.value = withTiming(0.98, { duration: 150 });
+    }
+  };
+
+  const handlePressOut = () => {
+    if (onPress) {
+      scaleX.value = withSpring(1, springConfigs.snappy);
+      scaleY.value = withSpring(1, springConfigs.snappy);
+    }
+  };
+
+  const content = (
+    <>
+      {children}
+    </>
+  );
+
+  if (sharedTransitionTag) {
+    const AnimatedView = Animated.View as any;
+    if (onPress) {
+      return (
+        <TouchableOpacity 
+          style={style}
+          onPress={onPress}
+          onPressIn={handlePressIn}
+          onPressOut={handlePressOut}
+          activeOpacity={0.9}
+        >
+          <AnimatedView 
+            sharedTransitionTag={sharedTransitionTag}
+            sharedTransitionStyle={sharedTransitionStyle}
+            style={[styles.card, { backgroundColor: background, borderColor }, animatedPressStyle]}
+          >
+            {content}
+          </AnimatedView>
+        </TouchableOpacity>
+      );
+    }
+
+    return (
+      <AnimatedView 
+        sharedTransitionTag={sharedTransitionTag}
+        sharedTransitionStyle={sharedTransitionStyle}
+        style={[styles.card, { backgroundColor: background, borderColor }, style, animatedPressStyle]}
+      >
+        {content}
+      </AnimatedView>
+    );
+  }
+
   if (onPress) {
     return (
       <TouchableOpacity 
-        style={[styles.card, { backgroundColor: background, borderColor }, style]}
+        style={style}
         onPress={onPress}
-        activeOpacity={0.7}
+        onPressIn={handlePressIn}
+        onPressOut={handlePressOut}
+        activeOpacity={0.9}
       >
-        {children}
+        <Animated.View style={[styles.card, { backgroundColor: background, borderColor }, animatedPressStyle]}>
+          {content}
+        </Animated.View>
       </TouchableOpacity>
     );
   }
 
   return (
     <View style={[styles.card, { backgroundColor: background, borderColor }, style]}>
-      {children}
+      {content}
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  card: {
-    borderRadius: radius.lg,
-    borderWidth: 0.5,
-    padding: spacing[4],
-  },
-});
