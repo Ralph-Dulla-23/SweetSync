@@ -48,7 +48,7 @@ export const styles = StyleSheet.create({
     borderRadius: radius.md,
     gap: spacing[2],
     ...globalStyles.shadowMd,
-    shadowColor: colors.indigoPunch,
+    boxShadow: `0px 4px 8px ${colors.indigoPunch}1A`,
   },
   scanButtonText: {
     fontFamily: fonts.bodySemibold,
@@ -91,7 +91,7 @@ export const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: colors.peachSoft,
     ...globalStyles.shadowSm,
-    shadowColor: colors.peachPunch,
+    boxShadow: `0px 2px 4px ${colors.peachPunch}0D`,
   },
   magicSlotText: {
     fontFamily: fonts.bodySemibold,
@@ -110,8 +110,7 @@ export const styles = StyleSheet.create({
     alignItems: "center",
     paddingTop: 12,
     ...globalStyles.shadowMd,
-    shadowOpacity: 0.1,
-    shadowRadius: 16,
+    boxShadow: `0px 4px 16px ${colors.black}1A`,
     zIndex: 10,
     borderWidth: 1,
     borderColor: colors.borderDefault,
@@ -352,7 +351,7 @@ export const styles = StyleSheet.create({
     backgroundColor: colors.indigoPunch,
     ...globalStyles.center,
     ...globalStyles.shadowMd,
-    shadowColor: colors.indigoPunch,
+    boxShadow: `0px 4px 8px ${colors.indigoPunch}1A`,
   },
   confirmButtonText: {
     fontFamily: fonts.bodySemibold,

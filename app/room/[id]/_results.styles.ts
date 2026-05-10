@@ -40,10 +40,7 @@ export const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: colors.peachSoft,
     ...globalStyles.shadowMd,
-    shadowColor: colors.peachPunch,
-    shadowOffset: { width: 0, height: 10 },
-    shadowOpacity: 0.1,
-    shadowRadius: 20,
+    boxShadow: `0px 10px 20px ${colors.peachPunch}1A`,
   },
   winnerHeader: {
     ...globalStyles.row,

@@ -2,13 +2,12 @@ import React, { useMemo, useEffect } from 'react';
 import { 
   View, 
   Text, 
-  StyleSheet, 
   TouchableOpacity, 
 } from 'react-native';
-import { colors, fonts, spacing, radius } from '@/constants/theme';
+import { colors, fonts } from '@/constants/theme';
 import { getHeatShade } from '@/lib/heatmap';
 import { Sparkle, Users } from 'phosphor-react-native';
-import { TimeSlot, MyBlock } from '@/types';
+import { TimeSlot, MyBlock, Preference } from '@/types';
 import Animated, { 
   useSharedValue, 
   useAnimatedStyle, 
@@ -17,20 +16,23 @@ import Animated, {
   withTiming, 
   Easing,
   interpolateColor,
-  FadeInUp
+  FadeInUp,
+  SharedValue
 } from 'react-native-reanimated';
 import { styles } from './HeatMap.styles';
+import { slotIndexToTime } from '@/lib/time';
 
 interface HeatCellProps {
   slot: TimeSlot;
   totalMembers: number;
   isMagic: boolean;
   isSelected: boolean;
-  isMeBusy: boolean;
+  myPreference: Preference;
   isEditMode: boolean;
   blockTitle: string | null;
+  pulse: SharedValue<number>;
   onPress: (slot: TimeSlot) => void;
-  onToggle: (day: number, hour: number) => void;
+  onToggle: (date: string, slotIndex: number) => void;
 }
 
 const HeatCell = React.memo(({
@@ -38,29 +40,18 @@ const HeatCell = React.memo(({
   totalMembers,
   isMagic,
   isSelected,
-  isMeBusy,
+  myPreference,
   isEditMode,
   blockTitle,
+  pulse,
   onPress,
   onToggle,
 }: HeatCellProps) => {
+  const isMeBusy = myPreference === 0;
+  
   const backgroundColor = isEditMode 
-    ? (isMeBusy ? colors.indigoPunch : colors.pageBg)
-    : getHeatShade(slot.freeCount, totalMembers);
-
-  // Pulse animation for Magic Slots
-  const pulse = useSharedValue(0);
-  useEffect(() => {
-    if (isMagic) {
-      pulse.value = withRepeat(
-        withTiming(1, { duration: 2000, easing: Easing.inOut(Easing.sin) }),
-        -1,
-        true
-      );
-    } else {
-      pulse.value = 0;
-    }
-  }, [isMagic]);
+    ? (isMeBusy ? colors.pageBg : (myPreference === 2 ? colors.indigoNeon : colors.indigoPunch))
+    : getHeatShade(slot.freeCount, slot.preferredCount, totalMembers);
 
   const magicAnimatedStyle = useAnimatedStyle(() => {
     if (!isMagic) return {};
@@ -92,7 +83,7 @@ const HeatCell = React.memo(({
   return (
     <TouchableOpacity 
       activeOpacity={0.6}
-      onPress={() => isEditMode ? onToggle(slot.dayIndex, slot.hourIndex) : onPress(slot)}
+      onPress={() => isEditMode ? onToggle(slot.date, slot.slotIndex) : onPress(slot)}
       style={styles.cellWrapper}
     >
       <Animated.View
@@ -101,12 +92,12 @@ const HeatCell = React.memo(({
           { backgroundColor },
           isMagic && styles.magicSlotCell,
           isSelected && styles.selectedCell,
-          isEditMode && isMeBusy && styles.myBusyCell,
+          isEditMode && !isMeBusy && styles.myBusyCell,
           magicAnimatedStyle,
           selectedAnimatedStyle,
         ]}
       >
-        {isMagic && slot.hourIndex === 8 && (
+        {isMagic && (slot.slotIndex % 2 === 0) && (
           <View style={styles.sparkleContainer}>
             <Sparkle size={14} weight="fill" color={colors.peachPunch} />
           </View>
@@ -117,7 +108,7 @@ const HeatCell = React.memo(({
             <Text style={styles.selectionText}>{slot.freeCount}</Text>
           </View>
         )}
-        {isEditMode && isMeBusy && blockTitle && (
+        {isEditMode && !isMeBusy && blockTitle && (
           <Text style={styles.cellTitle} numberOfLines={1}>{blockTitle}</Text>
         )}
       </Animated.View>
@@ -129,13 +120,14 @@ interface DayColumnProps {
   dayIndex: number;
   slots: TimeSlot[];
   totalMembers: number;
-  magicSlots: { dayIndex: number; hourIndex: number }[];
+  magicSlots: { date: string; slotIndex: number }[];
   selectedSlot: TimeSlot | null;
-  mySchedule: Set<string>;
+  mySchedule: Map<string, Preference>;
   myBlocks: MyBlock[];
   isEditMode: boolean;
+  pulse: SharedValue<number>;
   onCellPress: (slot: TimeSlot) => void;
-  onToggleCell: (day: number, hour: number) => void;
+  onToggleCell: (date: string, slotIndex: number) => void;
 }
 
 const DayColumn = React.memo(({
@@ -147,6 +139,7 @@ const DayColumn = React.memo(({
   mySchedule,
   myBlocks,
   isEditMode,
+  pulse,
   onCellPress,
   onToggleCell,
 }: DayColumnProps) => {
@@ -155,22 +148,23 @@ const DayColumn = React.memo(({
       entering={FadeInUp.delay(dayIndex * 50).duration(400)}
       style={styles.column}
     >
-      {slots.map((slot, hourIndex) => {
-        const isMagic = !isEditMode && magicSlots.some(s => s.dayIndex === dayIndex && s.hourIndex === hourIndex);
-        const isSelected = !isEditMode && selectedSlot?.dayIndex === dayIndex && selectedSlot?.hourIndex === hourIndex;
-        const isMeBusy = mySchedule.has(`${dayIndex}-${hourIndex}`);
-        const block = myBlocks.find(b => b.dayIndex === dayIndex && b.startHour === hourIndex);
+      {slots.map((slot) => {
+        const isMagic = !isEditMode && magicSlots.some(s => s.date === slot.date && s.slotIndex === slot.slotIndex);
+        const isSelected = !isEditMode && selectedSlot?.date === slot.date && selectedSlot?.slotIndex === slot.slotIndex;
+        const myPreference = mySchedule.get(`${slot.date}-${slot.slotIndex}`) ?? 0;
+        const block = myBlocks.find(b => b.date === slot.date && b.startSlot === slot.slotIndex);
         
         return (
           <HeatCell 
-            key={`${dayIndex}-${hourIndex}`}
+            key={`${slot.date}-${slot.slotIndex}`}
             slot={slot}
             totalMembers={totalMembers}
             isMagic={isMagic}
             isSelected={isSelected}
-            isMeBusy={isMeBusy}
+            myPreference={myPreference}
             isEditMode={isEditMode}
             blockTitle={block ? block.title : null}
+            pulse={pulse}
             onPress={onCellPress}
             onToggle={onToggleCell}
           />
@@ -183,18 +177,18 @@ const DayColumn = React.memo(({
 interface HeatMapProps {
   data: TimeSlot[][];
   totalMembers: number;
-  magicSlots: { dayIndex: number; hourIndex: number }[];
+  magicSlots: { date: string; slotIndex: number }[];
   onCellPress?: (slot: TimeSlot) => void;
   selectedSlot?: TimeSlot | null;
   isEditMode?: boolean;
-  onToggleCell?: (dayIndex: number, hourIndex: number) => void;
-  mySchedule?: Set<string>;
+  onToggleCell?: (date: string, slotIndex: number) => void;
+  mySchedule?: Map<string, Preference>;
   myBlocks?: MyBlock[];
-  lowConfidenceCells?: string[];
+  startSlot?: number;
+  endSlot?: number;
 }
 
 const DAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
-const TIMES = ["8 AM", "10 AM", "12 PM", "2 PM", "4 PM", "6 PM", "8 PM", "10 PM"];
 
 export const HeatMap: React.FC<HeatMapProps> = ({
   data,
@@ -204,9 +198,33 @@ export const HeatMap: React.FC<HeatMapProps> = ({
   selectedSlot = null,
   isEditMode = false,
   onToggleCell = () => {},
-  mySchedule = new Set(),
+  mySchedule = new Map(),
   myBlocks = [],
+  startSlot = 14, // 7 AM
+  endSlot = 48,   // 12 AM
 }) => {
+  const pulse = useSharedValue(0);
+
+  useEffect(() => {
+    pulse.value = withRepeat(
+      withTiming(1, { duration: 2000, easing: Easing.inOut(Easing.sin) }),
+      -1,
+      true
+    );
+  }, []);
+
+  const timeLabels = useMemo(() => {
+    const labels = [];
+    for (let s = startSlot; s < endSlot; s += 2) {
+      labels.push(slotIndexToTime(s));
+    }
+    return labels;
+  }, [startSlot, endSlot]);
+
+  const visibleData = useMemo(() => {
+    return data.map(column => column.slice(startSlot, endSlot));
+  }, [data, startSlot, endSlot]);
+
   return (
     <View style={styles.gridContainer}>
       {/* Day Headers */}
@@ -223,7 +241,7 @@ export const HeatMap: React.FC<HeatMapProps> = ({
       <View style={styles.gridBody}>
         {/* Time Labels Column */}
         <View style={styles.timeColumn}>
-          {TIMES.map((time) => (
+          {timeLabels.map((time) => (
             <View key={time} style={styles.timeLabelCell}>
               <Text style={styles.timeLabel}>{time}</Text>
             </View>
@@ -232,7 +250,7 @@ export const HeatMap: React.FC<HeatMapProps> = ({
 
         {/* Heat Map Cells (Columns) */}
         <View style={styles.cellsArea}>
-          {data.map((columnSlots, dayIndex) => (
+          {visibleData.map((columnSlots, dayIndex) => (
             <DayColumn 
               key={`col-${dayIndex}`}
               dayIndex={dayIndex}
@@ -243,6 +261,7 @@ export const HeatMap: React.FC<HeatMapProps> = ({
               mySchedule={mySchedule}
               myBlocks={myBlocks}
               isEditMode={isEditMode}
+              pulse={pulse}
               onCellPress={onCellPress}
               onToggleCell={onToggleCell}
             />
@@ -252,4 +271,3 @@ export const HeatMap: React.FC<HeatMapProps> = ({
     </View>
   );
 };
-

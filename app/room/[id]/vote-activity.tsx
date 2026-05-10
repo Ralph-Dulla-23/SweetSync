@@ -16,7 +16,7 @@ import { ActivityCard } from '@/components/ActivityCard';
 import { Button } from '@/components/Button';
 import { Sparkle, Plus, MagicWand } from 'phosphor-react-native';
 import Animated, { FadeInUp, FadeInDown, Layout } from 'react-native-reanimated';
-import { styles } from './vote-activity.styles';
+import { styles } from './_vote-activity.styles';
 
 interface ActivityOption {
   id: string;

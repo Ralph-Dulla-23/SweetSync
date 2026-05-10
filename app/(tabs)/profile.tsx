@@ -23,7 +23,7 @@ import {
 import { Header } from '@/components/Header';
 import { Button } from '@/components/Button';
 import Animated, { FadeInUp, Layout } from 'react-native-reanimated';
-import { styles } from './profile.styles';
+import { styles } from './_profile.styles';
 
 interface UploadedFile {
   id: string;

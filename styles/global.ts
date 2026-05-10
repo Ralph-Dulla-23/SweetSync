@@ -45,18 +45,12 @@ export const globalStyles = StyleSheet.create({
   },
   
   shadowSm: {
-    shadowColor: colors.black,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 4,
+    boxShadow: `0px 2px 4px ${colors.black}0D`, // ~0.05 opacity
     elevation: 2,
   },
   
   shadowMd: {
-    shadowColor: colors.black,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
+    boxShadow: `0px 4px 8px ${colors.black}1A`, // ~0.1 opacity
     elevation: 4,
   }
 });

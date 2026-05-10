@@ -23,7 +23,7 @@ import {
   QrCode
 } from 'phosphor-react-native';
 import Animated, { FadeInDown, FadeIn } from 'react-native-reanimated';
-import { styles } from './[id].styles';
+import { styles } from './_[id].styles';
 
 export default function ConfirmedEventScreen() {
   const { id } = useLocalSearchParams();

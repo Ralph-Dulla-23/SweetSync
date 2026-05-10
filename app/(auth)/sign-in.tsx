@@ -24,7 +24,7 @@ import Animated, {
   FadeInDown, 
   Layout, 
 } from 'react-native-reanimated';
-import { styles } from './sign-in.styles';
+import { styles } from './_sign-in.styles';
 
 export default function SignIn() {
   const router = useRouter();

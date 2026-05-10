@@ -18,7 +18,7 @@ import Animated, {
   FadeInUp, 
   FadeInDown,
 } from "react-native-reanimated";
-import { styles } from "./index.styles";
+import { styles } from "./_index.styles";
 
 interface Room {
   id: string;

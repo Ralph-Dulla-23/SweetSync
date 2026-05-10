@@ -10,6 +10,7 @@ export const lightColors = {
   indigoMid: '#7F77DD',
   indigoPunch: '#534AB7',
   indigoDeep: '#3C3489',
+  indigoNeon: '#4F46E5', // New intense color for preferences
 
   mintBase: '#E1F5EE',
   mintSoft: '#9FE1CB',
@@ -49,6 +50,7 @@ export const darkColors = {
   indigoMid: '#534AB7',
   indigoPunch: '#AFA9EC',
   indigoDeep: '#EEEDFE',
+  indigoNeon: '#818CF8', // Bright indigo for dark mode
 
   mintBase: '#04342C',
   mintSoft: '#0F6E56',

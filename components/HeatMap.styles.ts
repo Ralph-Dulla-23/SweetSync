@@ -36,7 +36,7 @@ export const styles = StyleSheet.create({
     justifyContent: "space-between",
   },
   timeLabelCell: {
-    height: 64, 
+    height: 48, 
     justifyContent: "flex-start",
   },
   timeLabel: {
@@ -57,7 +57,7 @@ export const styles = StyleSheet.create({
     gap: 1.5,
   },
   cellWrapper: {
-    height: 32,
+    height: 24,
   },
   cell: {
     flex: 1,
@@ -78,10 +78,7 @@ export const styles = StyleSheet.create({
     borderColor: colors.indigoPunch,
     borderWidth: 2,
     zIndex: 2,
-    shadowColor: colors.indigoPunch,
-    shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.5,
-    shadowRadius: 4,
+    boxShadow: `0px 0px 4px ${colors.indigoPunch}80`,
   },
   myBusyCell: {
     borderColor: colors.indigoMid,
@@ -111,7 +108,7 @@ export const styles = StyleSheet.create({
     borderColor: colors.peachPunch,
     zIndex: 2,
     ...globalStyles.shadowSm,
-    shadowColor: colors.peachPunch,
+    boxShadow: `0px 2px 4px ${colors.peachPunch}0D`,
   },
   cellTitle: {
     fontSize: 8,

@@ -31,7 +31,7 @@ import Animated, {
   useAnimatedStyle,
   Easing
 } from 'react-native-reanimated';
-import { styles } from './results.styles';
+import { styles } from './_results.styles';
 
 export default function ResultsScreen() {
   const { id } = useLocalSearchParams();

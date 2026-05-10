@@ -65,9 +65,7 @@ export const styles = StyleSheet.create({
     borderTopRightRadius: radius.xl,
     paddingHorizontal: spacing[5],
     paddingTop: 12,
-    ...globalStyles.shadowMd,
-    shadowOpacity: 0.08,
-    shadowRadius: 12,
+    boxShadow: `0px 4px 12px ${colors.black}14`,
     zIndex: 10,
   },
   dragHandle: {

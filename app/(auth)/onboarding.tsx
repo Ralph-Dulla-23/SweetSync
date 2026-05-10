@@ -30,7 +30,7 @@ import Animated, {
   withTiming,
   Easing
 } from 'react-native-reanimated';
-import { styles } from './onboarding.styles';
+import { styles } from './_onboarding.styles';
 
 const { width } = Dimensions.get('window');
 

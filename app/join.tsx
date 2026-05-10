@@ -16,7 +16,7 @@ import { Header } from '@/components/Header';
 import { Button } from '@/components/Button';
 import { Users, CaretRight, ShieldCheck } from 'phosphor-react-native';
 import Animated, { FadeInDown, FadeIn } from 'react-native-reanimated';
-import { styles } from './join.styles';
+import { styles } from './_join.styles';
 
 export default function JoinRoomScreen() {
   const router = useRouter();

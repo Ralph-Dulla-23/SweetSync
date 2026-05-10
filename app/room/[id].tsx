@@ -22,7 +22,7 @@ import Animated, {
 } from "react-native-reanimated";
 import { RoomInteriorSkeleton } from "@/components/RoomInteriorSkeleton";
 import { useRoom } from "@/hooks/useRoom";
-import { styles } from "./[id].styles";
+import { styles } from "./_[id].styles";
 
 export default function RoomInterior() {
   const { id } = useLocalSearchParams();

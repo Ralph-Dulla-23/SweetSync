@@ -12,9 +12,7 @@ export const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: colors.borderDefault,
     ...globalStyles.shadowSm,
-    shadowColor: colors.black,
-    shadowOpacity: 0.05,
-    shadowRadius: 10,
+    boxShadow: `0px 2px 10px ${colors.black}0D`,
   },
   ticketHeader: {
     ...globalStyles.rowBetween,

@@ -14,7 +14,7 @@ import { Card } from '@/components/Card';
 import { AvatarStack } from '@/components/AvatarStack';
 import { ListChecks, Clock, MagicWand, CaretRight } from 'phosphor-react-native';
 import Animated, { FadeInUp } from 'react-native-reanimated';
-import { styles } from './votes.styles';
+import { styles } from './_votes.styles';
 
 interface PendingVote {
   id: string;

@@ -2,41 +2,40 @@ import React from "react";
 import { 
   View, 
   Text, 
-  StyleSheet, 
   ScrollView, 
   SafeAreaView,
   TouchableOpacity,
-  Modal,
   TextInput,
   Image,
   ActivityIndicator,
   Modal as RNModal,
+  StyleSheet,
 } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
-import { colors, fonts, spacing, radius } from "@/constants/theme";
+import { colors, spacing, radius, fonts } from "@/constants/theme";
 import { Header } from "@/components/Header";
-import { Sparkle, Info, X, Users, Camera, Bell, Eye, EyeSlash } from "phosphor-react-native";
+import { Sparkle, Info, X, Users, Camera, Bell, Eye, EyeSlash, Warning, CaretRight } from "phosphor-react-native";
 import Animated, { 
   FadeIn, 
   FadeInDown, 
   Layout, 
-  FadeInUp,
   SlideInDown,
-  SlideOutDown,
   useSharedValue,
   useAnimatedStyle,
   withSpring,
-  withTiming,
   runOnJS
 } from "react-native-reanimated";
 import { GestureDetector, Gesture } from "react-native-gesture-handler";
 
 import { CalendarSkeleton } from "@/components/CalendarSkeleton";
 import { useHeatMap } from "@/hooks/useHeatMap";
+import { useGlobalAvailability } from "@/hooks/useGlobalAvailability";
 import { Button } from "@/components/Button";
 import { HeatMap } from "@/components/HeatMap";
+import { slotIndexToTime } from "@/lib/time";
 import * as ImagePicker from 'expo-image-picker';
-import { styles } from "./calendar.styles";
+import { styles } from "./_calendar.styles";
+import { format, parseISO } from "date-fns";
 
 export default function GroupCalendar() {
   const { id } = useLocalSearchParams();
@@ -45,11 +44,14 @@ export default function GroupCalendar() {
   const [activeTab, setActiveTab] = React.useState<'group' | 'mine'>('group');
   const [showImagePreview, setShowImagePreview] = React.useState(true);
 
+  const { mySchedule: globalSchedule } = useGlobalAvailability();
+
   // Quick Add Modal State (Manual Blocking)
   const [isQuickAddVisible, setQuickAddVisible] = React.useState(false);
   const [blockTitle, setBlockTitle] = React.useState("");
-  const [blockDuration, setBlockDuration] = React.useState(1);
-  const [pendingCell, setPendingCell] = React.useState<{day: number, hour: number} | null>(null);
+  const [startSlotIndex, setStartSlotIndex] = React.useState<number>(0);
+  const [endSlotIndex, setEndSlotIndex] = React.useState<number>(0);
+  const [pendingCell, setPendingCell] = React.useState<{date: string, slotIndex: number} | null>(null);
 
   const { 
     mockData, 
@@ -73,6 +75,14 @@ export default function GroupCalendar() {
     clearSelection 
   } = useHeatMap(5);
 
+  // Merge global schedule into local view for 'My Schedule' tab
+  const combinedSchedule = React.useMemo(() => {
+    if (activeTab !== 'mine') return mySchedule;
+    const merged = new Map(globalSchedule);
+    mySchedule.forEach((pref, key) => merged.set(key, pref));
+    return merged;
+  }, [mySchedule, globalSchedule, activeTab]);
+
   React.useEffect(() => {
     const timer = setTimeout(() => setLoading(false), 800);
     return () => clearTimeout(timer);
@@ -94,13 +104,14 @@ export default function GroupCalendar() {
     }
   };
 
-  const handleToggleCell = (dayIndex: number, hourIndex: number) => {
-    if (mySchedule.has(`${dayIndex}-${hourIndex}`)) {
-      removeBlockAt(dayIndex, hourIndex);
+  const handleToggleCell = (date: string, slotIndex: number) => {
+    if (mySchedule.has(`${date}-${slotIndex}`)) {
+      removeBlockAt(date, slotIndex);
     } else {
-      setPendingCell({ day: dayIndex, hour: hourIndex });
+      setPendingCell({ date, slotIndex });
       setBlockTitle("");
-      setBlockDuration(1);
+      setStartSlotIndex(slotIndex);
+      setEndSlotIndex(slotIndex + 2); // Default 1 hour later
       setQuickAddVisible(true);
     }
   };
@@ -109,9 +120,10 @@ export default function GroupCalendar() {
     if (pendingCell) {
       addBlock({
         title: blockTitle || "Busy",
-        dayIndex: pendingCell.day,
-        startHour: pendingCell.hour,
-        endHour: Math.min(pendingCell.hour + blockDuration - 1, 13),
+        date: pendingCell.date,
+        startSlot: startSlotIndex,
+        endSlot: Math.max(startSlotIndex, endSlotIndex - 1),
+        preference: 1,
       });
     }
     setQuickAddVisible(false);
@@ -163,7 +175,7 @@ export default function GroupCalendar() {
                 <View style={styles.warningBanner}>
                   <Info size={16} color={colors.peachDeep} weight="bold" />
                   <Text style={styles.warningText}>
-                    {["Mon", "Tue", "Wed", "Thu", "Fri"][emptyDays[0]]} looks empty. Did we miss a page?
+                    Update your schedule to help find better times!
                   </Text>
                 </View>
               </Animated.View>
@@ -172,7 +184,7 @@ export default function GroupCalendar() {
             <Animated.View entering={FadeInDown.delay(300).duration(500)}>
               <View style={styles.editNotice}>
                 <Info size={16} color={colors.indigoPunch} />
-                <Text style={styles.editNoticeText}>Tap or drag to mark busy blocks</Text>
+                <Text style={styles.editNoticeText}>Tap to mark busy blocks (30m intervals)</Text>
               </View>
             </Animated.View>
             
@@ -201,7 +213,7 @@ export default function GroupCalendar() {
           selectedSlot={selectedSlot}
           isEditMode={activeTab === 'mine'}
           onToggleCell={handleToggleCell}
-          mySchedule={mySchedule}
+          mySchedule={combinedSchedule}
           myBlocks={myBlocks}
         />
 
@@ -216,8 +228,9 @@ export default function GroupCalendar() {
                 <View style={[styles.legendStep, { backgroundColor: colors.indigoSoft }]} />
                 <View style={[styles.legendStep, { backgroundColor: colors.indigoMid }]} />
                 <View style={[styles.legendStep, { backgroundColor: colors.indigoPunch }]} />
+                <View style={[styles.legendStep, { backgroundColor: colors.indigoNeon }]} />
               </View>
-              <Text style={styles.legendText}>Free</Text>
+              <Text style={styles.legendText}>Prefer</Text>
             </View>
             <View style={styles.magicSlotInfo}>
               <Sparkle size={14} weight="fill" color={colors.peachPunch} />
@@ -228,9 +241,11 @@ export default function GroupCalendar() {
           <View style={styles.legendContainer}>
             <View style={styles.legendRow}>
               <View style={[styles.legendBox, { backgroundColor: colors.indigoPunch }]} />
-              <Text style={styles.legendText}>My Busy Blocks</Text>
+              <Text style={styles.legendText}>Busy</Text>
+              <View style={[styles.legendBox, { backgroundColor: colors.indigoNeon, marginLeft: 16 }]} />
+              <Text style={styles.legendText}>Preferred</Text>
               <View style={[styles.legendBox, { backgroundColor: colors.pageBg, marginLeft: 16 }]} />
-              <Text style={styles.legendText}>Available</Text>
+              <Text style={styles.legendText}>Free</Text>
             </View>
           </View>
         )}
@@ -252,7 +267,7 @@ export default function GroupCalendar() {
             </View>
             <View style={styles.uncertaintyHint}>
               <View style={styles.uncertaintyDot} />
-              <Text style={styles.uncertaintyText}>I've highlighted blocks I was unsure about. Please check them.</Text>
+              <Text style={styles.uncertaintyText}>Double-tap blocks to mark them as "Preferred".</Text>
             </View>
           </View>
 
@@ -272,7 +287,7 @@ export default function GroupCalendar() {
               magicSlots={[]}
               isEditMode={true}
               onToggleCell={toggleDraftCell}
-              mySchedule={draftSchedule || new Set()}
+              mySchedule={draftSchedule || new Map()}
               lowConfidenceCells={lowConfidenceCells}
             />
           </ScrollView>
@@ -316,17 +331,50 @@ export default function GroupCalendar() {
             </View>
 
             <View style={styles.formGroup}>
-              <Text style={styles.formLabel}>Duration (hours)</Text>
-              <View style={styles.durationRow}>
-                {[1, 2, 3, 4].map(h => (
-                  <TouchableOpacity 
-                    key={h}
-                    style={[styles.durationPill, blockDuration === h && styles.activeDurationPill]}
-                    onPress={() => setBlockDuration(h)}
-                  >
-                    <Text style={[styles.durationText, blockDuration === h && styles.activeDurationText]}>{h}h</Text>
-                  </TouchableOpacity>
-                ))}
+              <Text style={styles.formLabel}>Set Time Range</Text>
+              <View style={localStyles.pickerRow}>
+                {/* Start Time Picker */}
+                <View style={localStyles.pickerColumn}>
+                  <Text style={localStyles.columnLabel}>START</Text>
+                  <ScrollView style={localStyles.pickerList} showsVerticalScrollIndicator={false}>
+                    {Array.from({ length: 48 }, (_, i) => i).map(s => (
+                      <TouchableOpacity 
+                        key={`start-${s}`}
+                        style={[localStyles.slotItem, startSlotIndex === s && localStyles.activeSlotItem]}
+                        onPress={() => {
+                          setStartSlotIndex(s);
+                          if (s >= endSlotIndex) setEndSlotIndex(s + 1);
+                        }}
+                      >
+                        <Text style={[localStyles.slotText, startSlotIndex === s && localStyles.activeSlotText]}>
+                          {slotIndexToTime(s)}
+                        </Text>
+                      </TouchableOpacity>
+                    ))}
+                  </ScrollView>
+                </View>
+
+                <View style={localStyles.divider}>
+                  <CaretRight size={16} color={colors.textTertiary} weight="bold" />
+                </View>
+
+                {/* End Time Picker */}
+                <View style={localStyles.pickerColumn}>
+                  <Text style={localStyles.columnLabel}>END</Text>
+                  <ScrollView style={localStyles.pickerList} showsVerticalScrollIndicator={false}>
+                    {Array.from({ length: 49 }, (_, i) => i).filter(s => s > startSlotIndex).map(s => (
+                      <TouchableOpacity 
+                        key={`end-${s}`}
+                        style={[localStyles.slotItem, endSlotIndex === s && localStyles.activeSlotItem]}
+                        onPress={() => setEndSlotIndex(s)}
+                      >
+                        <Text style={[localStyles.slotText, endSlotIndex === s && localStyles.activeSlotText]}>
+                          {s === 48 ? "00:00" : slotIndexToTime(s)}
+                        </Text>
+                      </TouchableOpacity>
+                    ))}
+                  </ScrollView>
+                </View>
               </View>
             </View>
 
@@ -388,6 +436,9 @@ const InteractiveBottomSheet = ({ selectedSlot, clearSelection, isNudgeSlot, id,
   }));
 
   if (selectedSlot) {
+    const formattedDate = format(parseISO(selectedSlot.date), 'EEEE, MMM do');
+    const formattedTime = slotIndexToTime(selectedSlot.slotIndex);
+
     return (
       <GestureDetector gesture={gesture}>
         <Animated.View 
@@ -399,14 +450,14 @@ const InteractiveBottomSheet = ({ selectedSlot, clearSelection, isNudgeSlot, id,
           <View style={styles.detailHeader}>
             <View style={styles.detailTitleRow}>
               <Text style={styles.detailTitle}>
-                {["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"][selectedSlot.dayIndex]} at {selectedSlot.hourIndex + 8}:00
+                {formattedDate} at {formattedTime}
               </Text>
               <TouchableOpacity onPress={clearSelection}>
                 <X size={20} color={colors.textSecondary} />
               </TouchableOpacity>
             </View>
             <Text style={styles.detailSubtitle}>
-              {selectedSlot.freeCount} of 5 members are free
+              {selectedSlot.freeCount} members are free ({selectedSlot.preferredCount} prefer this)
             </Text>
           </View>
 
@@ -424,14 +475,17 @@ const InteractiveBottomSheet = ({ selectedSlot, clearSelection, isNudgeSlot, id,
           )}
 
           <View style={styles.memberSection}>
-            <Text style={styles.sectionLabel}>FREE</Text>
+            <Text style={styles.sectionLabel}>FREE & PREFERRED</Text>
             <View style={styles.memberList}>
-              {selectedSlot.members.map((member: string, i: number) => (
-                <View key={i} style={styles.memberChip}>
-                  <Users size={14} color={colors.indigoPunch} weight="fill" />
-                  <Text style={styles.memberChipText}>{member}</Text>
-                </View>
-              ))}
+              {selectedSlot.members.map((member: string, i: number) => {
+                const isPreferred = selectedSlot.preferredMembers.includes(member);
+                return (
+                  <View key={i} style={[styles.memberChip, isPreferred && { backgroundColor: colors.indigoBase }]}>
+                    <Users size={14} color={isPreferred ? colors.indigoNeon : colors.indigoPunch} weight="fill" />
+                    <Text style={[styles.memberChipText, isPreferred && { color: colors.indigoPunch }]}>{member}</Text>
+                  </View>
+                );
+              })}
             </View>
           </View>
 
@@ -465,9 +519,64 @@ const InteractiveBottomSheet = ({ selectedSlot, clearSelection, isNudgeSlot, id,
       <View style={styles.dragHandle} />
       <View style={styles.peekContent}>
         <Info size={16} color={colors.indigoPunch} weight="bold" />
-        <Text style={styles.peekText}>Saturday 4PM looks perfect for everyone</Text>
+        <Text style={styles.peekText}>Saturday night looks perfect for everyone</Text>
       </View>
     </Animated.View>
   );
-  };
+};
 
+const localStyles = StyleSheet.create({
+  pickerRow: {
+    flexDirection: 'row',
+    height: 180,
+    backgroundColor: colors.pageBg,
+    borderRadius: radius.md,
+    borderWidth: 1,
+    borderColor: colors.borderDefault,
+    overflow: 'hidden',
+  },
+  pickerColumn: {
+    flex: 1,
+  },
+  columnLabel: {
+    fontFamily: fonts.bodySemibold,
+    fontSize: 10,
+    color: colors.textTertiary,
+    textAlign: 'center',
+    paddingVertical: 8,
+    borderBottomWidth: 0.5,
+    borderBottomColor: colors.borderDefault,
+    letterSpacing: 1,
+  },
+  pickerList: {
+    flex: 1,
+  },
+  slotItem: {
+    height: 40,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderBottomWidth: 0.5,
+    borderBottomColor: 'rgba(0,0,0,0.02)',
+  },
+  activeSlotItem: {
+    backgroundColor: colors.indigoBase,
+  },
+  slotText: {
+    fontFamily: fonts.body,
+    fontSize: 14,
+    color: colors.textPrimary,
+  },
+  activeSlotText: {
+    fontFamily: fonts.bodySemibold,
+    color: colors.indigoPunch,
+  },
+  divider: {
+    width: 32,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: colors.pageBg,
+    borderLeftWidth: 0.5,
+    borderRightWidth: 0.5,
+    borderColor: colors.borderDefault,
+  },
+});

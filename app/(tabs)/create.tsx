@@ -24,7 +24,7 @@ import { useRouter } from "expo-router";
 import { Header } from "@/components/Header";
 import { Button } from "@/components/Button";
 import Animated, { FadeInRight, FadeOutLeft, Layout } from 'react-native-reanimated';
-import { styles } from './create.styles';
+import { styles } from './_create.styles';
 
 type CreateStep = 'choice' | 'session_details' | 'room_details' | 'success';
 

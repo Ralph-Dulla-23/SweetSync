@@ -6,7 +6,7 @@ import { colors } from '@/constants/theme';
 import { Sparkle, Scan, CalendarBlank, ListChecks } from 'phosphor-react-native';
 import Animated, { FadeIn } from 'react-native-reanimated';
 import { Button } from '@/components/Button';
-import { styles } from './index.styles';
+import { styles } from './_index.styles';
 
 export default function Index() {
   const { session, loading: authLoading } = useAuth();
