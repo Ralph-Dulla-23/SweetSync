@@ -28,15 +28,15 @@ interface CardProps {
   sharedTransitionStyle?: any;
 }
 
-export function Card({
-  variant = 'neutral',
-  children,
-  style,
+const AnimatedCard = React.memo(({ 
+  variant, 
+  children, 
+  style, 
   onPress,
   sharedTransitionTag,
-  sharedTransitionStyle,
-}: CardProps) {
-  const { background, borderColor } = cardStyles[variant];
+  sharedTransitionStyle 
+}: CardProps) => {
+  const { background, borderColor } = cardStyles[variant!];
   
   const scaleX = useSharedValue(1);
   const scaleY = useSharedValue(1);
@@ -49,77 +49,63 @@ export function Card({
   }));
 
   const handlePressIn = () => {
-    if (onPress) {
-      scaleX.value = withTiming(1.02, { duration: 150 });
-      scaleY.value = withTiming(0.98, { duration: 150 });
-    }
+    scaleX.value = withTiming(1.02, { duration: 150 });
+    scaleY.value = withTiming(0.98, { duration: 150 });
   };
 
   const handlePressOut = () => {
-    if (onPress) {
-      scaleX.value = withSpring(1, springConfigs.snappy);
-      scaleY.value = withSpring(1, springConfigs.snappy);
-    }
+    scaleX.value = withSpring(1, springConfigs.snappy);
+    scaleY.value = withSpring(1, springConfigs.snappy);
   };
 
-  const content = (
-    <>
-      {children}
-    </>
-  );
+  const AnimatedView = Animated.View as any;
 
-  if (sharedTransitionTag) {
-    const AnimatedView = Animated.View as any;
-    if (onPress) {
-      return (
-        <TouchableOpacity 
-          style={style}
-          onPress={onPress}
-          onPressIn={handlePressIn}
-          onPressOut={handlePressOut}
-          activeOpacity={0.9}
-        >
-          <AnimatedView 
-            sharedTransitionTag={sharedTransitionTag}
-            sharedTransitionStyle={sharedTransitionStyle}
-            style={[styles.card, { backgroundColor: background, borderColor }, animatedPressStyle]}
-          >
-            {content}
-          </AnimatedView>
-        </TouchableOpacity>
-      );
-    }
-
-    return (
+  return (
+    <TouchableOpacity 
+      style={style}
+      onPress={onPress}
+      onPressIn={handlePressIn}
+      onPressOut={handlePressOut}
+      activeOpacity={0.9}
+    >
       <AnimatedView 
         sharedTransitionTag={sharedTransitionTag}
         sharedTransitionStyle={sharedTransitionStyle}
-        style={[styles.card, { backgroundColor: background, borderColor }, style, animatedPressStyle]}
+        style={[styles.card, { backgroundColor: background, borderColor }, animatedPressStyle]}
       >
-        {content}
+        {children}
       </AnimatedView>
-    );
-  }
+    </TouchableOpacity>
+  );
+});
 
-  if (onPress) {
+export const Card = React.memo(({
+  variant = 'neutral',
+  children,
+  style,
+  onPress,
+  sharedTransitionTag,
+  sharedTransitionStyle,
+}: CardProps) => {
+  if (onPress || sharedTransitionTag) {
     return (
-      <TouchableOpacity 
+      <AnimatedCard 
+        variant={variant}
         style={style}
         onPress={onPress}
-        onPressIn={handlePressIn}
-        onPressOut={handlePressOut}
-        activeOpacity={0.9}
+        sharedTransitionTag={sharedTransitionTag}
+        sharedTransitionStyle={sharedTransitionStyle}
       >
-        <Animated.View style={[styles.card, { backgroundColor: background, borderColor }, animatedPressStyle]}>
-          {content}
-        </Animated.View>
-      </TouchableOpacity>
+        {children}
+      </AnimatedCard>
     );
   }
 
+  const { background, borderColor } = cardStyles[variant];
   return (
     <View style={[styles.card, { backgroundColor: background, borderColor }, style]}>
-      {content}
+      {children}
     </View>
   );
-}
+});
+

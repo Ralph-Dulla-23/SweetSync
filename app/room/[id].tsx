@@ -5,9 +5,9 @@ import {
   StyleSheet, 
   ScrollView, 
   TouchableOpacity,
-  SafeAreaView,
   ActivityIndicator
 } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { CheckCircle, Bell, UsersThree } from "phosphor-react-native";
 import { colors, fonts, spacing, radius } from "@/constants/theme";
@@ -24,10 +24,67 @@ import { RoomInteriorSkeleton } from "@/components/RoomInteriorSkeleton";
 import { useRoom } from "@/hooks/useRoom";
 import { styles } from "./_[id].styles";
 
+const MemberRow = React.memo(({ member, index, isLast, onNudge }: { member: any; index: number; isLast: boolean; onNudge: (id: string) => void }) => {
+  return (
+    <Animated.View 
+      entering={FadeInUp.duration(600).delay(200 + index * 50).springify().damping(18)}
+    >
+      <View 
+        style={[
+          styles.memberRow, 
+          isLast && styles.noBorder
+        ]}
+      >
+        <View style={styles.memberLeft}>
+          <Avatar 
+            name={member.name} 
+            uri={member.avatarUri}
+            size={44} 
+            color={member.status === "uploaded" ? colors.peachPunch : colors.textTertiary} 
+          />
+          <View style={styles.memberInfo}>
+            <Text style={styles.memberName}>{member.name}</Text>
+            <View style={styles.statusRow}>
+              {member.isHost && <Text style={styles.hostTag}>Host</Text>}
+              <Text style={[
+                styles.memberStatus,
+                member.status === "pending" && styles.pendingText
+              ]}>
+                {member.status === "uploaded" ? "Synced" : "Waiting for upload"}
+              </Text>
+            </View>
+          </View>
+        </View>
+        
+        {member.status === "uploaded" ? (
+          <View style={styles.statusIndicator}>
+            <CheckCircle size={26} weight="fill" color={colors.mintPunch} />
+          </View>
+        ) : (
+          <TouchableOpacity 
+            style={styles.nudgeButton}
+            activeOpacity={0.7}
+            onPress={() => onNudge(member.id)}
+            accessibilityRole="button"
+            accessibilityLabel={`Nudge ${member.name}`}
+          >
+            <Bell size={20} color={colors.peachPunch} weight="bold" />
+            <Text style={styles.nudgeLabel}>Nudge</Text>
+          </TouchableOpacity>
+        )}
+      </View>
+    </Animated.View>
+  );
+});
+
 export default function RoomInterior() {
   const { id } = useLocalSearchParams();
   const router = useRouter();
   const { room, loading, nudgeMember } = useRoom(id as string);
+
+  const handleNudge = React.useCallback((memberId: string) => {
+    nudgeMember(memberId);
+  }, [nudgeMember]);
 
   if (loading || !room) {
     return <RoomInteriorSkeleton />;
@@ -40,7 +97,7 @@ export default function RoomInterior() {
   const isReady = uploadedCount === totalCount;
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={styles.container} edges={['top']}>
       <Header 
         title={room.name} 
         subtitle={room.description || "Coordinate with the squad"}
@@ -67,7 +124,7 @@ export default function RoomInterior() {
             <View style={styles.progressInfo}>
               <Text style={styles.progressTitle}>Syncing Souls</Text>
               <Text style={styles.progressSubtitle}>
-                {isReady ? "The squad is fully synced" : `${totalCount - uploadedCount} people to go`}
+                {isReady ? "The squad is fully synced" : `${totalCount - uploadedCount} friends to go`}
               </Text>
             </View>
           </View>
@@ -86,62 +143,21 @@ export default function RoomInterior() {
 
         <View style={styles.memberList}>
           {room.members.map((member, index) => (
-            <Animated.View 
+            <MemberRow 
               key={member.id}
-              entering={FadeInUp.duration(600).delay(200 + index * 50).springify().damping(18)}
-            >
-              <View 
-                style={[
-                  styles.memberRow, 
-                  index === room.members.length - 1 && styles.noBorder
-                ]}
-              >
-                <View style={styles.memberLeft}>
-                  <Avatar 
-                    name={member.name} 
-                    uri={member.avatarUri}
-                    size={44} 
-                    color={member.status === "uploaded" ? colors.peachPunch : colors.textTertiary} 
-                  />
-                  <View style={styles.memberInfo}>
-                    <Text style={styles.memberName}>{member.name}</Text>
-                    <View style={styles.statusRow}>
-                      {member.isHost && <Text style={styles.hostTag}>Host</Text>}
-                      <Text style={[
-                        styles.memberStatus,
-                        member.status === "pending" && styles.pendingText
-                      ]}>
-                        {member.status === "uploaded" ? "Synced" : "Waiting for upload"}
-                      </Text>
-                    </View>
-                  </View>
-                </View>
-                
-                {member.status === "uploaded" ? (
-                  <View style={styles.statusIndicator}>
-                    <CheckCircle size={26} weight="fill" color={colors.mintPunch} />
-                  </View>
-                ) : (
-                  <TouchableOpacity 
-                    style={styles.nudgeButton}
-                    activeOpacity={0.7}
-                    onPress={() => nudgeMember(member.id)}
-                    accessibilityRole="button"
-                    accessibilityLabel={`Nudge ${member.name}`}
-                  >
-                    <Bell size={20} color={colors.peachPunch} weight="bold" />
-                    <Text style={styles.nudgeLabel}>Nudge</Text>
-                  </TouchableOpacity>
-                )}
-              </View>
-            </Animated.View>
+              member={member}
+              index={index}
+              isLast={index === room.members.length - 1}
+              onNudge={handleNudge}
+            />
           ))}
         </View>
+
 
         {/* Action Area */}
         <Animated.View entering={FadeInUp.duration(600).delay(800)} style={styles.footer}>
           <Button 
-            title="Reveal Gaps" 
+            title="Reveal the Magic" 
             variant={isReady ? "indigo" : "ghost"}
             disabled={!isReady}
             onPress={() => router.push(`/room/${id}/calendar`)}
@@ -149,7 +165,7 @@ export default function RoomInterior() {
           />
           {!isReady && (
             <Text style={styles.footerNote}>
-              Need all schedules to unlock AI slot finding
+              Waiting for the squad to reveal free time 🍑
             </Text>
           )}
         </Animated.View>
@@ -157,4 +173,3 @@ export default function RoomInterior() {
     </SafeAreaView>
   );
 }
-

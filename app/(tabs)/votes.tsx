@@ -3,10 +3,10 @@ import {
   View, 
   Text, 
   StyleSheet, 
-  SafeAreaView, 
   ScrollView, 
   TouchableOpacity 
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { colors, fonts, spacing, radius } from '@/constants/theme';
 import { Header } from '@/components/Header';
@@ -44,71 +44,87 @@ const mockPendingVotes: PendingVote[] = [
   },
 ];
 
+import { VotesSkeleton } from '@/components/VotesSkeleton';
+
+// ... (keep interface and mockPendingVotes)
+
 export default function VotesScreen() {
   const router = useRouter();
+  const [loading, setLoading] = React.useState(true);
+
+  React.useEffect(() => {
+    // Simulate data fetch
+    const timer = setTimeout(() => setLoading(false), 1000);
+    return () => clearTimeout(timer);
+  }, []);
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={styles.container} edges={['top']}>
       <Header 
         title="Votes" 
         subtitle="Your squad is waiting" 
         subtitlePosition="above"
       />
       
-      <ScrollView 
-        contentContainerStyle={styles.content}
-        showsVerticalScrollIndicator={false}
-      >
-        {mockPendingVotes.length > 0 ? (
-          <View style={styles.list}>
-            {mockPendingVotes.map((vote, index) => (
-              <Animated.View 
-                key={vote.id}
-                entering={FadeInUp.delay(100 + index * 100)}
-              >
-                <TouchableOpacity 
-                  activeOpacity={0.8}
-                  onPress={() => router.push(`/room/${vote.roomId}/vote-${vote.type === 'time' ? 'slots' : 'activity'}`)}
+      {loading ? (
+        <VotesSkeleton />
+      ) : (
+        <ScrollView 
+          contentContainerStyle={styles.content}
+          showsVerticalScrollIndicator={false}
+        >
+          {mockPendingVotes.length > 0 ? (
+            <View style={styles.list}>
+              {mockPendingVotes.map((vote, index) => (
+                <Animated.View 
+                  key={vote.id}
+                  entering={FadeInUp.delay(100 + index * 100)}
                 >
-                  <Card variant="peach" style={styles.voteCard}>
-                    <View style={styles.cardLeft}>
-                      <View style={[
-                        styles.iconCircle, 
-                        { backgroundColor: vote.type === 'time' ? colors.indigoBase : colors.peachBase }
-                      ]}>
-                        {vote.type === 'time' ? (
-                          <Clock size={20} color={colors.indigoPunch} weight="fill" />
-                        ) : (
-                          <MagicWand size={20} color={colors.peachPunch} weight="fill" />
-                        )}
+                  <TouchableOpacity 
+                    activeOpacity={0.8}
+                    onPress={() => router.push(`/room/${vote.roomId}/vote-${vote.type === 'time' ? 'slots' : 'activity'}`)}
+                  >
+                    <Card variant="peach" style={styles.voteCard}>
+                      <View style={styles.cardLeft}>
+                        <View style={[
+                          styles.iconCircle, 
+                          { backgroundColor: vote.type === 'time' ? colors.indigoBase : colors.peachBase }
+                        ]}>
+                          {vote.type === 'time' ? (
+                            <Clock size={20} color={colors.indigoPunch} weight="fill" />
+                          ) : (
+                            <MagicWand size={20} color={colors.peachPunch} weight="fill" />
+                          )}
+                        </View>
+                        <View style={styles.info}>
+                          <Text style={styles.roomName}>{vote.roomName}</Text>
+                          <Text style={styles.voteType}>
+                            Vote on {vote.type === 'time' ? 'Time Slots' : 'Activities'}
+                          </Text>
+                          <Text style={styles.deadline}>{vote.deadline}</Text>
+                        </View>
                       </View>
-                      <View style={styles.info}>
-                        <Text style={styles.roomName}>{vote.roomName}</Text>
-                        <Text style={styles.voteType}>
-                          Vote on {vote.type === 'time' ? 'Time Slots' : 'Activities'}
-                        </Text>
-                        <Text style={styles.deadline}>{vote.deadline}</Text>
+                      
+                      <View style={styles.cardRight}>
+                        <AvatarStack avatars={vote.members.map(m => ({ name: m.initial }))} size={20} />
+                        <CaretRight size={18} color={colors.textTertiary} />
                       </View>
-                    </View>
-                    
-                    <View style={styles.cardRight}>
-                      <AvatarStack avatars={vote.members.map(m => ({ name: m.initial }))} size={20} />
-                      <CaretRight size={18} color={colors.textTertiary} />
-                    </View>
-                  </Card>
-                </TouchableOpacity>
-              </Animated.View>
-            ))}
-          </View>
-        ) : (
-          <View style={styles.emptyState}>
-            <ListChecks size={64} color={colors.borderDefault} weight="thin" />
-            <Text style={styles.emptyTitle}>All caught up!</Text>
-            <Text style={styles.emptySubtitle}>You've voted in all active sessions.</Text>
-          </View>
-        )}
-      </ScrollView>
+                    </Card>
+                  </TouchableOpacity>
+                </Animated.View>
+              ))}
+            </View>
+          ) : (
+            <View style={styles.emptyState}>
+              <ListChecks size={64} color={colors.borderDefault} weight="thin" />
+              <Text style={styles.emptyTitle}>All caught up!</Text>
+              <Text style={styles.emptySubtitle}>You've voted in all active sessions.</Text>
+            </View>
+          )}
+        </ScrollView>
+      )}
     </SafeAreaView>
   );
 }
+
 

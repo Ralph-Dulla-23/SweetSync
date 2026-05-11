@@ -7,7 +7,7 @@ export const styles = StyleSheet.create({
     ...globalStyles.rowBetween,
     alignItems: "flex-start",
     paddingHorizontal: spacing[5],
-    paddingTop: spacing[6],
+    paddingTop: spacing[8],
     paddingBottom: spacing[4],
     backgroundColor: colors.pageBg,
   },

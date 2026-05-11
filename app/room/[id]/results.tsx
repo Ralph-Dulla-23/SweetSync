@@ -81,7 +81,7 @@ export default function ResultsScreen() {
             <View style={styles.successIcon}>
               <CheckCircle size={48} color={colors.mintPunch} weight="fill" />
             </View>
-            <Text style={styles.title}>Decision Locked</Text>
+            <Text style={styles.title}>It's a date! 🍑</Text>
             <Text style={styles.subtitle}>The squad has spoken. Here is the winner:</Text>
           </View>
         </Animated.View>
@@ -92,7 +92,7 @@ export default function ResultsScreen() {
         >
           <View style={styles.winnerHeader}>
             <Sparkle size={20} color={colors.peachPunch} weight="fill" />
-            <Text style={styles.winnerLabel}>THE WINNER</Text>
+            <Text style={styles.winnerLabel}>THE PLAN</Text>
             <Sparkle size={20} color={colors.peachPunch} weight="fill" />
           </View>
           
@@ -116,14 +116,14 @@ export default function ResultsScreen() {
 
         <Animated.View entering={FadeIn.delay(1000)} style={styles.actions}>
           <Button 
-            title="Add to My Calendar" 
+            title="Lock it in my calendar" 
             variant="primary"
             onPress={() => {}}
             icon={<Calendar size={20} color={colors.white} />}
             style={styles.actionButton}
           />
           <Button 
-            title="Share with Squad" 
+            title="Share with the Squad" 
             variant="secondary"
             onPress={handleShare}
             icon={<ShareNetwork size={20} color={colors.peachPunch} />}

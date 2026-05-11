@@ -110,13 +110,13 @@ export const styles = StyleSheet.create({
     alignItems: "center",
     paddingTop: 12,
     ...globalStyles.shadowMd,
-    boxShadow: `0px 4px 16px ${colors.black}1A`,
-    zIndex: 10,
+    boxShadow: `0px -4px 16px ${colors.black}1A`,
+    zIndex: 100,
     borderWidth: 1,
     borderColor: colors.borderDefault,
   },
   detailSheet: {
-    height: 320,
+    height: 360, // Increased to account for bottom insets
     alignItems: 'stretch',
     paddingHorizontal: spacing[5],
   },

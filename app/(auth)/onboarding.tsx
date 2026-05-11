@@ -7,9 +7,9 @@ import {
   TouchableOpacity, 
   FlatList, 
   NativeSyntheticEvent, 
-  NativeScrollEvent,
-  SafeAreaView
+  NativeScrollEvent
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { 
   Sparkle, 
@@ -146,7 +146,7 @@ export default function Onboarding() {
   };
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
       <View style={styles.header}>
         <TouchableOpacity 
           onPress={() => router.push('/(auth)/sign-in')}
@@ -211,4 +211,3 @@ export default function Onboarding() {
     </SafeAreaView>
   );
 }
-

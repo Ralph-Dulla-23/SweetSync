@@ -16,7 +16,7 @@ interface HeaderProps {
   userAvatar?: boolean;
 }
 
-export function Header({ 
+export const Header = React.memo(({ 
   title, 
   subtitle, 
   subtitlePosition = "above",
@@ -24,7 +24,7 @@ export function Header({
   backLabel = "Back",
   rightElement,
   userAvatar = false
-}: HeaderProps) {
+}: HeaderProps) => {
   const router = useRouter();
 
   return (
@@ -62,4 +62,5 @@ export function Header({
       )}
     </View>
   );
-}
+});
+

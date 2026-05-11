@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { View, Image, Text, ViewStyle } from 'react-native';
 import { colors, radius, fonts } from '@/constants/theme';
 
@@ -12,16 +12,18 @@ interface AvatarProps {
   style?: ViewStyle;
 }
 
-export function Avatar({ uri, name, size = 40, color, style }: AvatarProps) {
-  const initials = name
-    ? name
-        .trim()
-        .split(/\s+/)
-        .map((n) => n[0])
-        .join('')
-        .toUpperCase()
-        .slice(0, 2)
-    : '';
+export const Avatar = React.memo(({ uri, name, size = 40, color, style }: AvatarProps) => {
+  const initials = useMemo(() => {
+    return name
+      ? name
+          .trim()
+          .split(/\s+/)
+          .map((n) => n[0])
+          .join('')
+          .toUpperCase()
+          .slice(0, 2)
+      : '';
+  }, [name]);
 
   return (
     <View
@@ -66,5 +68,6 @@ export function Avatar({ uri, name, size = 40, color, style }: AvatarProps) {
       )}
     </View>
   );
-}
+});
+
 

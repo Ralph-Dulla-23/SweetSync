@@ -59,14 +59,15 @@ export const styles = StyleSheet.create({
     bottom: 0,
     left: 0,
     right: 0,
-    height: 200,
+    height: 340, // Increased to account for bottom insets
     backgroundColor: colors.white,
     borderTopLeftRadius: radius.xl,
     borderTopRightRadius: radius.xl,
     paddingHorizontal: spacing[5],
     paddingTop: 12,
-    boxShadow: `0px 4px 12px ${colors.black}14`,
-    zIndex: 10,
+    ...globalStyles.shadowMd,
+    boxShadow: `0px -4px 16px ${colors.black}1A`,
+    zIndex: 1000,
   },
   dragHandle: {
     width: 36,

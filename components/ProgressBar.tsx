@@ -12,12 +12,12 @@ interface ProgressBarProps {
   backgroundColor?: string;
 }
 
-export function ProgressBar({ 
+export const ProgressBar = React.memo(({ 
   progress, 
   height = 4, 
   color = colors.peachPunch,
   backgroundColor = 'rgba(0,0,0,0.07)'
-}: ProgressBarProps) {
+}: ProgressBarProps) => {
   const animatedProgress = useSharedValue(0);
 
   useEffect(() => {
@@ -39,4 +39,5 @@ export function ProgressBar({
       />
     </View>
   );
-}
+});
+

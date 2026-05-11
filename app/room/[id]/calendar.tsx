@@ -3,7 +3,6 @@ import {
   View, 
   Text, 
   ScrollView, 
-  SafeAreaView,
   TouchableOpacity,
   TextInput,
   Image,
@@ -11,6 +10,7 @@ import {
   Modal as RNModal,
   StyleSheet,
 } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { colors, spacing, radius, fonts } from "@/constants/theme";
 import { Header } from "@/components/Header";
@@ -37,6 +37,135 @@ import * as ImagePicker from 'expo-image-picker';
 import { styles } from "./_calendar.styles";
 import { format, parseISO } from "date-fns";
 
+import { useSafeAreaInsets } from "react-native-safe-area-context";
+
+// --- Interactive Bottom Sheet Sub-component ---
+function InteractiveBottomSheet({ selectedSlot, clearSelection, isNudgeSlot, id, router }: any) {
+  const insets = useSafeAreaInsets();
+  const translateY = useSharedValue(0);
+  const context = useSharedValue({ y: 0 });
+
+  const gesture = Gesture.Pan()
+    .minDistance(10)
+    .onStart(() => {
+      context.value = { y: translateY.value };
+    })
+    .onUpdate((event) => {
+      translateY.value = Math.max(0, event.translationY + context.value.y);
+    })
+    .onEnd((event) => {
+      if (translateY.value > 80 || event.velocityY > 500) {
+        translateY.value = withSpring(600, { damping: 25, stiffness: 150 });
+        runOnJS(clearSelection)();
+      } else {
+        translateY.value = withSpring(0, { damping: 20 });
+      }
+    });
+
+  React.useEffect(() => {
+    if (selectedSlot) {
+      translateY.value = withSpring(0, { damping: 20 });
+    }
+  }, [selectedSlot]);
+
+  const animatedStyle = useAnimatedStyle(() => ({
+    transform: [{ translateY: translateY.value }],
+    zIndex: 1000,
+  }));
+
+  const formattedDate = selectedSlot ? format(parseISO(selectedSlot.date), 'EEEE, MMM do') : '';
+  const formattedTime = selectedSlot ? slotIndexToTime(selectedSlot.slotIndex) : '';
+
+  return (
+    <GestureDetector gesture={gesture}>
+      <Animated.View 
+        layout={Layout.springify().damping(22).stiffness(100)}
+        style={[
+          styles.bottomSheetPeek, 
+          selectedSlot && styles.detailSheet,
+          animatedStyle,
+          { paddingBottom: insets.bottom + (selectedSlot ? 20 : 12) }
+        ]}
+      >
+        <View style={styles.dragHandle} />
+        
+        {selectedSlot ? (
+          <View style={{ flex: 1 }}>
+            <View style={styles.detailHeader}>
+              <View style={styles.detailTitleRow}>
+                <Text style={styles.detailTitle}>
+                  {formattedDate} at {formattedTime}
+                </Text>
+                <TouchableOpacity 
+                  onPress={clearSelection}
+                  hitSlop={{ top: 20, bottom: 20, left: 20, right: 20 }}
+                  style={{ padding: 4 }}
+                >
+                  <X size={20} color={colors.textSecondary} />
+                </TouchableOpacity>
+              </View>
+              <Text style={styles.detailSubtitle}>
+                {selectedSlot.freeCount} members are free ({selectedSlot.preferredCount} prefer this)
+              </Text>
+            </View>
+
+            {isNudgeSlot && (
+              <Animated.View entering={FadeIn.duration(300)}>
+                <View style={styles.nudgeBanner}>
+                  <Bell size={16} color={colors.peachPunch} weight="fill" />
+                  <Text style={styles.nudgeText}>
+                    {selectedSlot.busyMembers[0] === "Me" 
+                      ? "Everyone is free but you! Can you make it?" 
+                      : `Only ${selectedSlot.busyMembers[0]} is busy. Nudge them?`}
+                  </Text>
+                </View>
+              </Animated.View>
+            )}
+
+            <View style={styles.memberSection}>
+              <Text style={styles.sectionLabel}>FREE & PREFERRED</Text>
+              <View style={styles.memberList}>
+                {selectedSlot.members.map((member: string, i: number) => {
+                  const isPreferred = selectedSlot.preferredMembers.includes(member);
+                  return (
+                    <View key={i} style={[styles.memberChip, isPreferred && { backgroundColor: colors.indigoBase }]}>
+                      <Users size={14} color={isPreferred ? colors.indigoNeon : colors.indigoPunch} weight="fill" />
+                      <Text style={[styles.memberChipText, isPreferred && { color: colors.indigoPunch }]}>{member}</Text>
+                    </View>
+                  );
+                })}
+              </View>
+            </View>
+
+            <View style={[styles.memberSection, { marginTop: spacing[3] }]}>
+              <Text style={styles.sectionLabel}>BUSY</Text>
+              <View style={styles.memberList}>
+                {selectedSlot.busyMembers.map((member: string, i: number) => (
+                  <View key={i} style={[styles.memberChip, styles.busyChip]}>
+                    <Text style={styles.busyChipText}>{member}</Text>
+                  </View>
+                ))}
+              </View>
+            </View>
+
+            <Button 
+              title="Start Voting with Squad" 
+              onPress={() => router.push(`/room/${id}/vote-slots`)}
+              style={styles.voteButton}
+            />
+          </View>
+        ) : (
+          <View style={styles.peekContent}>
+            <Info size={16} color={colors.indigoPunch} weight="bold" />
+            <Text style={styles.peekText}>Saturday night looks perfect for everyone</Text>
+          </View>
+        )}
+      </Animated.View>
+    </GestureDetector>
+  );
+}
+
+// --- Main Screen ---
 export default function GroupCalendar() {
   const { id } = useLocalSearchParams();
   const router = useRouter();
@@ -399,131 +528,6 @@ export default function GroupCalendar() {
     </SafeAreaView>
   );
 }
-
-// --- Interactive Bottom Sheet Sub-component ---
-const InteractiveBottomSheet = ({ selectedSlot, clearSelection, isNudgeSlot, id, router }: any) => {
-  const translateY = useSharedValue(0);
-  const context = useSharedValue({ y: 0 });
-
-  const gesture = Gesture.Pan()
-    .onStart(() => {
-      context.value = { y: translateY.value };
-    })
-    .onUpdate((event) => {
-      // Only allow dragging down
-      translateY.value = Math.max(0, event.translationY + context.value.y);
-    })
-    .onEnd((event) => {
-      if (translateY.value > 100 || event.velocityY > 500) {
-        // Dismiss
-        translateY.value = withSpring(400, { damping: 20 });
-        runOnJS(clearSelection)();
-      } else {
-        // Snap back
-        translateY.value = withSpring(0, { damping: 20 });
-      }
-    });
-
-  // Reset position when a new slot is selected
-  React.useEffect(() => {
-    if (selectedSlot) {
-      translateY.value = 0;
-    }
-  }, [selectedSlot]);
-
-  const animatedStyle = useAnimatedStyle(() => ({
-    transform: [{ translateY: translateY.value }],
-  }));
-
-  if (selectedSlot) {
-    const formattedDate = format(parseISO(selectedSlot.date), 'EEEE, MMM do');
-    const formattedTime = slotIndexToTime(selectedSlot.slotIndex);
-
-    return (
-      <GestureDetector gesture={gesture}>
-        <Animated.View 
-          entering={SlideInDown.springify().damping(18).stiffness(120)}
-          layout={Layout.springify()}
-          style={[styles.bottomSheetPeek, styles.detailSheet, animatedStyle]}
-        >
-          <View style={styles.dragHandle} />
-          <View style={styles.detailHeader}>
-            <View style={styles.detailTitleRow}>
-              <Text style={styles.detailTitle}>
-                {formattedDate} at {formattedTime}
-              </Text>
-              <TouchableOpacity onPress={clearSelection}>
-                <X size={20} color={colors.textSecondary} />
-              </TouchableOpacity>
-            </View>
-            <Text style={styles.detailSubtitle}>
-              {selectedSlot.freeCount} members are free ({selectedSlot.preferredCount} prefer this)
-            </Text>
-          </View>
-
-          {isNudgeSlot && (
-            <Animated.View entering={FadeIn.duration(300)}>
-              <View style={styles.nudgeBanner}>
-                <Bell size={16} color={colors.peachPunch} weight="fill" />
-                <Text style={styles.nudgeText}>
-                  {selectedSlot.busyMembers[0] === "Me" 
-                    ? "Everyone is free but you! Can you make it?" 
-                    : `Only ${selectedSlot.busyMembers[0]} is busy. Nudge them?`}
-                </Text>
-              </View>
-            </Animated.View>
-          )}
-
-          <View style={styles.memberSection}>
-            <Text style={styles.sectionLabel}>FREE & PREFERRED</Text>
-            <View style={styles.memberList}>
-              {selectedSlot.members.map((member: string, i: number) => {
-                const isPreferred = selectedSlot.preferredMembers.includes(member);
-                return (
-                  <View key={i} style={[styles.memberChip, isPreferred && { backgroundColor: colors.indigoBase }]}>
-                    <Users size={14} color={isPreferred ? colors.indigoNeon : colors.indigoPunch} weight="fill" />
-                    <Text style={[styles.memberChipText, isPreferred && { color: colors.indigoPunch }]}>{member}</Text>
-                  </View>
-                );
-              })}
-            </View>
-          </View>
-
-          <View style={[styles.memberSection, { marginTop: spacing[3] }]}>
-            <Text style={styles.sectionLabel}>BUSY</Text>
-            <View style={styles.memberList}>
-              {selectedSlot.busyMembers.map((member: string, i: number) => (
-                <View key={i} style={[styles.memberChip, styles.busyChip]}>
-                  <Text style={styles.busyChipText}>{member}</Text>
-                </View>
-              ))}
-            </View>
-          </View>
-
-          <Button 
-            title="Start Voting with Squad" 
-            onPress={() => router.push(`/room/${id}/vote-slots`)}
-            style={styles.voteButton}
-          />
-        </Animated.View>
-      </GestureDetector>
-    );
-  }
-
-  return (
-    <Animated.View 
-      entering={SlideInDown.duration(400)}
-      layout={Layout.springify()}
-      style={styles.bottomSheetPeek}
-    >
-      <View style={styles.dragHandle} />
-      <View style={styles.peekContent}>
-        <Info size={16} color={colors.indigoPunch} weight="bold" />
-        <Text style={styles.peekText}>Saturday night looks perfect for everyone</Text>
-      </View>
-    </Animated.View>
-  );
-};
 
 const localStyles = StyleSheet.create({
   pickerRow: {

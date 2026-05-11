@@ -3,11 +3,11 @@ import {
   View, 
   Text, 
   StyleSheet, 
-  SafeAreaView, 
   TouchableOpacity, 
   ScrollView,
   Alert
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { colors, fonts, spacing, radius } from '@/constants/theme';
 import { Avatar } from '@/components/Avatar';
 import { 
@@ -37,9 +37,18 @@ const mockFiles: UploadedFile[] = [
   { id: '2', name: 'Work_Hours.pdf', date: 'May 8, 2026', type: 'pdf' },
 ];
 
+import { ProfileSkeleton } from '@/components/ProfileSkeleton';
+
 export default function ProfileScreen() {
+  const [loading, setLoading] = useState(true);
   const [files, setFiles] = useState<UploadedFile[]>(mockFiles);
   const [view, setView] = useState<'main' | 'files'>('main');
+
+  React.useEffect(() => {
+    // Simulate data fetch
+    const timer = setTimeout(() => setLoading(false), 1000);
+    return () => clearTimeout(timer);
+  }, []);
 
   const handleDeleteFile = (id: string) => {
     Alert.alert(
@@ -191,7 +200,7 @@ export default function ProfileScreen() {
   );
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={styles.container} edges={['top']}>
       <Header title="Profile" />
       
       <ScrollView contentContainerStyle={styles.content}>

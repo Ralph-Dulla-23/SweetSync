@@ -10,7 +10,7 @@ interface ActivityCardProps {
   onPress?: () => void;
 }
 
-export const ActivityCard: React.FC<ActivityCardProps> = ({ title, votes, onPress }) => {
+export const ActivityCard = React.memo(({ title, votes, onPress }: ActivityCardProps) => {
   return (
     <Card style={styles.container} onPress={onPress}>
       <Text style={styles.title}>{title}</Text>
@@ -19,5 +19,6 @@ export const ActivityCard: React.FC<ActivityCardProps> = ({ title, votes, onPres
       </View>
     </Card>
   );
-};
+});
+
 

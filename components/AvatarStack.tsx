@@ -12,7 +12,7 @@ interface AvatarStackProps {
   style?: ViewStyle;
 }
 
-export function AvatarStack({ avatars, size = 32, max = 4, overlap, style }: AvatarStackProps) {
+export const AvatarStack = React.memo(({ avatars, size = 32, max = 4, overlap, style }: AvatarStackProps) => {
   const visibleAvatars = avatars.slice(0, max);
   const remaining = avatars.length - max;
   const actualOverlap = overlap !== undefined ? overlap : size / 3;
@@ -53,5 +53,6 @@ export function AvatarStack({ avatars, size = 32, max = 4, overlap, style }: Ava
       )}
     </View>
   );
-}
+});
+
 

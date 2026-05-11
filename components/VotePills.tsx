@@ -41,8 +41,15 @@ const voteStyles: Record<VoteType, { background: string; border: string; text: s
   },
 };
 
-export const VotePill = React.memo(({ type, selected = false, onPress, count }: VotePillProps) => {
-  const { background, border, text, label } = voteStyles[type];
+const AnimatedVotePill = React.memo(({ 
+  background, 
+  border, 
+  text, 
+  label, 
+  selected, 
+  onPress, 
+  count 
+}: any) => {
   const scale = useSharedValue(1);
 
   React.useEffect(() => {
@@ -87,6 +94,45 @@ export const VotePill = React.memo(({ type, selected = false, onPress, count }: 
     </TouchableOpacity>
   );
 });
+
+export const VotePill = React.memo(({ type, selected = false, onPress, count }: VotePillProps) => {
+  const { background, border, text, label } = voteStyles[type];
+  
+  if (selected || !!onPress) {
+    return (
+      <AnimatedVotePill 
+        background={background}
+        border={border}
+        text={text}
+        label={label}
+        selected={selected}
+        onPress={onPress}
+        count={count}
+      />
+    );
+  }
+
+  return (
+    <View style={styles.pillWrapper}>
+      <View
+        style={[
+          styles.pill,
+          { 
+            backgroundColor: background, 
+            borderColor: border,
+            borderWidth: 1,
+            opacity: 0.6
+          }
+        ]}
+      >
+        <Text style={[styles.text, { color: text }]}>
+          {label} {count !== undefined && `(${count})`}
+        </Text>
+      </View>
+    </View>
+  );
+});
+
 
 export const VotePills = React.memo(({ 
   onVote, 

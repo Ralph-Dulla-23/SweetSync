@@ -11,7 +11,7 @@ interface SlotCardProps {
   onPress?: () => void;
 }
 
-export const SlotCard: React.FC<SlotCardProps> = ({ time, freeCount, totalCount, onPress }) => {
+export const SlotCard = React.memo(({ time, freeCount, totalCount, onPress }: SlotCardProps) => {
   const isPerfect = freeCount === totalCount;
 
   return (
@@ -26,5 +26,6 @@ export const SlotCard: React.FC<SlotCardProps> = ({ time, freeCount, totalCount,
       </Text>
     </Card>
   );
-};
+});
+
 
