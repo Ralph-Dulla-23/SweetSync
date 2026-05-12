@@ -25,8 +25,8 @@ export default function JoinRoomScreen() {
   const [error, setError] = useState<string | null>(null);
 
   const handleJoin = () => {
-    if (code.length < 4) {
-      setError("Please enter a valid 4-digit code");
+    if (code.length < 7) {
+      setError("Please enter a valid code (e.g. SS-1234)");
       return;
     }
     setError(null);
@@ -59,7 +59,7 @@ export default function JoinRoomScreen() {
               </View>
               <Text style={styles.heroTitle}>Enter Group Code</Text>
               <Text style={styles.heroSubtitle}>
-                Your squad leader should have shared a 4-digit code with you.
+                Your squad leader should have shared a code like "SS-1234" with you.
               </Text>
             </View>
           </Animated.View>
@@ -68,14 +68,18 @@ export default function JoinRoomScreen() {
             <View style={[styles.inputContainer, error && styles.inputError]}>
               <TextInput
                 style={styles.input}
-                placeholder="0000"
+                placeholder="SS-0000"
                 placeholderTextColor={colors.textTertiary}
                 value={code}
                 onChangeText={(text) => {
-                  setCode(text.toUpperCase());
+                  let formatted = text.toUpperCase();
+                  if (formatted.length === 2 && !formatted.includes('-') && code.length < text.length) {
+                    formatted = formatted + '-';
+                  }
+                  setCode(formatted);
                   setError(null);
                 }}
-                maxLength={4}
+                maxLength={7}
                 autoFocus
                 keyboardType="default"
                 autoCapitalize="characters"

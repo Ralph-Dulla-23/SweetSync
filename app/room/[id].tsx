@@ -9,7 +9,7 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useLocalSearchParams, useRouter } from "expo-router";
-import { CheckCircle, Bell, UsersThree } from "phosphor-react-native";
+import { CheckCircle, Bell, UsersThree, CaretRight } from "phosphor-react-native";
 import { colors, fonts, spacing, radius } from "@/constants/theme";
 import { Header } from "@/components/Header";
 import { ProgressBar } from "@/components/ProgressBar";
@@ -23,6 +23,47 @@ import Animated, {
 import { RoomInteriorSkeleton } from "@/components/RoomInteriorSkeleton";
 import { useRoom } from "@/hooks/useRoom";
 import { styles } from "./_[id].styles";
+
+const localStyles = StyleSheet.create({
+  heatmapButton: {
+    backgroundColor: colors.white,
+    marginHorizontal: spacing[4],
+    marginBottom: spacing[4],
+    borderRadius: radius.lg,
+    padding: spacing[3],
+    borderWidth: 1,
+    borderColor: colors.borderDefault,
+    shadowColor: colors.black,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 8,
+    elevation: 2,
+  },
+  heatmapButtonContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing[3],
+  },
+  heatmapIconContainer: {
+    width: 44,
+    height: 44,
+    borderRadius: radius.md,
+    backgroundColor: colors.indigoBase,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  heatmapButtonTitle: {
+    fontFamily: fonts.bodyBold,
+    fontSize: 15,
+    color: colors.textPrimary,
+  },
+  heatmapButtonSubtitle: {
+    fontFamily: fonts.body,
+    fontSize: 12,
+    color: colors.textTertiary,
+    marginTop: 2,
+  },
+});
 
 const MemberRow = React.memo(({ member, index, isLast, onNudge }: { member: any; index: number; isLast: boolean; onNudge: (id: string) => void }) => {
   return (
@@ -141,6 +182,22 @@ export default function RoomInterior() {
           <Text style={styles.sectionTitle}>The Squad</Text>
         </View>
 
+        <TouchableOpacity 
+          style={localStyles.heatmapButton}
+          onPress={() => router.push(`/room/${id}/calendar`)}
+        >
+          <View style={localStyles.heatmapButtonContent}>
+            <View style={localStyles.heatmapIconContainer}>
+              <UsersThree size={20} color={colors.indigoPunch} weight="duotone" />
+            </View>
+            <View style={{ flex: 1 }}>
+              <Text style={localStyles.heatmapButtonTitle}>View Group Heatmap</Text>
+              <Text style={localStyles.heatmapButtonSubtitle}>See everyone's availability & add your own</Text>
+            </View>
+            <CaretRight size={20} color={colors.textTertiary} />
+          </View>
+        </TouchableOpacity>
+
         <View style={styles.memberList}>
           {room.members.map((member, index) => (
             <MemberRow 
@@ -160,7 +217,7 @@ export default function RoomInterior() {
             title="Reveal the Magic" 
             variant={isReady ? "indigo" : "ghost"}
             disabled={!isReady}
-            onPress={() => router.push(`/room/${id}/calendar`)}
+            onPress={() => router.push(`/room/${id}/processing`)}
             style={styles.mainButton}
           />
           {!isReady && (

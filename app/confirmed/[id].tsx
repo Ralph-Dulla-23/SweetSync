@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { 
   View, 
   Text, 
@@ -20,10 +20,56 @@ import {
   CaretLeft, 
   DotsThreeVertical,
   CheckCircle,
-  QrCode
+  QrCode,
+  Sparkle
 } from 'phosphor-react-native';
-import Animated, { FadeInDown, FadeIn } from 'react-native-reanimated';
+import Animated, { 
+  FadeInDown, 
+  FadeIn, 
+  useSharedValue, 
+  useAnimatedStyle, 
+  withRepeat, 
+  withSequence, 
+  withTiming,
+  withDelay,
+  Easing
+} from 'react-native-reanimated';
 import { styles } from './_[id].styles';
+
+const CelebrationSparkle = ({ delay = 0, style }: { delay?: number, style?: any }) => {
+  const scale = useSharedValue(0);
+  const opacity = useSharedValue(0);
+
+  useEffect(() => {
+    scale.value = withDelay(delay, withRepeat(
+      withSequence(
+        withTiming(1, { duration: 1000, easing: Easing.out(Easing.back(2)) }),
+        withTiming(0, { duration: 1000 })
+      ),
+      -1,
+      false
+    ));
+    opacity.value = withDelay(delay, withRepeat(
+      withSequence(
+        withTiming(1, { duration: 1000 }),
+        withTiming(0, { duration: 1000 })
+      ),
+      -1,
+      false
+    ));
+  }, []);
+
+  const animatedStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: scale.value }],
+    opacity: opacity.value,
+  }));
+
+  return (
+    <Animated.View style={[animatedStyle, style, { position: 'absolute' }]}>
+      <Sparkle size={24} color={colors.peachSoft} weight="fill" />
+    </Animated.View>
+  );
+};
 
 export default function ConfirmedEventScreen() {
   const { id } = useLocalSearchParams();
@@ -53,11 +99,20 @@ export default function ConfirmedEventScreen() {
         }
       />
 
+      <View style={{ position: 'absolute', top: 100, left: 0, right: 0, bottom: 0, pointerEvents: 'none' }}>
+        <CelebrationSparkle style={{ top: '10%', left: '10%' }} delay={0} />
+        <CelebrationSparkle style={{ top: '5%', right: '15%' }} delay={400} />
+        <CelebrationSparkle style={{ top: '40%', left: '5%' }} delay={800} />
+        <CelebrationSparkle style={{ top: '35%', right: '10%' }} delay={1200} />
+        <CelebrationSparkle style={{ bottom: '20%', left: '15%' }} delay={1600} />
+        <CelebrationSparkle style={{ bottom: '25%', right: '20%' }} delay={2000} />
+      </View>
+
       <ScrollView 
         contentContainerStyle={styles.content}
         showsVerticalScrollIndicator={false}
       >
-        <Animated.View entering={FadeInDown.duration(600)}>
+        <Animated.View entering={FadeInDown.duration(600).springify().damping(15)}>
           <View style={styles.ticketCard}>
             <View style={styles.ticketHeader}>
               <View style={styles.roomBadge}>
@@ -118,9 +173,15 @@ export default function ConfirmedEventScreen() {
           </View>
         </Animated.View>
 
-        <Animated.View entering={FadeIn.delay(600)} style={styles.actions}>
+        <Animated.View entering={FadeIn.delay(800)} style={styles.actions}>
           <Button 
-            title="Edit Details" 
+            title="Add to Calendar" 
+            variant="primary"
+            onPress={() => {}}
+            style={styles.actionButton}
+          />
+          <Button 
+            title="Share with Group" 
             variant="secondary"
             onPress={() => {}}
             style={styles.actionButton}
@@ -133,4 +194,5 @@ export default function ConfirmedEventScreen() {
     </SafeAreaView>
   );
 }
+
 

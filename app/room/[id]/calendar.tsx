@@ -23,7 +23,9 @@ import Animated, {
   useSharedValue,
   useAnimatedStyle,
   withSpring,
-  runOnJS
+  runOnJS,
+  withTiming,
+  Easing
 } from "react-native-reanimated";
 import { GestureDetector, Gesture } from "react-native-gesture-handler";
 
@@ -42,124 +44,119 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 // --- Interactive Bottom Sheet Sub-component ---
 function InteractiveBottomSheet({ selectedSlot, clearSelection, isNudgeSlot, id, router }: any) {
   const insets = useSafeAreaInsets();
-  const translateY = useSharedValue(0);
-  const context = useSharedValue({ y: 0 });
+  
+  // Sheet is roughly 160-200px tall in compact mode. 
+  // We'll hide it 400px down to be safe.
+  const OPEN_Y = 0;
+  const HIDDEN_Y = 400; 
 
-  const gesture = Gesture.Pan()
-    .minDistance(10)
-    .onStart(() => {
-      context.value = { y: translateY.value };
-    })
-    .onUpdate((event) => {
-      translateY.value = Math.max(0, event.translationY + context.value.y);
-    })
-    .onEnd((event) => {
-      if (translateY.value > 80 || event.velocityY > 500) {
-        translateY.value = withSpring(600, { damping: 25, stiffness: 150 });
+  const translateY = useSharedValue(HIDDEN_Y);
+
+  // Internal state to hold data during transition
+  const [internalSlot, setInternalSlot] = React.useState<any>(null);
+
+  const SPRING_CONFIG = { 
+    damping: 25, 
+    stiffness: 180,
+    mass: 1,
+    overshootClamping: true // Absolute no bounce to prevent "jumping" feel
+  };
+
+  const handleDismiss = React.useCallback(() => {
+    translateY.value = withSpring(HIDDEN_Y, SPRING_CONFIG, (finished) => {
+      if (finished) {
+        runOnJS(setInternalSlot)(null);
         runOnJS(clearSelection)();
-      } else {
-        translateY.value = withSpring(0, { damping: 20 });
       }
     });
+  }, [clearSelection]);
 
   React.useEffect(() => {
     if (selectedSlot) {
-      translateY.value = withSpring(0, { damping: 20 });
+      setInternalSlot(selectedSlot);
+      translateY.value = withSpring(OPEN_Y, SPRING_CONFIG);
+    } else if (internalSlot) {
+      // Trigger dismissal animation if external state is cleared
+      handleDismiss();
     }
   }, [selectedSlot]);
 
   const animatedStyle = useAnimatedStyle(() => ({
     transform: [{ translateY: translateY.value }],
     zIndex: 1000,
+    // Hide completely when far enough down to avoid overlapping tabs or touch issues
+    opacity: translateY.value > 380 ? 0 : 1,
   }));
 
-  const formattedDate = selectedSlot ? format(parseISO(selectedSlot.date), 'EEEE, MMM do') : '';
-  const formattedTime = selectedSlot ? slotIndexToTime(selectedSlot.slotIndex) : '';
+  const displaySlot = selectedSlot || internalSlot;
+  if (!displaySlot) return null;
+
+  const formattedDate = format(parseISO(displaySlot.date), 'EEEE, MMM do');
+  const formattedTime = slotIndexToTime(displaySlot.slotIndex);
 
   return (
-    <GestureDetector gesture={gesture}>
+    <GestureDetector 
+      gesture={Gesture.Pan()
+        .onUpdate((e) => {
+          translateY.value = Math.max(OPEN_Y, e.translationY);
+        })
+        .onEnd((e) => {
+          if (e.translationY > 80 || e.velocityY > 500) {
+            runOnJS(handleDismiss)();
+          } else {
+            translateY.value = withSpring(OPEN_Y, SPRING_CONFIG);
+          }
+        })
+      }
+    >
       <Animated.View 
-        layout={Layout.springify().damping(22).stiffness(100)}
         style={[
-          styles.bottomSheetPeek, 
-          selectedSlot && styles.detailSheet,
+          styles.compactSheet, 
           animatedStyle,
-          { paddingBottom: insets.bottom + (selectedSlot ? 20 : 12) }
+          { 
+            paddingBottom: Math.max(insets.bottom, spacing[2]),
+            paddingTop: spacing[3] // Tighter top padding
+          }
         ]}
       >
-        <View style={styles.dragHandle} />
-        
-        {selectedSlot ? (
-          <View style={{ flex: 1 }}>
-            <View style={styles.detailHeader}>
-              <View style={styles.detailTitleRow}>
-                <Text style={styles.detailTitle}>
-                  {formattedDate} at {formattedTime}
-                </Text>
-                <TouchableOpacity 
-                  onPress={clearSelection}
-                  hitSlop={{ top: 20, bottom: 20, left: 20, right: 20 }}
-                  style={{ padding: 4 }}
-                >
-                  <X size={20} color={colors.textSecondary} />
-                </TouchableOpacity>
-              </View>
-              <Text style={styles.detailSubtitle}>
-                {selectedSlot.freeCount} members are free ({selectedSlot.preferredCount} prefer this)
+        <View style={styles.compactSheetInner}>
+          <View style={styles.compactHeader}>
+            <View style={{ flex: 1 }}>
+              <Text style={styles.compactTitle}>
+                {formattedDate} at {formattedTime}
+              </Text>
+              <Text style={styles.compactSubtitle}>
+                {displaySlot.freeCount} available ({displaySlot.preferredCount} prefer this)
               </Text>
             </View>
+            <TouchableOpacity 
+              onPress={handleDismiss}
+              hitSlop={{ top: 20, bottom: 20, left: 20, right: 20 }}
+              style={{ padding: 4 }}
+            >
+              <X size={18} color={colors.textSecondary} weight="bold" />
+            </TouchableOpacity>
+          </View>
 
-            {isNudgeSlot && (
-              <Animated.View entering={FadeIn.duration(300)}>
-                <View style={styles.nudgeBanner}>
-                  <Bell size={16} color={colors.peachPunch} weight="fill" />
-                  <Text style={styles.nudgeText}>
-                    {selectedSlot.busyMembers[0] === "Me" 
-                      ? "Everyone is free but you! Can you make it?" 
-                      : `Only ${selectedSlot.busyMembers[0]} is busy. Nudge them?`}
-                  </Text>
+          <View style={styles.compactChips}>
+            {displaySlot.members.map((member: string, i: number) => {
+              const isPreferred = displaySlot.preferredMembers.includes(member);
+              return (
+                <View key={i} style={[styles.memberChip, isPreferred && { backgroundColor: colors.indigoBase }]}>
+                  <Users size={14} color={isPreferred ? colors.indigoNeon : colors.indigoPunch} weight="fill" />
+                  <Text style={[styles.memberChipText, isPreferred && { color: colors.indigoPunch }]}>{member}</Text>
                 </View>
-              </Animated.View>
-            )}
-
-            <View style={styles.memberSection}>
-              <Text style={styles.sectionLabel}>FREE & PREFERRED</Text>
-              <View style={styles.memberList}>
-                {selectedSlot.members.map((member: string, i: number) => {
-                  const isPreferred = selectedSlot.preferredMembers.includes(member);
-                  return (
-                    <View key={i} style={[styles.memberChip, isPreferred && { backgroundColor: colors.indigoBase }]}>
-                      <Users size={14} color={isPreferred ? colors.indigoNeon : colors.indigoPunch} weight="fill" />
-                      <Text style={[styles.memberChipText, isPreferred && { color: colors.indigoPunch }]}>{member}</Text>
-                    </View>
-                  );
-                })}
-              </View>
-            </View>
-
-            <View style={[styles.memberSection, { marginTop: spacing[3] }]}>
-              <Text style={styles.sectionLabel}>BUSY</Text>
-              <View style={styles.memberList}>
-                {selectedSlot.busyMembers.map((member: string, i: number) => (
-                  <View key={i} style={[styles.memberChip, styles.busyChip]}>
-                    <Text style={styles.busyChipText}>{member}</Text>
-                  </View>
-                ))}
-              </View>
-            </View>
-
-            <Button 
-              title="Start Voting with Squad" 
-              onPress={() => router.push(`/room/${id}/vote-slots`)}
-              style={styles.voteButton}
-            />
+              );
+            })}
           </View>
-        ) : (
-          <View style={styles.peekContent}>
-            <Info size={16} color={colors.indigoPunch} weight="bold" />
-            <Text style={styles.peekText}>Saturday night looks perfect for everyone</Text>
-          </View>
-        )}
+          
+          <Button 
+            title="Start Voting" 
+            variant="indigo"
+            onPress={() => router.push(`/room/${id}/vote-slots`)}
+            style={{ marginTop: spacing[2], height: 48 }}
+          />
+        </View>
       </Animated.View>
     </GestureDetector>
   );

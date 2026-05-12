@@ -4,6 +4,7 @@ import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context'
 import { colors, fonts, spacing, radius } from '@/constants/theme';
 import { Header } from '@/components/Header';
 import { HeatMap } from '@/components/HeatMap';
+import { EmptyState } from '@/components/EmptyState';
 import { useHeatMap } from '@/hooks/useHeatMap';
 import { useGlobalAvailability } from '@/hooks/useGlobalAvailability';
 import { Info, Sparkle, X, Users, CalendarBlank } from 'phosphor-react-native';
@@ -22,91 +23,123 @@ import Animated, {
   useSharedValue,
   useAnimatedStyle,
   withSpring,
-  runOnJS
+  runOnJS,
+  SlideOutDown
 } from 'react-native-reanimated';
 
-// --- Sub-components ---
-
+// --- Interactive Bottom Sheet Sub-component ---
 function InteractiveBottomSheet({ selectedSlot, clearSelection }: any) {
   const insets = useSafeAreaInsets();
-  const translateY = useSharedValue(0);
-  const context = useSharedValue({ y: 0 });
+  const SHEET_HEIGHT = 220; // Reduced height for more compact feel
+  
+  const OPEN_Y = 0;
+  const HIDDEN_Y = SHEET_HEIGHT + 50;
 
-  const gesture = Gesture.Pan()
-    .minDistance(10)
-    .onStart(() => {
-      context.value = { y: translateY.value };
-    })
-    .onUpdate((event) => {
-      translateY.value = Math.max(0, event.translationY + context.value.y);
-    })
-    .onEnd((event) => {
-      if (translateY.value > 80 || event.velocityY > 500) {
-        translateY.value = withSpring(600, { damping: 25, stiffness: 150 });
+  const translateY = useSharedValue(HIDDEN_Y);
+
+  // Internal state to hold data during transition
+  const [internalSlot, setInternalSlot] = React.useState<any>(null);
+
+  const SPRING_CONFIG = { 
+    damping: 25, 
+    stiffness: 200, // Slightly snappier
+    mass: 1,
+    overshootClamping: true
+  };
+
+  const handleDismiss = React.useCallback(() => {
+    translateY.value = withSpring(HIDDEN_Y, SPRING_CONFIG, (finished) => {
+      if (finished) {
+        runOnJS(setInternalSlot)(null);
         runOnJS(clearSelection)();
-      } else {
-        translateY.value = withSpring(0, { damping: 20 });
       }
     });
+  }, [clearSelection]);
 
   React.useEffect(() => {
     if (selectedSlot) {
-      translateY.value = withSpring(0, { damping: 20 });
+      setInternalSlot(selectedSlot);
+      translateY.value = withSpring(OPEN_Y, SPRING_CONFIG);
+    } else if (internalSlot) {
+      handleDismiss();
     }
   }, [selectedSlot]);
 
   const animatedStyle = useAnimatedStyle(() => ({
     transform: [{ translateY: translateY.value }],
     zIndex: 1000,
+    opacity: translateY.value > SHEET_HEIGHT ? 0 : 1,
   }));
 
-  const formattedDate = selectedSlot ? format(parseISO(selectedSlot.date), 'EEEE, MMM do') : '';
-  const formattedTime = selectedSlot ? slotIndexToTime(selectedSlot.slotIndex) : '';
+  const displaySlot = selectedSlot || internalSlot;
+  if (!displaySlot) return null;
+
+  const formattedDate = format(parseISO(displaySlot.date), 'EEEE, MMM do');
+  const formattedTime = slotIndexToTime(displaySlot.slotIndex);
 
   return (
-    <GestureDetector gesture={gesture}>
+    <GestureDetector 
+      gesture={Gesture.Pan()
+        .onUpdate((e) => {
+          translateY.value = Math.max(OPEN_Y, e.translationY);
+        })
+        .onEnd((e) => {
+          if (e.translationY > 80 || e.velocityY > 500) {
+            runOnJS(handleDismiss)();
+          } else {
+            translateY.value = withSpring(OPEN_Y, SPRING_CONFIG);
+          }
+        })
+      }
+    >
       <Animated.View 
-        layout={Layout.springify().damping(22).stiffness(100)}
         style={[
           styles.detailSheet, 
-          !selectedSlot && { height: 0, opacity: 0 },
+          { 
+            height: SHEET_HEIGHT,
+            position: 'absolute',
+            bottom: 0,
+            left: 0,
+            right: 0,
+            // Removed insets.bottom because it sits on the tab bar
+            paddingBottom: spacing[3]
+          },
           animatedStyle,
-          { paddingBottom: insets.bottom + 20 }
         ]}
       >
         <View style={styles.dragHandle} />
-        {selectedSlot && (
-          <View style={{ flex: 1 }}>
-            <View style={styles.detailHeader}>
-              <View style={styles.detailTitleRow}>
-                <Text style={styles.detailTitle}>
-                  {formattedDate} at {formattedTime}
-                </Text>
-                <TouchableOpacity 
-                  onPress={clearSelection}
-                  hitSlop={{ top: 20, bottom: 20, left: 20, right: 20 }}
-                  style={{ padding: 4 }}
-                >
-                  <X size={20} color={colors.textSecondary} />
-                </TouchableOpacity>
-              </View>
-              <Text style={styles.detailSubtitle}>
-                {selectedSlot.freeCount} members are available ({selectedSlot.preferredCount} prefer this)
+        
+        <View style={{ flex: 1 }}>
+          <View style={styles.detailHeader}>
+            <View style={styles.detailTitleRow}>
+              <Text style={styles.detailTitle}>
+                {formattedDate} at {formattedTime}
               </Text>
+              <TouchableOpacity 
+                onPress={handleDismiss}
+                hitSlop={{ top: 20, bottom: 20, left: 20, right: 20 }}
+                style={{ padding: 4 }}
+              >
+                <X size={20} color={colors.textSecondary} weight="bold" />
+              </TouchableOpacity>
             </View>
-            <View style={styles.memberList}>
-              {selectedSlot.members.map((member: string, i: number) => {
-                const isPreferred = selectedSlot.preferredMembers.includes(member);
-                return (
-                  <View key={i} style={[styles.memberChip, isPreferred && { backgroundColor: colors.indigoBase }]}>
-                    <Users size={14} color={isPreferred ? colors.indigoNeon : colors.indigoPunch} weight="fill" />
-                    <Text style={[styles.memberChipText, i === 0 && { color: colors.indigoPunch }]}>{member}</Text>
-                  </View>
-                );
-              })}
-            </View>
+            <Text style={styles.detailSubtitle}>
+              {displaySlot.freeCount} members are available ({displaySlot.preferredCount} prefer this)
+            </Text>
           </View>
-        )}
+          
+          <View style={styles.memberList}>
+            {displaySlot.members.map((member: string, i: number) => {
+              const isPreferred = displaySlot.preferredMembers.includes(member);
+              return (
+                <View key={i} style={[styles.memberChip, isPreferred && { backgroundColor: colors.indigoBase }]}>
+                  <Users size={14} color={isPreferred ? colors.indigoNeon : colors.indigoPunch} weight="fill" />
+                  <Text style={[styles.memberChipText, i === 0 && { color: colors.indigoPunch }]}>{member}</Text>
+                </View>
+              );
+            })}
+          </View>
+        </View>
       </Animated.View>
     </GestureDetector>
   );
@@ -132,10 +165,11 @@ export default function CalendarScreen() {
           title="Calendar" 
           rightElement={<Text style={styles.month}>May 2026</Text>}
         />
-        <View style={localStyles.emptyContainer}>
-          <CalendarBlank size={48} color={colors.textTertiary} weight="thin" />
-          <Text style={localStyles.emptyText}>No events yet — create a room to get started.</Text>
-        </View>
+        <EmptyState 
+          icon={<CalendarBlank size={48} color={colors.textTertiary} weight="thin" />}
+          title="No events yet"
+          description="Create a room or join one to start syncing your squad's schedule."
+        />
       </SafeAreaView>
     );
   }

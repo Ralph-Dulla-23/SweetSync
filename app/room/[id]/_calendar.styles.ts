@@ -98,81 +98,43 @@ export const styles = StyleSheet.create({
     fontSize: 12,
     color: colors.peachPunch,
   },
-  bottomSheetPeek: {
+  compactSheet: {
     position: "absolute",
     bottom: 0,
     left: 0,
     right: 0,
-    height: 90,
     backgroundColor: colors.white,
-    borderTopLeftRadius: radius.xl,
-    borderTopRightRadius: radius.xl,
-    alignItems: "center",
-    paddingTop: 12,
-    ...globalStyles.shadowMd,
-    boxShadow: `0px -4px 16px ${colors.black}1A`,
+    borderTopWidth: 1,
+    borderTopColor: colors.borderDefault,
     zIndex: 100,
-    borderWidth: 1,
-    borderColor: colors.borderDefault,
   },
-  detailSheet: {
-    height: 360, // Increased to account for bottom insets
-    alignItems: 'stretch',
+  compactSheetInner: {
     paddingHorizontal: spacing[5],
-  },
-  dragHandle: {
-    width: 36,
-    height: 4,
-    borderRadius: 2,
-    backgroundColor: colors.borderDefault,
-    marginBottom: 16,
-    alignSelf: 'center',
-  },
-  peekContent: {
-    ...globalStyles.row,
+    paddingTop: spacing[3],
+    paddingBottom: spacing[1],
     gap: spacing[2],
   },
-  peekText: {
-    fontFamily: fonts.bodySemibold,
-    fontSize: 14,
-    color: colors.textPrimary,
+  compactHeader: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: spacing[3],
   },
-  detailHeader: {
-    marginBottom: spacing[3],
-  },
-  detailTitleRow: {
-    ...globalStyles.rowBetween,
-    marginBottom: 4,
-  },
-  detailTitle: {
+  compactTitle: {
     fontFamily: fonts.display,
-    fontSize: 20,
+    fontSize: 17,
     color: colors.textPrimary,
+    lineHeight: 22,
   },
-  detailSubtitle: {
+  compactSubtitle: {
     fontFamily: fonts.body,
-    fontSize: 14,
-    color: colors.textSecondary,
-  },
-  nudgeBanner: {
-    ...globalStyles.row,
-    backgroundColor: colors.peachBase,
-    padding: 10,
-    borderRadius: radius.md,
-    gap: 8,
-    marginBottom: spacing[4],
-    borderWidth: 0.5,
-    borderColor: colors.peachSoft,
-  },
-  nudgeText: {
-    fontFamily: fonts.bodySemibold,
     fontSize: 13,
-    color: colors.peachPunch,
-    flex: 1,
+    color: colors.textSecondary,
+    marginTop: 2,
   },
-  voteButton: {
-    marginTop: spacing[6],
-    height: 56,
+  compactChips: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: spacing[2],
   },
   memberSection: {
     gap: spacing[2],
