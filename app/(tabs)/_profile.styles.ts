@@ -4,17 +4,20 @@ import { globalStyles } from '@/styles/global';
 
 export const styles = StyleSheet.create({
   container: globalStyles.screen,
-  content: globalStyles.scrollContent,
+  content: {
+    ...globalStyles.scrollContent,
+    paddingTop: spacing[6],
+  },
   sectionContainer: {
-    gap: spacing[6],
+    gap: spacing[8],
   },
   userCard: {
     ...globalStyles.row,
     backgroundColor: colors.white,
     padding: spacing[5],
     borderRadius: radius.xl,
-    borderWidth: 0.5,
-    borderColor: 'rgba(0,0,0,0.07)',
+    borderWidth: 2,
+    borderColor: colors.peachSoft,
     gap: spacing[4],
   },
   userInfo: {
@@ -23,7 +26,7 @@ export const styles = StyleSheet.create({
   },
   userName: {
     fontFamily: fonts.display,
-    fontSize: 22,
+    fontSize: 24,
     color: colors.textPrimary,
   },
   userEmail: {
@@ -33,63 +36,45 @@ export const styles = StyleSheet.create({
   },
   editProfileBtn: {
     backgroundColor: colors.peachBase,
-    paddingHorizontal: 12,
-    paddingVertical: 6,
+    paddingHorizontal: 16,
+    paddingVertical: 8,
     borderRadius: radius.full,
+    borderWidth: 1,
+    borderColor: colors.peachSoft,
   },
   editProfileText: {
     fontFamily: fonts.bodySemibold,
     fontSize: 12,
     color: colors.peachPunch,
   },
-  statsRow: {
-    flexDirection: 'row',
-    backgroundColor: colors.white,
-    borderRadius: radius.lg,
-    borderWidth: 0.5,
-    borderColor: 'rgba(0,0,0,0.05)',
-    paddingVertical: spacing[4],
-  },
-  statBox: {
-    flex: 1,
-    alignItems: 'center',
-    gap: 2,
-  },
-  statDivider: {
-    borderLeftWidth: 1,
-    borderRightWidth: 1,
-    borderColor: 'rgba(0,0,0,0.05)',
-  },
-  statValue: {
-    fontFamily: fonts.display,
-    fontSize: 20,
-    color: colors.textPrimary,
-  },
-  statLabel: {
-    fontFamily: fonts.body,
-    fontSize: 12,
-    color: colors.textTertiary,
-  },
   section: {
-    gap: spacing[1],
+    gap: spacing[3],
   },
   sectionLabel: {
     fontFamily: fonts.bodySemibold,
-    fontSize: 11,
+    fontSize: 12,
     color: colors.textTertiary,
     letterSpacing: 1.5,
-    marginBottom: spacing[2],
     marginLeft: 4,
+    textTransform: 'uppercase',
+  },
+  sectionCard: {
+    backgroundColor: colors.white,
+    borderRadius: radius.lg,
+    borderWidth: 2,
+    borderColor: colors.borderDefault,
+    overflow: 'hidden',
   },
   row: {
     ...globalStyles.rowBetween,
     paddingVertical: spacing[4],
     paddingHorizontal: spacing[4],
     backgroundColor: colors.white,
-    borderRadius: radius.md,
-    marginBottom: spacing[1],
-    borderWidth: 0.5,
-    borderColor: 'rgba(0,0,0,0.03)',
+  },
+  rowDivider: {
+    height: 1,
+    backgroundColor: colors.borderDefault,
+    marginHorizontal: spacing[4],
   },
   rowLeft: {
     ...globalStyles.row,
@@ -109,53 +94,51 @@ export const styles = StyleSheet.create({
     fontSize: 14,
     color: colors.textSecondary,
   },
-  toggle: {
-    width: 36,
-    height: 20,
-    borderRadius: 10,
-    backgroundColor: colors.textTertiary,
-  },
-  toggleOn: {
-    backgroundColor: colors.peachPunch,
+  signOutRow: {
+    borderTopWidth: 0,
+    marginTop: spacing[4],
+    backgroundColor: 'transparent',
   },
   backButton: {
     ...globalStyles.row,
     gap: 4,
+    marginBottom: spacing[4],
   },
   backButtonText: {
     fontFamily: fonts.bodySemibold,
-    fontSize: 14,
+    fontSize: 15,
     color: colors.peachPunch,
   },
   filesHeader: {
     gap: 4,
+    marginBottom: spacing[4],
   },
   filesTitle: {
     fontFamily: fonts.display,
-    fontSize: 26,
+    fontSize: 28,
     color: colors.textPrimary,
   },
   filesSubtitle: {
     fontFamily: fonts.body,
     fontSize: 15,
     color: colors.textSecondary,
-    lineHeight: 20,
+    lineHeight: 22,
   },
   fileList: {
-    gap: spacing[3],
+    gap: spacing[4],
   },
   fileCard: {
     ...globalStyles.row,
     backgroundColor: colors.white,
     padding: spacing[4],
     borderRadius: radius.lg,
-    borderWidth: 0.5,
+    borderWidth: 2,
     borderColor: colors.borderDefault,
     gap: spacing[4],
   },
   fileIcon: {
-    width: 44,
-    height: 44,
+    width: 48,
+    height: 48,
     borderRadius: radius.md,
     backgroundColor: colors.indigoBase,
     ...globalStyles.center,
@@ -178,7 +161,34 @@ export const styles = StyleSheet.create({
     padding: spacing[2],
   },
   uploadBtn: {
-    height: 56,
-    marginTop: spacing[4],
+    height: 60,
+    marginTop: spacing[6],
   },
+  clearAllBtn: {
+    alignSelf: 'center',
+    marginTop: spacing[4],
+    padding: spacing[2],
+  },
+  clearAllText: {
+    fontFamily: fonts.bodySemibold,
+    color: colors.textTertiary,
+    fontSize: 13,
+    textDecorationLine: 'underline',
+  },
+  emptyFileCard: {
+    padding: spacing[8],
+    ...globalStyles.center,
+    gap: spacing[4],
+    backgroundColor: colors.white,
+    borderRadius: radius.lg,
+    borderWidth: 2,
+    borderColor: colors.borderDefault,
+    borderStyle: 'dashed',
+  },
+  emptyFileText: {
+    fontFamily: fonts.bodySemibold,
+    color: colors.textSecondary,
+    textAlign: 'center',
+    lineHeight: 20,
+  }
 });

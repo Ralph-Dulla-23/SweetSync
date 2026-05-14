@@ -1,4 +1,4 @@
-import { StyleSheet } from 'react-native';
+import { StyleSheet, Platform } from 'react-native';
 import { colors, fonts, spacing, radius } from '@/constants/theme';
 import { globalStyles } from '@/styles/global';
 
@@ -6,30 +6,39 @@ export const styles = StyleSheet.create({
   container: globalStyles.screen,
   content: {
     ...globalStyles.scrollContent,
-    paddingBottom: 100,
+    paddingBottom: 140,
+    paddingTop: spacing[4],
   },
   hero: {
+    flexDirection: 'row',
     alignItems: 'center',
     marginBottom: spacing[8],
-    gap: spacing[3],
+    gap: spacing[4],
+    paddingHorizontal: 4,
   },
   iconCircle: {
-    ...globalStyles.iconCircle,
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    ...globalStyles.center,
     backgroundColor: colors.indigoBase,
+    borderWidth: 1,
     borderColor: colors.indigoSoft,
+  },
+  heroTextContainer: {
+    flex: 1,
+    gap: 2,
   },
   heroTitle: {
     fontFamily: fonts.display,
-    fontSize: 24,
+    fontSize: 26,
     color: colors.textPrimary,
-    textAlign: 'center',
   },
   heroSubtitle: {
     fontFamily: fonts.body,
-    fontSize: 15,
+    fontSize: 14,
     color: colors.textSecondary,
-    textAlign: 'center',
-    paddingHorizontal: spacing[4],
+    lineHeight: 20,
   },
   slotList: {
     gap: spacing[4],
@@ -37,24 +46,24 @@ export const styles = StyleSheet.create({
   slotContainer: {
     backgroundColor: colors.white,
     borderRadius: radius.lg,
-    borderWidth: 0.5,
-    borderColor: colors.borderDefault,
+    borderWidth: 2,
+    borderColor: colors.indigoSoft,
     overflow: 'hidden',
   },
   voteArea: {
     padding: spacing[4],
-    backgroundColor: 'rgba(0,0,0,0.02)',
-    borderTopWidth: 0.5,
-    borderTopColor: colors.borderDefault,
+    backgroundColor: colors.indigoBase + '40', // Very transparent indigo
+    borderTopWidth: 1,
+    borderTopColor: colors.indigoSoft,
   },
   infoBox: {
     ...globalStyles.row,
     backgroundColor: colors.peachBase,
-    padding: spacing[4],
-    borderRadius: radius.md,
-    marginTop: spacing[8],
-    gap: spacing[3],
-    borderWidth: 0.5,
+    padding: spacing[5],
+    borderRadius: radius.xl,
+    marginTop: spacing[10],
+    gap: spacing[4],
+    borderWidth: 1,
     borderColor: colors.peachSoft,
   },
   infoText: {
@@ -73,5 +82,6 @@ export const styles = StyleSheet.create({
     backgroundColor: colors.white,
     borderTopWidth: 1,
     borderTopColor: colors.borderDefault,
+    paddingBottom: Platform.OS === 'ios' ? spacing[10] : spacing[5],
   },
 });

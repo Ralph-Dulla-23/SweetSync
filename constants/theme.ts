@@ -21,6 +21,7 @@ export const lightColors = {
   textPrimary: '#1A1A1A',
   textSecondary: '#6B6B6B',
   textTertiary: '#808080',
+  buttonDisabled: '#EBE9E8', // Warmer neutral for disabled states
   borderDefault: 'rgba(0,0,0,0.08)',
 
   white: '#FFFFFF',
@@ -36,6 +37,10 @@ export const lightColors = {
   voteCantBg: '#FCEBEB',
   voteCantBorder: '#F09595',
   voteCantText: '#791F1F',
+
+  // System Colors
+  conflictBg: '#FFF1F1',
+  conflictBorder: '#F5C4B3',
 } as const;
 
 export const darkColors = {
@@ -76,6 +81,10 @@ export const darkColors = {
   voteCantBg: '#3D1515',
   voteCantBorder: '#791F1F',
   voteCantText: '#F09595',
+
+  // System Colors
+  conflictBg: '#3D1515',
+  conflictBorder: '#712B13',
 } as const;
 
 // Default to light for now, but export both for future implementation

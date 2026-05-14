@@ -12,17 +12,17 @@ import { styles } from './Card.styles';
 
 export type CardVariant = 'peach' | 'indigo' | 'mint' | 'neutral';
 
-const cardStyles: Record<CardVariant, { background: string; borderColor: string }> = {
-  peach:   { background: colors.peachBase,  borderColor: colors.peachSoft  },
-  indigo:  { background: colors.indigoPunch, borderColor: colors.indigoDeep },
-  mint:    { background: colors.mintBase,   borderColor: colors.mintSoft   },
-  neutral: { background: colors.pageBg,         borderColor: colors.borderDefault },
+const cardStyles: Record<CardVariant, { background: string; borderColor: string; borderWidth: number }> = {
+  peach:   { background: colors.peachBase,  borderColor: colors.peachSoft,    borderWidth: 2 },
+  indigo:  { background: colors.indigoPunch, borderColor: colors.indigoDeep,    borderWidth: 2 },
+  mint:    { background: colors.mintBase,   borderColor: colors.mintSoft,      borderWidth: 2 },
+  neutral: { background: colors.white,      borderColor: colors.borderDefault, borderWidth: 2 },
 };
 
 interface CardProps {
   variant?: CardVariant;
   children: React.ReactNode;
-  style?: ViewStyle;
+  style?: ViewStyle | ViewStyle[];
   onPress?: () => void;
   sharedTransitionTag?: string;
   sharedTransitionStyle?: any;
@@ -36,42 +36,40 @@ const AnimatedCard = React.memo(({
   sharedTransitionTag,
   sharedTransitionStyle 
 }: CardProps) => {
-  const { background, borderColor } = cardStyles[variant!];
+  const { background, borderColor, borderWidth } = cardStyles[variant!];
   
-  const scaleX = useSharedValue(1);
-  const scaleY = useSharedValue(1);
+  const scale = useSharedValue(1);
 
   const animatedPressStyle = useAnimatedStyle(() => ({
-    transform: [
-      { scaleX: scaleX.value },
-      { scaleY: scaleY.value }
-    ],
+    transform: [{ scale: scale.value }],
   }));
 
   const handlePressIn = () => {
-    scaleX.value = withTiming(1.02, { duration: 150 });
-    scaleY.value = withTiming(0.98, { duration: 150 });
+    scale.value = withTiming(0.97, { duration: 100 });
   };
 
   const handlePressOut = () => {
-    scaleX.value = withSpring(1, springConfigs.snappy);
-    scaleY.value = withSpring(1, springConfigs.snappy);
+    scale.value = withSpring(1, springConfigs.snappy);
   };
 
   const AnimatedView = Animated.View as any;
 
   return (
     <TouchableOpacity 
-      style={style}
       onPress={onPress}
       onPressIn={handlePressIn}
       onPressOut={handlePressOut}
-      activeOpacity={0.9}
+      activeOpacity={1}
     >
       <AnimatedView 
         sharedTransitionTag={sharedTransitionTag}
         sharedTransitionStyle={sharedTransitionStyle}
-        style={[styles.card, { backgroundColor: background, borderColor }, animatedPressStyle]}
+        style={[
+          styles.card, 
+          { backgroundColor: background, borderColor, borderWidth }, 
+          style, 
+          animatedPressStyle
+        ]}
       >
         {children}
       </AnimatedView>
@@ -101,9 +99,9 @@ export const Card = React.memo(({
     );
   }
 
-  const { background, borderColor } = cardStyles[variant];
+  const { background, borderColor, borderWidth } = cardStyles[variant];
   return (
-    <View style={[styles.card, { backgroundColor: background, borderColor }, style]}>
+    <View style={[styles.card, { backgroundColor: background, borderColor, borderWidth }, style]}>
       {children}
     </View>
   );

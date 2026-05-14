@@ -18,6 +18,14 @@ import { Sparkle, Plus, MagicWand } from 'phosphor-react-native';
 import Animated, { FadeInUp, FadeInDown, Layout } from 'react-native-reanimated';
 import { styles } from './_vote-activity.styles';
 
+// Optional Haptics
+let Haptics: any;
+try {
+  Haptics = require('expo-haptics');
+} catch (e) {
+  Haptics = null;
+}
+
 interface ActivityOption {
   id: string;
   title: string;
@@ -40,6 +48,9 @@ export default function VoteActivityScreen() {
   const [loading, setLoading] = useState(false);
 
   const toggleVote = (activityId: string) => {
+    if (Haptics) {
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    }
     const newSelected = new Set(selectedIds);
     if (newSelected.has(activityId)) {
       newSelected.delete(activityId);
@@ -51,6 +62,9 @@ export default function VoteActivityScreen() {
 
   const handleAddActivity = () => {
     if (!newActivity.trim()) return;
+    if (Haptics) {
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+    }
     const newItem: ActivityOption = {
       id: Math.random().toString(),
       title: newActivity.trim(),
@@ -64,6 +78,9 @@ export default function VoteActivityScreen() {
 
   const handleFinalize = () => {
     setLoading(true);
+    if (Haptics) {
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    }
     // Simulate finalizing decision
     setTimeout(() => {
       setLoading(false);
@@ -77,7 +94,7 @@ export default function VoteActivityScreen() {
         title="What's the plan?" 
         subtitle="Step 2 of 2" 
         showBack 
-        backLabel="Time" 
+        backLabel="Times" 
       />
 
       <KeyboardAvoidingView 
@@ -88,46 +105,32 @@ export default function VoteActivityScreen() {
           contentContainerStyle={styles.content}
           showsVerticalScrollIndicator={false}
         >
-          <Animated.View entering={FadeInDown.duration(600).delay(100)}>
-            <View style={styles.hero}>
-              <View style={styles.iconCircle}>
-                <MagicWand size={32} color={colors.peachPunch} weight="duotone" />
-              </View>
-              <Text style={styles.heroTitle}>Pick an Activity</Text>
+          <View style={styles.hero}>
+            <View style={styles.iconCircle}>
+              <MagicWand size={32} color={colors.peachPunch} weight="duotone" />
+            </View>
+            <View style={styles.heroTextContainer}>
+              <Text style={styles.heroTitle}>Pick Activities</Text>
               <Text style={styles.heroSubtitle}>
-                The AI suggested these based on your group's interests.
+                AI found these based on your squad's vibe.
               </Text>
             </View>
-          </Animated.View>
+          </View>
 
           <View style={styles.list}>
             {activities.map((activity, index) => (
-              <Animated.View 
+              <ActivityCard 
                 key={activity.id}
-                entering={FadeInUp.duration(500).delay(300 + index * 100)}
-                layout={Layout.springify()}
-              >
-                <View style={[
-                  styles.cardWrapper,
-                  selectedIds.has(activity.id) && styles.selectedWrapper
-                ]}>
-                  <ActivityCard 
-                    title={activity.title}
-                    votes={activity.votes + (selectedIds.has(activity.id) ? 1 : 0)}
-                    onPress={() => toggleVote(activity.id)}
-                  />
-                  {activity.isAI && (
-                    <View style={styles.aiBadge}>
-                      <Sparkle size={10} color={colors.indigoPunch} weight="fill" />
-                      <Text style={styles.aiText}>AI</Text>
-                    </View>
-                  )}
-                </View>
-              </Animated.View>
+                title={activity.title}
+                votes={activity.votes + (selectedIds.has(activity.id) ? 1 : 0)}
+                selected={selectedIds.has(activity.id)}
+                isAI={activity.isAI}
+                onPress={() => toggleVote(activity.id)}
+              />
             ))}
           </View>
 
-          <Animated.View entering={FadeInUp.delay(800)} style={styles.addSection}>
+          <View style={styles.addSection}>
             <Text style={styles.sectionLabel}>Something else?</Text>
             <View style={styles.inputRow}>
               <TextInput
@@ -141,15 +144,15 @@ export default function VoteActivityScreen() {
                 onPress={handleAddActivity}
                 style={styles.addButton}
                 variant="indigo"
-                icon={<Plus size={20} color={colors.white} weight="bold" />}
+                icon={<Plus size={24} color={colors.white} weight="bold" />}
               />
             </View>
-          </Animated.View>
+          </View>
         </ScrollView>
 
         <View style={styles.footer}>
           <Button 
-            title={selectedIds.size > 0 ? "Lock it in!" : "Select an option"}
+            title={selectedIds.size > 0 ? "Lock it in!" : "Pick one or more"}
             disabled={selectedIds.size === 0 || loading}
             loading={loading}
             variant="primary"
@@ -160,4 +163,3 @@ export default function VoteActivityScreen() {
     </SafeAreaView>
   );
 }
-

@@ -3,6 +3,7 @@ import { View, Text, StyleSheet } from 'react-native';
 import { colors, fonts, spacing, radius } from '@/constants/theme';
 import { Card } from './Card';
 import { styles } from './SlotCard.styles';
+import { Sparkle } from 'phosphor-react-native';
 
 interface SlotCardProps {
   time: string;
@@ -16,14 +17,23 @@ export const SlotCard = React.memo(({ time, freeCount, totalCount, onPress }: Sl
 
   return (
     <Card 
-      variant={isPerfect ? 'mint' : 'peach'} 
-      style={styles.container} 
+      variant={isPerfect ? 'mint' : 'neutral'} 
       onPress={onPress}
     >
-      <Text style={styles.time}>{time}</Text>
-      <Text style={[styles.stats, { color: isPerfect ? colors.mintPunch : colors.peachPunch }]}>
-        {freeCount} of {totalCount} free
-      </Text>
+      <View style={styles.content}>
+        <View style={styles.left}>
+          <Text style={styles.time}>{time}</Text>
+          <Text style={[styles.stats, { color: isPerfect ? colors.mintPunch : colors.textSecondary }]}>
+            {freeCount} of {totalCount} friends free
+          </Text>
+        </View>
+        {isPerfect && (
+          <View style={styles.perfectBadge}>
+            <Sparkle size={12} color={colors.mintPunch} weight="fill" />
+            <Text style={styles.perfectText}>Perfect</Text>
+          </View>
+        )}
+      </View>
     </Card>
   );
 });

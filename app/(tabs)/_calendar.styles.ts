@@ -112,4 +112,61 @@ export const styles = StyleSheet.create({
     fontSize: 12,
     color: colors.indigoPunch,
   },
+  taskSection: {
+    marginTop: spacing[8],
+    paddingHorizontal: spacing[5],
+  },
+  taskHeader: {
+    marginBottom: spacing[4],
+  },
+  taskSectionTitle: {
+    fontFamily: fonts.display,
+    fontSize: 18,
+    color: colors.textPrimary,
+  },
+  taskList: {
+    gap: spacing[3],
+  },
+  taskItem: {
+    ...globalStyles.rowBetween,
+    backgroundColor: colors.white,
+    padding: spacing[4],
+    borderRadius: radius.lg,
+    borderWidth: 2,
+  },
+  squadTask: {
+    borderColor: colors.mintSoft,
+  },
+  personalTask: {
+    borderColor: colors.peachSoft,
+  },
+  taskLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing[4],
+  },
+  taskTime: {
+    fontFamily: fonts.bodySemibold,
+    fontSize: 13,
+    color: colors.textTertiary,
+    width: 60,
+  },
+  taskDetails: {
+    gap: 1,
+  },
+  taskTitle: {
+    fontFamily: fonts.display,
+    fontSize: 16,
+    color: colors.textPrimary,
+  },
+  taskSquad: {
+    fontFamily: fonts.bodySemibold,
+    fontSize: 12,
+    color: colors.textSecondary,
+  },
+  taskStatus: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+  },
 });

@@ -3,7 +3,9 @@ import {
   View, 
   Text, 
   ScrollView, 
-  TouchableOpacity
+  TouchableOpacity,
+  TextInput,
+  Platform
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
@@ -13,12 +15,24 @@ import { StatusPill, StatusVariant } from "@/components/StatusPill";
 import { AvatarStack } from "@/components/AvatarStack";
 import { Header } from "@/components/Header";
 import { DashboardHero } from "@/components/DashboardHero";
+import { Button } from "@/components/Button";
 import { HomeSkeleton } from "@/components/HomeSkeleton";
+import { Hash } from "phosphor-react-native";
 import Animated, { 
   FadeInUp, 
   FadeInDown,
+  FadeOut,
+  Easing,
 } from "react-native-reanimated";
 import { styles } from "./_index.styles";
+
+// Optional Haptics
+let Haptics: any;
+try {
+  Haptics = require('expo-haptics');
+} catch (e) {
+  Haptics = null;
+}
 
 interface Room {
   id: string;
@@ -59,25 +73,52 @@ const mockRooms: Room[] = [
     detail: "2 of 3 uploaded",
     detailColor: "#888780",
   },
+];
+
+interface ConfirmedPlan {
+  id: string;
+  title: string;
+  roomName: string;
+  date: string;
+  time: string;
+  members: { initial: string }[];
+}
+
+const mockConfirmedPlans: ConfirmedPlan[] = [
   {
-    id: "3",
-    name: "Weekend Plans",
-    status: "Confirmed",
-    statusVariant: "mint",
-    members: [
-      { name: "Raphael", initial: "R" },
-      { name: "Ana", initial: "A" },
-      { name: "Jamie", initial: "J" },
-    ],
-    detail: "Movie Night · May 10",
-    detailColor: colors.mintPunch,
+    id: "p1",
+    title: "Movie Night",
+    roomName: "Weekend Plans",
+    date: "May 10",
+    time: "8:00 PM",
+    members: [{ initial: "R" }, { initial: "A" }, { initial: "J" }],
   },
 ];
+
+const ConfirmedTicket = React.memo(({ plan, index }: { plan: ConfirmedPlan, index: number }) => {
+  return (
+    <Animated.View 
+      entering={FadeInDown.duration(600).delay(300 + index * 100)}
+      style={styles.ticketWrapper}
+    >
+      <Card variant="mint" style={styles.ticketCard}>
+        <View style={styles.ticketLeft}>
+          <Text style={styles.ticketTitle} numberOfLines={1}>{plan.title}</Text>
+          <Text style={styles.ticketRoom}>{plan.roomName}</Text>
+          <View style={styles.ticketTimeRow}>
+            <Text style={styles.ticketDate}>{plan.date} · {plan.time}</Text>
+          </View>
+        </View>
+        <AvatarStack avatars={plan.members.map(m => ({ name: m.initial }))} size={20} />
+      </Card>
+    </Animated.View>
+  );
+});
 
 const RoomListItem = React.memo(({ room, index, onPress }: { room: Room; index: number; onPress: (id: string) => void }) => {
   return (
     <Animated.View 
-      entering={FadeInUp.duration(500).delay(400 + index * 100)}
+      entering={FadeInDown.duration(600).delay(200 + index * 50).easing(Easing.out(Easing.exp))}
     >
       <TouchableOpacity 
         activeOpacity={0.8}
@@ -110,6 +151,8 @@ const RoomListItem = React.memo(({ room, index, onPress }: { room: Room; index: 
 export default function Home() {
   const router = useRouter();
   const [loading, setLoading] = React.useState(true);
+  const [joinCode, setJoinCode] = React.useState("");
+  const [joining, setJoining] = React.useState(false);
 
   React.useEffect(() => {
     const timer = setTimeout(() => setLoading(false), 1200);
@@ -119,6 +162,22 @@ export default function Home() {
   const handleRoomPress = React.useCallback((id: string) => {
     router.push(`/room/${id}`);
   }, [router]);
+
+  const handleJoinRoom = () => {
+    if (joinCode.length < 4) return;
+    
+    setJoining(true);
+    if (Haptics) {
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    }
+
+    // Simulate join logic
+    setTimeout(() => {
+      setJoining(false);
+      setJoinCode("");
+      router.push(`/room/1`); // For demo, join the Friday Gang
+    }, 1500);
+  };
 
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
@@ -130,13 +189,15 @@ export default function Home() {
       />
 
       {loading ? (
-        <HomeSkeleton />
+        <Animated.View key="skeleton" exiting={FadeOut.duration(300)}>
+          <HomeSkeleton />
+        </Animated.View>
       ) : (
         <ScrollView 
           contentContainerStyle={styles.list}
           showsVerticalScrollIndicator={false}
         >
-          <Animated.View entering={FadeInDown.duration(600).delay(100)}>
+          <Animated.View entering={FadeInDown.duration(600).easing(Easing.out(Easing.exp))}>
             <DashboardHero 
               userName="Raphael" 
               roomCount={mockRooms.length}
@@ -145,9 +206,60 @@ export default function Home() {
             />
           </Animated.View>
 
+          <Animated.View 
+            entering={FadeInDown.duration(600).delay(100)}
+            style={styles.joinBarContainer}
+          >
+            <View style={styles.joinBar}>
+              <Hash size={20} color={colors.indigoPunch} weight="bold" />
+              <TextInput 
+                style={styles.joinInput}
+                placeholder="Enter Room Code"
+                placeholderTextColor={colors.textTertiary}
+                value={joinCode}
+                onChangeText={setJoinCode}
+                maxLength={10}
+                autoCapitalize="characters"
+                returnKeyType="join"
+                onSubmitEditing={handleJoinRoom}
+              />
+              <Button 
+                title="Join"
+                variant="indigo"
+                style={styles.joinButton}
+                disabled={joinCode.length < 4 || joining}
+                loading={joining}
+                onPress={handleJoinRoom}
+              />
+            </View>
+          </Animated.View>
+
+          {mockConfirmedPlans.length > 0 && (
+            <>
+              <Animated.View 
+                entering={FadeInDown.duration(600).delay(200)} 
+                style={styles.sectionHeader}
+              >
+                <Text style={styles.sectionTitle}>Upcoming Plans</Text>
+              </Animated.View>
+              <ScrollView 
+                horizontal 
+                showsHorizontalScrollIndicator={false}
+                contentContainerStyle={styles.horizontalScroll}
+              >
+                {mockConfirmedPlans.map((plan, index) => (
+                  <ConfirmedTicket key={plan.id} plan={plan} index={index} />
+                ))}
+              </ScrollView>
+            </>
+          )}
+
           {mockRooms.length > 0 && (
-            <Animated.View entering={FadeInDown.duration(500).delay(300)} style={styles.sectionHeader}>
-              <Text style={styles.sectionTitle}>Your Rooms</Text>
+            <Animated.View 
+              entering={FadeInDown.duration(600).delay(100).easing(Easing.out(Easing.exp))} 
+              style={styles.sectionHeader}
+            >
+              <Text style={styles.sectionTitle}>Active Squads</Text>
             </Animated.View>
           )}
 

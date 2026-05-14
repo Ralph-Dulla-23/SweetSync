@@ -6,7 +6,7 @@ import {
 } from 'react-native';
 import { colors, fonts } from '@/constants/theme';
 import { getHeatShade } from '@/lib/heatmap';
-import { Sparkle, Users } from 'phosphor-react-native';
+import { Sparkle, Users, Warning } from 'phosphor-react-native';
 import { TimeSlot, MyBlock, Preference } from '@/types';
 import Animated, { 
   useSharedValue, 
@@ -17,7 +17,8 @@ import Animated, {
   Easing,
   interpolateColor,
   FadeInUp,
-  SharedValue
+  SharedValue,
+  withDelay
 } from 'react-native-reanimated';
 import { styles } from './HeatMap.styles';
 import { slotIndexToTime } from '@/lib/time';
@@ -27,6 +28,7 @@ interface HeatCellProps {
   totalMembers: number;
   isMagic: boolean;
   isSelected: boolean;
+  isUncertain: boolean;
   myPreference: Preference;
   isEditMode: boolean;
   blockTitle: string | null;
@@ -41,6 +43,7 @@ const StaticHeatCell = React.memo(({
   backgroundColor,
   isEditMode,
   isMeBusy,
+  isUncertain,
   blockTitle,
   onPress,
   onToggle,
@@ -55,6 +58,7 @@ const StaticHeatCell = React.memo(({
           styles.cell, 
           { backgroundColor },
           isEditMode && !isMeBusy && styles.myBusyCell,
+          isUncertain && { borderColor: colors.peachPunch, borderWidth: 1, borderStyle: 'dashed' }
         ]}
       >
         {isEditMode && !isMeBusy && blockTitle && (
@@ -65,12 +69,13 @@ const StaticHeatCell = React.memo(({
   );
 });
 
-// Heavier cell only for magic/selected slots with animations
+// Heavier cell only for magic/selected/uncertain slots with animations
 const AnimatedHeatCell = React.memo(({
   slot,
   backgroundColor,
   isMagic,
   isSelected,
+  isUncertain,
   isEditMode,
   isMeBusy,
   blockTitle,
@@ -80,14 +85,15 @@ const AnimatedHeatCell = React.memo(({
   freeCount,
 }: any) => {
   const magicAnimatedStyle = useAnimatedStyle(() => {
-    if (!isMagic) return {};
+    if (!isMagic && !isUncertain) return {};
+    const borderColor = isUncertain ? colors.peachPunch : colors.peachPunch;
     return {
       borderColor: interpolateColor(
         pulse.value,
         [0, 1],
-        [colors.peachPunch, colors.peachSoft]
+        [borderColor, isUncertain ? colors.white : colors.peachSoft]
       ),
-      borderWidth: 1.5 + pulse.value * 0.5,
+      borderWidth: (isMagic ? 1.5 : 2) + pulse.value * 1,
     };
   });
 
@@ -116,6 +122,7 @@ const AnimatedHeatCell = React.memo(({
           { backgroundColor },
           isMagic && styles.magicSlotCell,
           isSelected && styles.selectedCell,
+          isUncertain && { borderWidth: 2, borderStyle: 'solid' },
           isEditMode && !isMeBusy && styles.myBusyCell,
           magicAnimatedStyle,
           selectedAnimatedStyle,
@@ -124,6 +131,11 @@ const AnimatedHeatCell = React.memo(({
         {isMagic && (slot.slotIndex % 2 === 0) && (
           <View style={styles.sparkleContainer}>
             <Sparkle size={14} weight="fill" color={colors.peachPunch} />
+          </View>
+        )}
+        {isUncertain && (
+          <View style={[styles.sparkleContainer, { backgroundColor: colors.peachPunch, borderRadius: 10, padding: 1 }]}>
+            <Warning size={12} weight="bold" color={colors.white} />
           </View>
         )}
         {isSelected && (
@@ -145,6 +157,7 @@ const HeatCell = React.memo(({
   totalMembers,
   isMagic,
   isSelected,
+  isUncertain,
   myPreference,
   isEditMode,
   blockTitle,
@@ -158,13 +171,14 @@ const HeatCell = React.memo(({
     ? (isMeBusy ? colors.pageBg : (myPreference === 2 ? colors.indigoNeon : colors.indigoPunch))
     : getHeatShade(slot.freeCount, slot.preferredCount, totalMembers);
 
-  if (isMagic || isSelected) {
+  if (isMagic || isSelected || isUncertain) {
     return (
       <AnimatedHeatCell 
         slot={slot}
         backgroundColor={backgroundColor}
         isMagic={isMagic}
         isSelected={isSelected}
+        isUncertain={isUncertain}
         isEditMode={isEditMode}
         isMeBusy={isMeBusy}
         blockTitle={blockTitle}
@@ -182,6 +196,7 @@ const HeatCell = React.memo(({
       backgroundColor={backgroundColor}
       isEditMode={isEditMode}
       isMeBusy={isMeBusy}
+      isUncertain={isUncertain}
       blockTitle={blockTitle}
       onPress={onPress}
       onToggle={onToggle}
@@ -194,6 +209,7 @@ interface DayColumnProps {
   slots: TimeSlot[];
   totalMembers: number;
   magicSlotsSet: Set<string>; // Optimized O(1) lookup
+  uncertainSlotsSet: Set<string>; // Optimized O(1) lookup
   selectedSlot: TimeSlot | null;
   mySchedule: Map<string, Preference>;
   myBlocksMap: Map<string, string>; // Optimized O(1) lookup
@@ -208,6 +224,7 @@ const DayColumn = React.memo(({
   slots,
   totalMembers,
   magicSlotsSet,
+  uncertainSlotsSet,
   selectedSlot,
   mySchedule,
   myBlocksMap,
@@ -224,6 +241,7 @@ const DayColumn = React.memo(({
       {slots.map((slot) => {
         const slotKey = `${slot.date}-${slot.slotIndex}`;
         const isMagic = !isEditMode && magicSlotsSet.has(slotKey);
+        const isUncertain = uncertainSlotsSet.has(slotKey);
         const isSelected = !isEditMode && selectedSlot?.date === slot.date && selectedSlot?.slotIndex === slot.slotIndex;
         const myPreference = mySchedule.get(slotKey) ?? 0;
         const blockTitle = myBlocksMap.get(slotKey) || null;
@@ -235,6 +253,7 @@ const DayColumn = React.memo(({
             totalMembers={totalMembers}
             isMagic={isMagic}
             isSelected={isSelected}
+            isUncertain={isUncertain}
             myPreference={myPreference}
             isEditMode={isEditMode}
             blockTitle={blockTitle}
@@ -261,6 +280,8 @@ interface HeatMapProps {
   myBlocks?: MyBlock[];
   startSlot?: number;
   endSlot?: number;
+  lowConfidenceCells?: string[];
+  backgroundOpacity?: number;
 }
 
 const DAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
@@ -277,12 +298,14 @@ export const HeatMap: React.FC<HeatMapProps> = ({
   myBlocks = [],
   startSlot = 14, // 7 AM
   endSlot = 48,   // 12 AM
+  lowConfidenceCells = [],
+  backgroundOpacity = 1,
 }) => {
   const pulse = useSharedValue(0);
 
   useEffect(() => {
     pulse.value = withRepeat(
-      withTiming(1, { duration: 2000, easing: Easing.inOut(Easing.sin) }),
+      withTiming(1, { duration: 1500, easing: Easing.inOut(Easing.sin) }),
       -1,
       true
     );
@@ -316,8 +339,12 @@ export const HeatMap: React.FC<HeatMapProps> = ({
     return new Set(magicSlots.map(s => `${s.date}-${s.slotIndex}`));
   }, [magicSlots]);
 
+  const uncertainSlotsSet = useMemo(() => {
+    return new Set(lowConfidenceCells);
+  }, [lowConfidenceCells]);
+
   return (
-    <View style={styles.gridContainer}>
+    <View style={[styles.gridContainer, { opacity: backgroundOpacity }]}>
       {/* Day Headers */}
       <View style={styles.dayHeaderRow}>
         <View style={styles.timeLabelSpacer} />
@@ -348,6 +375,7 @@ export const HeatMap: React.FC<HeatMapProps> = ({
               slots={columnSlots}
               totalMembers={totalMembers}
               magicSlotsSet={magicSlotsSet}
+              uncertainSlotsSet={uncertainSlotsSet}
               selectedSlot={selectedSlot}
               mySchedule={mySchedule}
               myBlocksMap={myBlocksMap}
@@ -362,5 +390,4 @@ export const HeatMap: React.FC<HeatMapProps> = ({
     </View>
   );
 };
-
 

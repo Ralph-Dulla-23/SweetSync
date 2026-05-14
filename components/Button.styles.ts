@@ -27,8 +27,8 @@ export const styles = StyleSheet.create({
     paddingHorizontal: 12,
   },
   disabled: {
-    backgroundColor: colors.textTertiary,
-    borderColor: colors.textTertiary,
+    backgroundColor: colors.buttonDisabled,
+    borderColor: colors.buttonDisabled,
   },
   text: {
     fontFamily: fonts.bodySemibold,
@@ -48,7 +48,7 @@ export const styles = StyleSheet.create({
     color: colors.textSecondary,
   },
   textDisabled: {
-    color: colors.white,
+    color: colors.textTertiary,
   },
   iconContainer: {
     marginRight: spacing[2],

@@ -40,7 +40,6 @@ export const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: colors.peachSoft,
     ...globalStyles.shadowMd,
-    boxShadow: `0px 10px 20px ${colors.peachPunch}1A`,
   },
   winnerHeader: {
     ...globalStyles.row,
@@ -53,18 +52,21 @@ export const styles = StyleSheet.create({
     fontSize: 12,
     color: colors.peachPunch,
     letterSpacing: 2,
+    textTransform: 'uppercase',
   },
   activityName: {
     fontFamily: fonts.display,
-    fontSize: 26,
+    fontSize: 32,
     color: colors.peachDeep,
     textAlign: 'center',
     marginBottom: spacing[6],
+    lineHeight: 38,
   },
   detailsList: {
     gap: spacing[4],
-    borderTopWidth: 1,
-    borderTopColor: 'rgba(0,0,0,0.05)',
+    borderTopWidth: 1.5,
+    borderTopColor: colors.peachBase,
+    borderStyle: 'dashed',
     paddingTop: spacing[6],
   },
   detailItem: {
@@ -78,13 +80,26 @@ export const styles = StyleSheet.create({
   },
   actions: {
     marginTop: spacing[10],
-    gap: spacing[3],
+    gap: spacing[4],
   },
   actionButton: {
     height: 56,
   },
+  shareContainer: {
+    backgroundColor: colors.peachBase,
+    borderRadius: radius.lg,
+    padding: spacing[4],
+    borderWidth: 1,
+    borderColor: colors.peachSoft,
+    ...globalStyles.rowBetween,
+  },
+  shareText: {
+    fontFamily: fonts.bodySemibold,
+    fontSize: 15,
+    color: colors.peachDeep,
+  },
   backToRoom: {
-    marginTop: spacing[8],
+    marginTop: spacing[10],
     alignItems: 'center',
     paddingVertical: spacing[2],
   },
@@ -92,6 +107,6 @@ export const styles = StyleSheet.create({
     fontFamily: fonts.bodySemibold,
     fontSize: 14,
     color: colors.textTertiary,
-    textDecorationLine: 'underline',
+    letterSpacing: 0.5,
   },
 });

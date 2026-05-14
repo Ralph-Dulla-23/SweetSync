@@ -157,4 +157,52 @@ export const styles = StyleSheet.create({
     color: colors.textSecondary,
     textAlign: "center",
   },
+  // Nudge All Styles
+  nudgeAllBanner: {
+    backgroundColor: colors.peachBase,
+    marginHorizontal: spacing[4],
+    marginTop: spacing[4],
+    borderRadius: radius.lg,
+    borderWidth: 1,
+    borderColor: colors.peachSoft,
+    padding: spacing[3],
+    ...globalStyles.shadowSm,
+  },
+  nudgeAllContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing[3],
+  },
+  nudgeAllIcon: {
+    width: 40,
+    height: 40,
+    borderRadius: radius.md,
+    backgroundColor: colors.white,
+    ...globalStyles.center,
+    borderWidth: 1,
+    borderColor: colors.peachSoft,
+  },
+  nudgeAllTitle: {
+    fontFamily: fonts.bodySemibold,
+    fontSize: 14,
+    color: colors.peachPunch,
+  },
+  nudgeAllSubtitle: {
+    fontFamily: fonts.body,
+    fontSize: 12,
+    color: colors.peachDeep,
+    opacity: 0.8,
+  },
+  nudgeAllButton: {
+    backgroundColor: colors.peachPunch,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: radius.md,
+  },
+  nudgeAllButtonText: {
+    fontFamily: fonts.bodySemibold,
+    fontSize: 11,
+    color: colors.white,
+    letterSpacing: 0.5,
+  },
 });

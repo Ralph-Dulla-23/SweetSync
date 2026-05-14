@@ -158,6 +158,12 @@ export default function CalendarScreen() {
 
   const { isEmpty, mySchedule } = useGlobalAvailability();
 
+  const mockTasks = [
+    { id: 't1', title: 'Movie Night', squad: 'Weekend Plans', time: '8:00 PM', type: 'squad' },
+    { id: 't2', title: 'Study Session', squad: 'Personal', time: '10:00 AM', type: 'personal' },
+    { id: 't3', title: 'Gym with Marco', squad: 'Personal', time: '4:00 PM', type: 'personal' },
+  ];
+
   if (isEmpty) {
     return (
       <SafeAreaView style={styles.container} edges={['top']}>
@@ -182,7 +188,7 @@ export default function CalendarScreen() {
       />
       <ScrollView 
         showsVerticalScrollIndicator={false}
-        contentContainerStyle={[styles.scrollContent, { paddingBottom: 100 + insets.bottom }]}
+        contentContainerStyle={[styles.scrollContent, { paddingBottom: 120 + insets.bottom }]}
       >
         <View style={styles.sectionHeader}>
           <Text style={styles.sectionTitle}>Global Availability</Text>
@@ -210,6 +216,37 @@ export default function CalendarScreen() {
               <View style={[styles.legendStep, { backgroundColor: colors.indigoNeon }]} />
             </View>
             <Text style={styles.legendText}>Prefer</Text>
+          </View>
+        </View>
+
+        <View style={styles.taskSection}>
+          <View style={styles.taskHeader}>
+            <Text style={styles.taskSectionTitle}>Today's Plans</Text>
+          </View>
+          
+          <View style={styles.taskList}>
+            {mockTasks.map((task, i) => (
+              <Animated.View 
+                key={task.id}
+                entering={FadeInDown.delay(i * 100)}
+                style={[
+                  styles.taskItem,
+                  task.type === 'squad' ? styles.squadTask : styles.personalTask
+                ]}
+              >
+                <View style={styles.taskLeft}>
+                  <Text style={styles.taskTime}>{task.time}</Text>
+                  <View style={styles.taskDetails}>
+                    <Text style={styles.taskTitle}>{task.title}</Text>
+                    <Text style={styles.taskSquad}>{task.squad}</Text>
+                  </View>
+                </View>
+                <View style={[
+                  styles.taskStatus,
+                  { backgroundColor: task.type === 'squad' ? colors.mintPunch : colors.peachPunch }
+                ]} />
+              </Animated.View>
+            ))}
           </View>
         </View>
       </ScrollView>

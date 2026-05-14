@@ -1,4 +1,4 @@
-import { StyleSheet } from 'react-native';
+import { StyleSheet, Platform } from 'react-native';
 import { colors, fonts, spacing, radius } from '@/constants/theme';
 import { globalStyles } from '@/styles/global';
 
@@ -6,7 +6,8 @@ export const styles = StyleSheet.create({
   container: globalStyles.screen,
   content: {
     ...globalStyles.scrollContent,
-    paddingBottom: 120,
+    paddingBottom: 140,
+    paddingTop: spacing[4],
   },
   hero: {
     alignItems: 'center',
@@ -17,6 +18,9 @@ export const styles = StyleSheet.create({
     ...globalStyles.iconCircle,
     backgroundColor: colors.peachBase,
     borderColor: colors.peachSoft,
+  },
+  heroTextContainer: {
+    gap: spacing[1],
   },
   heroTitle: {
     fontFamily: fonts.display,
@@ -93,6 +97,8 @@ export const styles = StyleSheet.create({
     width: 52,
     height: 52,
     borderRadius: radius.md,
+    paddingVertical: 0,
+    paddingHorizontal: 0,
   },
   footer: {
     position: 'absolute',

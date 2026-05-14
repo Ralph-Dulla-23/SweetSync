@@ -22,7 +22,16 @@ import Animated, {
 } from "react-native-reanimated";
 import { RoomInteriorSkeleton } from "@/components/RoomInteriorSkeleton";
 import { useRoom } from "@/hooks/useRoom";
+import { useAuth } from "@/hooks/useAuth";
 import { styles } from "./_[id].styles";
+
+// Optional Haptics
+let Haptics: any;
+try {
+  Haptics = require('expo-haptics');
+} catch (e) {
+  Haptics = null;
+}
 
 const localStyles = StyleSheet.create({
   heatmapButton: {
@@ -53,7 +62,7 @@ const localStyles = StyleSheet.create({
     alignItems: 'center',
   },
   heatmapButtonTitle: {
-    fontFamily: fonts.bodyBold,
+    fontFamily: fonts.bodySemibold,
     fontSize: 15,
     color: colors.textPrimary,
   },
@@ -65,7 +74,57 @@ const localStyles = StyleSheet.create({
   },
 });
 
+const NudgeAllBanner = ({ pendingCount, onNudgeAll }: { pendingCount: number; onNudgeAll: () => void }) => {
+  const [nudgedAll, setNudgedAll] = React.useState(false);
+
+  const handlePress = () => {
+    setNudgedAll(true);
+    onNudgeAll();
+    if (Haptics) {
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+    }
+  };
+
+  if (nudgedAll) return null;
+
+  return (
+    <Animated.View 
+      entering={FadeInDown.duration(600)}
+      style={styles.nudgeAllBanner}
+    >
+      <View style={styles.nudgeAllContent}>
+        <View style={styles.nudgeAllIcon}>
+          <Bell size={20} color={colors.peachPunch} weight="fill" />
+        </View>
+        <View style={{ flex: 1 }}>
+          <Text style={styles.nudgeAllTitle}>{pendingCount} friends haven't synced yet</Text>
+          <Text style={styles.nudgeAllSubtitle}>Nudge them all with one tap?</Text>
+        </View>
+        <TouchableOpacity 
+          style={styles.nudgeAllButton}
+          onPress={handlePress}
+        >
+          <Text style={styles.nudgeAllButtonText}>NUDGE ALL</Text>
+        </TouchableOpacity>
+      </View>
+    </Animated.View>
+  );
+};
+
 const MemberRow = React.memo(({ member, index, isLast, onNudge }: { member: any; index: number; isLast: boolean; onNudge: (id: string) => void }) => {
+  // Simulate a 12-hour cool-down using a mock state/timestamp logic
+  // In a real app, this would be fetched from the member's relation metadata
+  const [nudged, setNudged] = React.useState(member.lastNudgeAt ? (Date.now() - member.lastNudgeAt < 12 * 60 * 60 * 1000) : false);
+
+  const handlePress = () => {
+    if (nudged) return;
+    setNudged(true);
+    onNudge(member.id);
+    if (Haptics) {
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+    }
+  };
+
   return (
     <Animated.View 
       entering={FadeInUp.duration(600).delay(200 + index * 50).springify().damping(18)}
@@ -91,7 +150,7 @@ const MemberRow = React.memo(({ member, index, isLast, onNudge }: { member: any;
                 styles.memberStatus,
                 member.status === "pending" && styles.pendingText
               ]}>
-                {member.status === "uploaded" ? "Synced" : "Waiting for upload"}
+                {member.status === "uploaded" ? "Synced" : nudged ? "Nudged (on cooldown)" : "Waiting for upload"}
               </Text>
             </View>
           </View>
@@ -103,14 +162,27 @@ const MemberRow = React.memo(({ member, index, isLast, onNudge }: { member: any;
           </View>
         ) : (
           <TouchableOpacity 
-            style={styles.nudgeButton}
+            style={[
+              styles.nudgeButton,
+              nudged && { backgroundColor: colors.pageBg, borderColor: colors.borderDefault, opacity: 0.6 }
+            ]}
             activeOpacity={0.7}
-            onPress={() => onNudge(member.id)}
+            onPress={handlePress}
+            disabled={nudged}
             accessibilityRole="button"
-            accessibilityLabel={`Nudge ${member.name}`}
+            accessibilityLabel={nudged ? `${member.name} nudged` : `Nudge ${member.name}`}
           >
-            <Bell size={20} color={colors.peachPunch} weight="bold" />
-            <Text style={styles.nudgeLabel}>Nudge</Text>
+            {nudged ? (
+              <CheckCircle size={20} color={colors.textTertiary} weight="fill" />
+            ) : (
+              <Bell size={20} color={colors.peachPunch} weight="bold" />
+            )}
+            <Text style={[
+              styles.nudgeLabel,
+              nudged && { color: colors.textTertiary }
+            ]}>
+              {nudged ? "Sent!" : "Nudge"}
+            </Text>
           </TouchableOpacity>
         )}
       </View>
@@ -121,18 +193,24 @@ const MemberRow = React.memo(({ member, index, isLast, onNudge }: { member: any;
 export default function RoomInterior() {
   const { id } = useLocalSearchParams();
   const router = useRouter();
+  const { user } = useAuth();
   const { room, loading, nudgeMember } = useRoom(id as string);
 
   const handleNudge = React.useCallback((memberId: string) => {
     nudgeMember(memberId);
   }, [nudgeMember]);
 
+  const handleNudgeAll = React.useCallback(() => {
+    room?.members.filter(m => m.status === 'pending').forEach(m => nudgeMember(m.id));
+  }, [room, nudgeMember]);
+
   if (loading || !room) {
     return <RoomInteriorSkeleton />;
   }
 
-
-  const uploadedCount = room.members.filter(m => m.status === "uploaded").length;
+  const isHost = room.hostId === user?.id;
+  const pendingMembers = room.members.filter(m => m.status === "pending");
+  const uploadedCount = room.members.length - pendingMembers.length;
   const totalCount = room.members.length;
   const progress = (uploadedCount / totalCount) * 100;
   const isReady = uploadedCount === totalCount;
@@ -175,6 +253,13 @@ export default function RoomInterior() {
             height={10} 
           />
         </Card>
+
+        {isHost && pendingMembers.length > 1 && (
+          <NudgeAllBanner 
+            pendingCount={pendingMembers.length} 
+            onNudgeAll={handleNudgeAll} 
+          />
+        )}
 
         {/* Member List - Social and Responsive */}
         <View style={styles.sectionHeader}>

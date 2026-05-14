@@ -12,6 +12,7 @@ interface HeaderProps {
   subtitlePosition?: "above" | "below";
   showBack?: boolean;
   backLabel?: string;
+  onBackPress?: () => void;
   rightElement?: React.ReactNode;
   userAvatar?: boolean;
 }
@@ -22,10 +23,25 @@ export const Header = React.memo(({
   subtitlePosition = "above",
   showBack = false, 
   backLabel = "Back",
+  onBackPress,
   rightElement,
   userAvatar = false
 }: HeaderProps) => {
   const router = useRouter();
+
+  const handleBack = () => {
+    if (onBackPress) {
+      onBackPress();
+      return;
+    }
+    
+    if (router.canGoBack()) {
+      router.back();
+    } else {
+      // Fallback to home if no history (e.g. opened from notification)
+      router.replace("/(tabs)");
+    }
+  };
 
   return (
     <View style={styles.container}>
@@ -33,7 +49,7 @@ export const Header = React.memo(({
         {showBack && (
           <TouchableOpacity 
             style={styles.backButton} 
-            onPress={() => router.back()}
+            onPress={handleBack}
             activeOpacity={0.7}
             accessibilityRole="button"
             accessibilityLabel={`Go back to ${backLabel}`}

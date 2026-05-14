@@ -1,15 +1,25 @@
 import React from 'react';
 import { View, TouchableOpacity, Text } from 'react-native';
 import { colors } from '@/constants/theme';
+import { springConfigs } from '@/constants/animation';
 
 import Animated, { 
   useSharedValue, 
   useAnimatedStyle, 
   withSequence, 
   withTiming, 
+  withSpring,
   Easing 
 } from 'react-native-reanimated';
 import { styles } from './VotePills.styles';
+
+// Optional Haptics
+let Haptics: any;
+try {
+  Haptics = require('expo-haptics');
+} catch (e) {
+  Haptics = null;
+}
 
 export type VoteType = 'free' | 'prefer' | 'cant';
 
@@ -55,8 +65,8 @@ const AnimatedVotePill = React.memo(({
   React.useEffect(() => {
     if (selected) {
       scale.value = withSequence(
-        withTiming(1.1, { duration: 150, easing: Easing.out(Easing.quad) }),
-        withTiming(1, { duration: 150, easing: Easing.in(Easing.quad) })
+        withSpring(1.15, springConfigs.bouncy),
+        withSpring(1, springConfigs.bouncy)
       );
     }
   }, [selected]);
@@ -65,9 +75,18 @@ const AnimatedVotePill = React.memo(({
     transform: [{ scale: scale.value }],
   }));
 
+  const handlePress = () => {
+    if (onPress) {
+      if (Haptics) {
+        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+      }
+      onPress();
+    }
+  };
+
   return (
     <TouchableOpacity
-      onPress={onPress}
+      onPress={handlePress}
       disabled={!onPress}
       activeOpacity={0.7}
       style={styles.pillWrapper}

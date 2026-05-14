@@ -14,6 +14,9 @@ import Animated, {
   useAnimatedStyle, 
   withSpring,
   withTiming,
+  withRepeat,
+  withSequence,
+  Easing,
 } from 'react-native-reanimated';
 import { styles } from './Button.styles';
 
@@ -25,6 +28,7 @@ interface ButtonProps {
   variant?: ButtonVariant;
   loading?: boolean;
   disabled?: boolean;
+  pulse?: boolean;
   style?: ViewStyle;
   textStyle?: TextStyle;
   icon?: React.ReactNode;
@@ -41,6 +45,7 @@ export const Button = React.memo(({
   variant = 'primary',
   loading = false,
   disabled = false,
+  pulse = false,
   style,
   textStyle,
   icon,
@@ -55,11 +60,27 @@ export const Button = React.memo(({
 
   const scaleX = useSharedValue(1);
   const scaleY = useSharedValue(1);
+  const pulseScale = useSharedValue(1);
+
+  React.useEffect(() => {
+    if (pulse && !disabled && !loading) {
+      pulseScale.value = withRepeat(
+        withSequence(
+          withTiming(1.03, { duration: 600, easing: Easing.inOut(Easing.quad) }),
+          withTiming(1, { duration: 600, easing: Easing.inOut(Easing.quad) })
+        ),
+        -1,
+        true
+      );
+    } else {
+      pulseScale.value = withTiming(1, { duration: 300 });
+    }
+  }, [pulse, disabled, loading]);
 
   const animatedStyle = useAnimatedStyle(() => ({
     transform: [
-      { scaleX: scaleX.value },
-      { scaleY: scaleY.value }
+      { scaleX: scaleX.value * pulseScale.value },
+      { scaleY: scaleY.value * pulseScale.value }
     ],
   }));
 
@@ -111,7 +132,14 @@ export const Button = React.memo(({
         <ActivityIndicator color={isSecondary || isGhost ? colors.peachPunch : colors.white} />
       ) : (
         <>
-          {icon && <View style={styles.iconContainer}>{icon}</View>}
+          {icon && (
+            <View style={[
+              styles.iconContainer, 
+              !title && { marginRight: 0 }
+            ]}>
+              {icon}
+            </View>
+          )}
           {title ? <Text style={titleStyles}>{title}</Text> : null}
           {children}
         </>

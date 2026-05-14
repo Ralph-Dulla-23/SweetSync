@@ -89,20 +89,6 @@ export default function CreateScreen() {
             <Text style={styles.optionDescription}>Persistent space for squads</Text>
           </View>
         </TouchableOpacity>
-
-        <TouchableOpacity 
-          style={[styles.optionCard, styles.peachCard]}
-          onPress={() => router.push("/join")}
-          activeOpacity={0.7}
-        >
-          <View style={[styles.iconContainer, { backgroundColor: colors.peachSoft }]}>
-            <Users size={24} color={colors.peachPunch} weight="bold" />
-          </View>
-          <View style={styles.optionInfo}>
-            <Text style={styles.optionTitle}>Join a Room</Text>
-            <Text style={styles.optionDescription}>Enter a group code</Text>
-          </View>
-        </TouchableOpacity>
       </View>
     </Animated.View>
   );

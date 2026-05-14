@@ -139,22 +139,39 @@ function InteractiveBottomSheet({ selectedSlot, clearSelection, isNudgeSlot, id,
           </View>
 
           <View style={styles.compactChips}>
-            {displaySlot.members.map((member: string, i: number) => {
-              const isPreferred = displaySlot.preferredMembers.includes(member);
-              return (
-                <View key={i} style={[styles.memberChip, isPreferred && { backgroundColor: colors.indigoBase }]}>
-                  <Users size={14} color={isPreferred ? colors.indigoNeon : colors.indigoPunch} weight="fill" />
-                  <Text style={[styles.memberChipText, isPreferred && { color: colors.indigoPunch }]}>{member}</Text>
-                </View>
-              );
-            })}
+            <View style={styles.memberSection}>
+              <Text style={styles.sectionLabel}>FREE SQUAD</Text>
+              <View style={styles.memberList}>
+                {displaySlot.members.map((member: string, i: number) => {
+                  const isPreferred = displaySlot.preferredMembers.includes(member);
+                  return (
+                    <View key={i} style={[styles.memberChip, isPreferred && { backgroundColor: colors.indigoBase }]}>
+                      <Users size={14} color={isPreferred ? colors.indigoNeon : colors.indigoPunch} weight="fill" />
+                      <Text style={[styles.memberChipText, isPreferred && { color: colors.indigoPunch }]}>{member}</Text>
+                    </View>
+                  );
+                })}
+              </View>
+            </View>
+
+            <View style={styles.memberSection}>
+              <Text style={styles.sectionLabel}>BUSY / UNSYNCED</Text>
+              <View style={styles.memberList}>
+                {displaySlot.busyMembers.map((member: string, i: number) => (
+                  <View key={i} style={[styles.memberChip, styles.busyChip]}>
+                    <X size={12} color={colors.textSecondary} weight="bold" />
+                    <Text style={[styles.memberChipText, styles.busyChipText]}>{member}</Text>
+                  </View>
+                ))}
+              </View>
+            </View>
           </View>
           
           <Button 
             title="Start Voting" 
             variant="indigo"
             onPress={() => router.push(`/room/${id}/vote-slots`)}
-            style={{ marginTop: spacing[2], height: 48 }}
+            style={{ marginTop: spacing[4], height: 52 }}
           />
         </View>
       </Animated.View>
@@ -384,46 +401,55 @@ export default function GroupCalendar() {
             <View style={styles.modalHeaderTop}>
               <Text style={styles.confirmModalTitle}>Confirm Extraction</Text>
               <TouchableOpacity 
-                style={styles.previewToggle} 
+                style={[styles.previewToggle, showImagePreview && { backgroundColor: colors.indigoPunch }]} 
                 onPress={() => setShowImagePreview(!showImagePreview)}
               >
-                {showImagePreview ? <EyeSlash size={20} color={colors.indigoPunch} /> : <Eye size={20} color={colors.indigoPunch} />}
-                <Text style={styles.previewToggleText}>{showImagePreview ? "Hide Original" : "Show Original"}</Text>
+                {showImagePreview ? <EyeSlash size={20} color={colors.white} /> : <Eye size={20} color={colors.indigoPunch} />}
+                <Text style={[styles.previewToggleText, showImagePreview && { color: colors.white }]}>
+                  {showImagePreview ? "Ghost Overlay: On" : "Show Overlay"}
+                </Text>
               </TouchableOpacity>
             </View>
+            <Text style={styles.confirmModalSubtitle}>
+              Our AI extracted these busy blocks. {showImagePreview ? "Compare against your screenshot below." : "Tap blocks to correct any errors."}
+            </Text>
             <View style={styles.uncertaintyHint}>
-              <View style={styles.uncertaintyDot} />
-              <Text style={styles.uncertaintyText}>Double-tap blocks to mark them as "Preferred".</Text>
+              <View style={[styles.uncertaintyDot, { backgroundColor: colors.peachPunch }]} />
+              <Text style={styles.uncertaintyText}>Pulsing blocks need your review.</Text>
             </View>
           </View>
 
-          {showImagePreview && scannedImageUri && (
-            <View style={styles.imageAnchorContainer}>
-              <Image source={{ uri: scannedImageUri }} style={styles.anchorImage} resizeMode="contain" />
-              <View style={styles.imageOverlayLabel}>
-                <Text style={styles.imageOverlayText}>SOURCE OF TRUTH</Text>
+          <View style={{ flex: 1 }}>
+            {showImagePreview && scannedImageUri && (
+              <View style={StyleSheet.absoluteFill}>
+                <Image 
+                  source={{ uri: scannedImageUri }} 
+                  style={{ width: '100%', height: '100%', opacity: 0.35 }} 
+                  resizeMode="cover" 
+                />
               </View>
-            </View>
-          )}
-          
-          <ScrollView contentContainerStyle={styles.modalGridScroll}>
-            <HeatMap 
-              data={mockData}
-              totalMembers={5}
-              magicSlots={[]}
-              isEditMode={true}
-              onToggleCell={toggleDraftCell}
-              mySchedule={draftSchedule || new Map()}
-              lowConfidenceCells={lowConfidenceCells}
-            />
-          </ScrollView>
+            )}
+            
+            <ScrollView contentContainerStyle={styles.modalGridScroll}>
+              <HeatMap 
+                data={mockData}
+                totalMembers={5}
+                magicSlots={[]}
+                isEditMode={true}
+                onToggleCell={toggleDraftCell}
+                mySchedule={draftSchedule || new Map()}
+                lowConfidenceCells={lowConfidenceCells}
+                backgroundOpacity={showImagePreview ? 0.85 : 1}
+              />
+            </ScrollView>
+          </View>
 
           <View style={styles.confirmModalFooter}>
             <TouchableOpacity style={styles.discardButton} onPress={discardDraft}>
               <Text style={styles.discardButtonText}>Discard</Text>
             </TouchableOpacity>
             <TouchableOpacity style={styles.confirmButton} onPress={confirmDraft}>
-              <Text style={styles.confirmButtonText}>Looks Good</Text>
+              <Text style={styles.confirmButtonText}>Confirm My Schedule</Text>
             </TouchableOpacity>
           </View>
         </SafeAreaView>
