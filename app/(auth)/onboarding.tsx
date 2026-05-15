@@ -120,7 +120,7 @@ export default function Onboarding() {
       <View style={[styles.stepContainer, { width }]}>
         <View style={styles.illustrationArea}>
           <Animated.View 
-            entering={FadeIn.delay(200).duration(1000)}
+            entering={FadeIn.delay(200).duration(800)}
             style={[styles.iconCircle, { backgroundColor: item.iconColor + '15' }, floatStyle]}
           >
             <item.icon size={80} weight="duotone" color={item.iconColor} />

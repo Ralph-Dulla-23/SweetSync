@@ -23,8 +23,19 @@ import Animated, {
   FadeIn, 
   FadeInDown, 
   Layout, 
+  useSharedValue,
+  useAnimatedStyle,
+  withSpring,
+  runOnJS,
 } from 'react-native-reanimated';
 import { styles } from './_sign-in.styles';
+
+const SPRING_CONFIG = { 
+  damping: 25, 
+  stiffness: 200, 
+  mass: 1,
+  overshootClamping: true
+};
 
 export default function SignIn() {
   const router = useRouter();
@@ -146,40 +157,35 @@ export default function SignIn() {
   };
 
   const renderHeader = () => {
-    if (step === 'email') {
-      return (
-        <Animated.View 
-          entering={FadeInDown.duration(400)}
-          style={styles.header}
-        >
-          <View style={styles.logoContainer}>
-            <Sparkle size={32} weight="fill" color={colors.peachPunch} />
-          </View>
-          <View style={styles.titleRow}>
-            <Text style={styles.title}>{isSignUp ? 'Create' : 'Welcome'}</Text>
-            <Text style={styles.titleAccent}>{isSignUp ? ' Account' : ' Back'}</Text>
-          </View>
-          <Text style={styles.subtitle}>
-            {isSignUp ? 'Join SweetSync and start planning together.' : 'Sign in to sync with your group.'}
-          </Text>
-        </Animated.View>
-      );
-    }
-
+    const isStepEmail = step === 'email';
+    
     return (
-      <Animated.View 
-        entering={FadeInDown.duration(400)}
-        style={styles.header}
-      >
-        <View style={styles.logoContainer}>
-          <Sparkle size={32} weight="fill" color={colors.indigoPunch} />
+      <View style={styles.header}>
+        <View style={[
+          styles.logoContainer, 
+          !isStepEmail && { borderColor: colors.indigoSoft, backgroundColor: colors.indigoBase }
+        ]}>
+          <Sparkle 
+            size={32} 
+            weight="fill" 
+            color={isStepEmail ? colors.peachPunch : colors.indigoPunch} 
+          />
         </View>
         <View style={styles.titleRow}>
-          <Text style={styles.title}>Enter</Text>
-          <Text style={[styles.titleAccent, { color: colors.indigoPunch }]}> Password</Text>
+          <Text style={styles.title}>{isStepEmail ? (isSignUp ? 'Create' : 'Welcome') : 'Enter'}</Text>
+          <Text style={[
+            styles.titleAccent, 
+            !isStepEmail && { color: colors.indigoPunch }
+          ]}>
+            {isStepEmail ? (isSignUp ? ' Account' : ' Back') : ' Password'}
+          </Text>
         </View>
-        <Text style={styles.subtitle}>Continuing as {email}</Text>
-      </Animated.View>
+        <Text style={styles.subtitle}>
+          {isStepEmail 
+            ? (isSignUp ? 'Join SweetSync and start planning together.' : 'Sign in to sync with your group.')
+            : `Continuing as ${email}`}
+        </Text>
+      </View>
     );
   };
 
@@ -189,135 +195,143 @@ export default function SignIn() {
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         style={styles.keyboardView}
       >
-        <ScrollView 
+        <Animated.ScrollView 
+          entering={FadeInDown.duration(800).damping(20)}
           showsVerticalScrollIndicator={false}
           contentContainerStyle={styles.scrollContent}
         >
-          <TouchableOpacity 
-            onPress={() => step === 'password' ? setStep('email') : router.back()}
-            style={styles.backButton}
-          >
-            <CaretLeft size={20} weight="bold" color={step === 'password' ? colors.indigoPunch : colors.peachPunch} />
-          </TouchableOpacity>
-
-          {renderHeader()}
-
-          <View style={styles.form}>
-            {error && (
-              <Animated.View 
-                entering={FadeInDown.duration(300)}
-                layout={Layout.springify()}
-                style={styles.errorContainer}
-              >
-                <Text style={styles.errorText}>{error}</Text>
-              </Animated.View>
-            )}
-
-            {step === 'email' ? (
-              <>
-                <View style={[styles.inputContainer, error && styles.inputError]}>
-                  <Envelope size={20} color={colors.textTertiary} style={styles.inputIcon} />
-                  <TextInput
-                    style={styles.input}
-                    placeholder="Email"
-                    placeholderTextColor={colors.textTertiary}
-                    value={email}
-                    onChangeText={(text) => {
-                      setEmail(text);
-                      setError(null);
-                    }}
-                    autoCapitalize="none"
-                    keyboardType="email-address"
-                    autoFocus={true}
-                  />
-                </View>
-
-                <Button
-                  title="Continue"
-                  onPress={handleNextStep}
-                  style={styles.authButton}
-                />
-
-                <View style={styles.divider}>
-                  <View style={styles.dividerLine} />
-                  <Text style={styles.dividerText}>or</Text>
-                  <View style={styles.dividerLine} />
-                </View>
-
-                <Button
-                  title="Google"
-                  onPress={handleGoogleSignIn}
-                  variant="secondary"
-                  icon={<GoogleIcon size={20} />}
-                  style={styles.googleButton}
-                  textStyle={styles.googleButtonText}
-                />
-              </>
-            ) : (
-              <>
-                <View style={[styles.inputContainer, error && styles.inputError, { borderColor: colors.indigoSoft }]}>
-                  <Lock size={20} color={colors.textTertiary} style={styles.inputIcon} />
-                  <TextInput
-                    style={styles.input}
-                    placeholder="Password"
-                    placeholderTextColor={colors.textTertiary}
-                    value={password}
-                    onChangeText={(text) => {
-                      setPassword(text);
-                      setError(null);
-                    }}
-                    secureTextEntry
-                    autoFocus={true}
-                  />
-                </View>
-
-                <Button
-                  title={loading ? '' : (isSignUp ? 'Sign Up' : 'Sign In')}
-                  variant={isSignUp ? 'primary' : 'indigo'}
-                  onPress={handleAuth}
-                  disabled={loading}
-                  style={styles.authButton}
-                >
-                  {loading && <ActivityIndicator color="#FFFFFF" />}
-                </Button>
-
-                {!isSignUp && (
-                  <TouchableOpacity 
-                    onPress={handleMagicLink}
-                    style={styles.magicLinkContainer}
-                    disabled={loading}
-                  >
-                    <Text style={styles.magicLinkText}>
-                      Forgot password? <Text style={styles.magicLinkAction}>Send Magic Link</Text>
-                    </Text>
-                  </TouchableOpacity>
-                )}
-              </>
-            )}
-
+          <View>
             <TouchableOpacity 
-              onPress={() => {
-                setIsSignUp(!isSignUp);
-                setStep('email');
-                setError(null);
-              }}
-              style={styles.toggleContainer}
+              onPress={() => step === 'password' ? setStep('email') : router.back()}
+              style={styles.backButton}
             >
-              <Text style={styles.toggleText}>
-                {isSignUp ? 'Already have an account? ' : "Don't have an account? "}
-                <Text style={styles.toggleAction}>{isSignUp ? 'Sign In' : 'Sign Up'}</Text>
-              </Text>
+              <CaretLeft size={20} weight="bold" color={step === 'password' ? colors.indigoPunch : colors.peachPunch} />
             </TouchableOpacity>
-
-            <Button
-              title="Continue with Demo Account"
-              onPress={handleDemoSignIn}
-              variant="ghost"
-              style={styles.demoButton}
-              textStyle={styles.demoButtonText}
-            />
           </View>
-        </ScrollView>
+
+          <Animated.View layout={Layout.springify().damping(25).stiffness(200)}>
+            {renderHeader()}
+
+            <View style={styles.form}>
+              {error && (
+                <Animated.View 
+                  entering={FadeInDown.duration(400)}
+                  style={styles.errorContainer}
+                >
+                  <Text style={styles.errorText}>{error}</Text>
+                </Animated.View>
+              )}
+
+              {step === 'email' ? (
+                <View key="email-step" style={{ gap: spacing[4] }}>
+                  <View style={[styles.inputContainer, error && styles.inputError]}>
+                    <Envelope size={20} color={colors.textTertiary} style={styles.inputIcon} />
+                    <TextInput
+                      style={styles.input}
+                      placeholder="Email"
+                      placeholderTextColor={colors.textTertiary}
+                      value={email}
+                      onChangeText={(text) => {
+                        setEmail(text);
+                        setError(null);
+                      }}
+                      autoCapitalize="none"
+                      keyboardType="email-address"
+                      autoFocus={true}
+                    />
+                  </View>
+
+                  <Button
+                    title="Continue"
+                    onPress={handleNextStep}
+                    style={styles.authButton}
+                  />
+
+                  <View style={styles.divider}>
+                    <View style={styles.dividerLine} />
+                    <Text style={styles.dividerText}>or</Text>
+                    <View style={styles.dividerLine} />
+                  </View>
+
+                  <Button
+                    title="Google"
+                    onPress={handleGoogleSignIn}
+                    variant="secondary"
+                    icon={<GoogleIcon size={20} />}
+                    style={styles.googleButton}
+                    textStyle={styles.googleButtonText}
+                  />
+                </View>
+              ) : (
+                <View key="password-step" style={{ gap: spacing[4] }}>
+                  <View style={[styles.inputContainer, error && styles.inputError, { borderColor: colors.indigoSoft, backgroundColor: colors.indigoBase }]}>
+                    <Lock size={20} color={colors.textTertiary} style={styles.inputIcon} />
+                    <TextInput
+                      style={styles.input}
+                      placeholder="Password"
+                      placeholderTextColor={colors.textTertiary}
+                      value={password}
+                      onChangeText={(text) => {
+                        setPassword(text);
+                        setError(null);
+                      }}
+                      secureTextEntry
+                      autoFocus={true}
+                    />
+                  </View>
+
+                  <Button
+                    title={loading ? '' : (isSignUp ? 'Sign Up' : 'Sign In')}
+                    variant={isSignUp ? 'primary' : 'indigo'}
+                    onPress={handleAuth}
+                    disabled={loading}
+                    style={styles.authButton}
+                  >
+                    {loading && <ActivityIndicator color="#FFFFFF" />}
+                  </Button>
+
+                  {!isSignUp && (
+                    <TouchableOpacity 
+                      onPress={handleMagicLink}
+                      style={styles.magicLinkContainer}
+                      disabled={loading}
+                    >
+                      <Text style={styles.magicLinkText}>
+                        Forgot password? <Text style={styles.magicLinkAction}>Send Magic Link</Text>
+                      </Text>
+                    </TouchableOpacity>
+                  )}
+                </View>
+              )}
+
+              <View style={styles.toggleContainer}>
+                <TouchableOpacity 
+                  onPress={() => {
+                    setIsSignUp(!isSignUp);
+                    setStep('email');
+                    setError(null);
+                  }}
+                  style={{ marginBottom: spacing[4], alignItems: 'center' }}
+                >
+                  <Text style={styles.toggleText}>
+                    {isSignUp ? 'Already have an account? ' : "Don't have an account? "}
+                    <Text style={[styles.toggleAction, !isSignUp && { color: colors.indigoPunch }]}>
+                      {isSignUp ? 'Sign In' : 'Sign Up'}
+                    </Text>
+                  </Text>
+                </TouchableOpacity>
+
+                <Button
+                  title="Continue with Demo Account"
+                  onPress={handleDemoSignIn}
+                  variant="ghost"
+                  style={styles.demoButton}
+                  textStyle={styles.demoButtonText}
+                />
+              </View>
+            </View>
+          </Animated.View>
+        </Animated.ScrollView>
       </KeyboardAvoidingView>
     </SafeAreaView>
   );

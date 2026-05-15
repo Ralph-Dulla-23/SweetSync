@@ -12,7 +12,7 @@ export const RoomInteriorSkeleton = () => {
         {/* Progress Card Skeleton */}
         <View style={styles.progressSection}>
           <View style={styles.progressHeader}>
-            <Skeleton width={60} height={60} style={{ borderRadius: 12 }} />
+            <Skeleton width={80} height={40} style={{ borderRadius: 12 }} />
             <View style={styles.progressInfo}>
               <Skeleton width="60%" height={24} style={{ marginBottom: 8 }} />
               <Skeleton width="40%" height={16} />
@@ -21,15 +21,34 @@ export const RoomInteriorSkeleton = () => {
           <Skeleton height={10} style={{ borderRadius: 5 }} />
         </View>
 
+        {/* Quick Actions Skeleton */}
+        <View style={styles.quickActionsRow}>
+          {[1, 2, 3].map((i) => (
+            <View key={i} style={styles.quickAction}>
+              <Skeleton width={56} height={56} circle />
+              <Skeleton width={40} height={12} style={{ marginTop: 8 }} />
+            </View>
+          ))}
+        </View>
+
         {/* Squad List Header */}
         <View style={styles.sectionHeader}>
           <Skeleton width={120} height={16} />
         </View>
 
+        {/* Heatmap Button Skeleton */}
+        <View style={styles.heatmapButton}>
+          <Skeleton width={44} height={44} style={{ borderRadius: 12 }} />
+          <View style={{ flex: 1, gap: 4 }}>
+            <Skeleton width="50%" height={18} />
+            <Skeleton width="80%" height={14} />
+          </View>
+        </View>
+
         {/* Squad List Items */}
         <View style={styles.memberList}>
           {[1, 2, 3, 4].map((i) => (
-            <View key={i} style={styles.memberRow}>
+            <View key={i} style={[styles.memberRow, i === 4 && { borderBottomWidth: 0 }]}>
               <View style={styles.memberLeft}>
                 <Skeleton width={44} height={44} circle />
                 <View style={styles.memberInfo}>
@@ -37,7 +56,7 @@ export const RoomInteriorSkeleton = () => {
                   <Skeleton width={140} height={14} />
                 </View>
               </View>
-              <Skeleton width={44} height={44} circle />
+              <Skeleton width={60} height={32} style={{ borderRadius: radius.full }} />
             </View>
           ))}
         </View>
@@ -58,12 +77,12 @@ const styles = StyleSheet.create({
   },
   content: {
     paddingHorizontal: spacing[5],
-    paddingTop: spacing[6],
+    paddingTop: spacing[5],
     paddingBottom: spacing[10],
   },
   progressSection: {
-    marginBottom: spacing[10],
-    padding: spacing[6],
+    marginBottom: spacing[8],
+    padding: spacing[5],
     borderRadius: radius.lg,
     borderWidth: 1,
     borderColor: colors.borderDefault,
@@ -72,15 +91,36 @@ const styles = StyleSheet.create({
   progressHeader: {
     flexDirection: "row",
     alignItems: "center",
-    gap: spacing[5],
-    marginBottom: spacing[6],
+    gap: spacing[4],
+    marginBottom: spacing[5],
   },
   progressInfo: {
     flex: 1,
   },
-  sectionHeader: {
+  quickActionsRow: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    gap: spacing[6],
+    marginBottom: spacing[8],
+  },
+  quickAction: {
+    alignItems: 'center',
+  },
+  heatmapButton: {
+    backgroundColor: colors.surface,
     marginBottom: spacing[4],
-    paddingHorizontal: 4,
+    borderRadius: radius.lg,
+    padding: spacing[5],
+    borderWidth: 1,
+    borderColor: colors.borderDefault,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing[4],
+  },
+  sectionHeader: {
+    marginBottom: spacing[3],
+    marginTop: spacing[8],
+    paddingHorizontal: 0,
   },
   memberList: {
     marginBottom: spacing[10],
@@ -94,7 +134,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    paddingHorizontal: spacing[4],
+    paddingHorizontal: spacing[5],
     paddingVertical: spacing[5],
     borderBottomWidth: 0.5,
     borderBottomColor: colors.borderDefault,

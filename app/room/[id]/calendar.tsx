@@ -41,8 +41,10 @@ import { format, parseISO } from "date-fns";
 
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
+import { useRoom } from "@/hooks/useRoom";
+
 // --- Interactive Bottom Sheet Sub-component ---
-function InteractiveBottomSheet({ selectedSlot, clearSelection, isNudgeSlot, id, router }: any) {
+function InteractiveBottomSheet({ selectedSlot, clearSelection, isNudgeSlot, id, router, sessionStatus }: any) {
   const insets = useSafeAreaInsets();
   
   // Sheet is roughly 160-200px tall in compact mode. 
@@ -93,6 +95,18 @@ function InteractiveBottomSheet({ selectedSlot, clearSelection, isNudgeSlot, id,
 
   const formattedDate = format(parseISO(displaySlot.date), 'EEEE, MMM do');
   const formattedTime = slotIndexToTime(displaySlot.slotIndex);
+
+  const getAction = () => {
+    if (sessionStatus === 'voting_slots' || sessionStatus === 'voting_activity') {
+      return { title: "Start Voting", onPress: () => router.push(`/room/${id}/vote-slots`) };
+    }
+    if (sessionStatus === 'processing') {
+      return { title: "AI is Syncing...", onPress: () => router.push(`/room/${id}/processing`), variant: "ghost" as const };
+    }
+    return { title: "Reveal the Magic", onPress: () => router.push(`/room/${id}/processing`) };
+  };
+
+  const action = getAction();
 
   return (
     <GestureDetector 
@@ -168,9 +182,9 @@ function InteractiveBottomSheet({ selectedSlot, clearSelection, isNudgeSlot, id,
           </View>
           
           <Button 
-            title="Start Voting" 
-            variant="indigo"
-            onPress={() => router.push(`/room/${id}/vote-slots`)}
+            title={action.title} 
+            variant={action.variant || "indigo"}
+            onPress={action.onPress}
             style={{ marginTop: spacing[4], height: 52 }}
           />
         </View>
@@ -183,6 +197,7 @@ function InteractiveBottomSheet({ selectedSlot, clearSelection, isNudgeSlot, id,
 export default function GroupCalendar() {
   const { id } = useLocalSearchParams();
   const router = useRouter();
+  const { room } = useRoom(id as string);
   const [loading, setLoading] = React.useState(true);
   const [activeTab, setActiveTab] = React.useState<'group' | 'mine'>('group');
   const [showImagePreview, setShowImagePreview] = React.useState(true);
@@ -547,6 +562,7 @@ export default function GroupCalendar() {
         isNudgeSlot={isNudgeSlot}
         id={id as string}
         router={router}
+        sessionStatus={room?.sessionStatus}
       />
     </SafeAreaView>
   );

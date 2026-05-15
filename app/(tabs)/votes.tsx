@@ -81,7 +81,6 @@ const mockPendingVotes: PendingVote[] = [
 
 const TaskCard = ({ vote, onClear }: { vote: PendingVote; onClear: (id: string) => void }) => {
   const router = useRouter();
-  const [expanded, setExpanded] = React.useState(false);
   const [voted, setVoted] = React.useState(false);
 
   const handleVote = (type: VoteType) => {
@@ -90,13 +89,6 @@ const TaskCard = ({ vote, onClear }: { vote: PendingVote; onClear: (id: string) 
     }
     setVoted(true);
     setTimeout(() => onClear(vote.id), 800);
-  };
-
-  const handleExpand = () => {
-    if (Haptics) {
-      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    }
-    setExpanded(!expanded);
   };
 
   if (voted) {
@@ -108,16 +100,23 @@ const TaskCard = ({ vote, onClear }: { vote: PendingVote; onClear: (id: string) 
     );
   }
 
+  const handleCardPress = () => {
+    if (vote.type === 'time') {
+      router.push(`/room/${vote.roomId}/vote-slots`);
+    } else {
+      router.push(`/room/${vote.roomId}/vote-activity`);
+    }
+  };
+
   return (
     <View style={[
       styles.voteCard,
-      { borderColor: vote.type === 'time' ? colors.indigoSoft : colors.peachSoft },
-      expanded && styles.expandedCard
+      { borderColor: vote.type === 'time' ? colors.indigoSoft : colors.peachSoft }
     ]}>
       <TouchableOpacity 
-        activeOpacity={0.8}
-        onPress={handleExpand}
         style={styles.cardMainAction}
+        onPress={handleCardPress}
+        activeOpacity={0.7}
       >
         <View style={styles.cardLeft}>
           <View style={[
@@ -135,62 +134,51 @@ const TaskCard = ({ vote, onClear }: { vote: PendingVote; onClear: (id: string) 
           </View>
           <View style={styles.info}>
             <Text style={styles.voteType}>
-              {vote.type === 'time' ? 'Pick a Time Slot' : 'Suggest an Activity'}
+              {vote.type === 'time' ? 'Pick a Time' : 'Suggest Activity'}
             </Text>
             <Text style={styles.roomName} numberOfLines={1}>{vote.roomName}</Text>
           </View>
         </View>
         
-        <View style={styles.cardRight}>
-          {expanded ? (
-            <CaretUp size={20} color={colors.textTertiary} weight="bold" />
-          ) : (
-            <View style={styles.quickVoteIndicator}>
-              <Text style={styles.quickVoteText}>QUICK VOTE</Text>
-              <CaretDown size={14} color={colors.peachPunch} weight="bold" />
-            </View>
-          )}
+        <View style={styles.fullViewButton}>
+          <CaretRight size={20} color={colors.textTertiary} weight="bold" />
         </View>
       </TouchableOpacity>
 
-      {expanded && (
-        <Animated.View entering={FadeInDown.duration(300)} style={styles.expandedContent}>
-          <View style={styles.divider} />
-          
-          {vote.type === 'time' ? (
-            <View style={styles.optionsList}>
-              {vote.options.map(option => (
-                <View key={option.id} style={styles.optionRow}>
-                  <Text style={styles.optionLabel}>{option.label}</Text>
-                  <VotePills onVote={handleVote} />
-                </View>
-              ))}
-            </View>
-          ) : (
-            <View style={styles.activityInputContainer}>
-              <TextInput 
-                style={styles.inlineInput}
-                placeholder="Suggest something..."
-                placeholderTextColor={colors.textTertiary}
-                onSubmitEditing={() => handleVote('free')}
-              />
-              <TouchableOpacity 
-                style={styles.inlineSubmit}
-                onPress={() => handleVote('free')}
-              >
-                <CaretRight size={20} color={colors.white} weight="bold" />
-              </TouchableOpacity>
-            </View>
-          )}
+      <View style={styles.quickVoteContainer}>
+        <View style={styles.quickVoteHeader}>
+          <Sparkle size={14} color={colors.peachPunch} weight="fill" />
+          <Text style={styles.quickVoteLabel}>QUICK VOTE</Text>
+        </View>
 
-          <TouchableOpacity 
-            style={styles.fullViewButton}
-            onPress={() => router.push(`/room/${vote.roomId}/vote-${vote.type === 'time' ? 'slots' : 'activity'}`)}
-          >
-            <Text style={styles.fullViewText}>Open Full Room</Text>
-          </TouchableOpacity>
-        </Animated.View>
-      )}
+        {vote.type === 'time' ? (
+          <View style={styles.optionsList}>
+            {vote.options.map(option => (
+              <View key={option.id} style={styles.optionRow}>
+                <Text style={styles.optionLabel}>{option.label}</Text>
+                <VotePills onVote={handleVote} />
+              </View>
+            ))}
+          </View>
+        ) : (
+          <View style={styles.activityInputContainer}>
+            <TextInput 
+              style={styles.inlineInput}
+              placeholder="Suggest something..."
+              placeholderTextColor={colors.textTertiary}
+              onSubmitEditing={() => handleVote('free')}
+            />
+            <TouchableOpacity 
+              style={styles.inlineSubmit}
+              onPress={() => handleVote('free')}
+              accessibilityLabel="Submit activity"
+              accessibilityRole="button"
+            >
+              <CaretRight size={20} color={colors.white} weight="bold" />
+            </TouchableOpacity>
+          </View>
+        )}
+      </View>
     </View>
   );
 };

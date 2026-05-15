@@ -6,6 +6,14 @@ import { colors } from "@/constants/theme";
 import { Avatar } from "./Avatar";
 import { styles } from "./Header.styles";
 
+// Optional Haptics
+let Haptics: any;
+try {
+  Haptics = require('expo-haptics');
+} catch (e) {
+  Haptics = null;
+}
+
 interface HeaderProps {
   title: string;
   subtitle?: string;
@@ -72,7 +80,19 @@ export const Header = React.memo(({
         <View style={styles.rightContainer}>
           {rightElement}
           {userAvatar && (
-            <Avatar name="Raphael" size={38} color={colors.peachSoft} />
+            <TouchableOpacity 
+              onPress={() => {
+                if (Haptics) {
+                  Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                }
+                router.push("/profile");
+              }}
+              activeOpacity={0.8}
+              accessibilityRole="button"
+              accessibilityLabel="View profile"
+            >
+              <Avatar name="Raphael" size={38} color={colors.peachSoft} />
+            </TouchableOpacity>
           )}
         </View>
       )}

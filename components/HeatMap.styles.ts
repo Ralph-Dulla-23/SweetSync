@@ -5,7 +5,7 @@ import { globalStyles } from '@/styles/global';
 export const styles = StyleSheet.create({
   gridContainer: {
     marginTop: spacing[2],
-    paddingHorizontal: spacing[4],
+    paddingHorizontal: spacing[5],
   },
   dayHeaderRow: {
     ...globalStyles.row,

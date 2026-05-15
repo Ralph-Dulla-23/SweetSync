@@ -17,7 +17,7 @@ import { Header } from "@/components/Header";
 import { DashboardHero } from "@/components/DashboardHero";
 import { Button } from "@/components/Button";
 import { HomeSkeleton } from "@/components/HomeSkeleton";
-import { Hash } from "phosphor-react-native";
+import { Hash, WarningCircle } from "phosphor-react-native";
 import Animated, { 
   FadeInUp, 
   FadeInDown,
@@ -25,6 +25,8 @@ import Animated, {
   Easing,
 } from "react-native-reanimated";
 import { styles } from "./_index.styles";
+import { useTimeVoting } from "@/hooks/useTimeVoting";
+import { RoomStatus } from "@/types";
 
 // Optional Haptics
 let Haptics: any;
@@ -37,8 +39,7 @@ try {
 interface Room {
   id: string;
   name: string;
-  status: string;
-  statusVariant: StatusVariant;
+  sessionStatus: RoomStatus;
   members: { name: string; initial: string }[];
   detail: string;
   detailColor: string;
@@ -48,8 +49,7 @@ const mockRooms: Room[] = [
   {
     id: "1",
     name: "Friday Gang",
-    status: "Voting open",
-    statusVariant: "peach",
+    sessionStatus: "voting_slots",
     members: [
       { name: "Raphael", initial: "R" },
       { name: "Jamie", initial: "J" },
@@ -63,8 +63,7 @@ const mockRooms: Room[] = [
   {
     id: "2",
     name: "Study Squad",
-    status: "Waiting",
-    statusVariant: "neutral",
+    sessionStatus: "collecting",
     members: [
       { name: "Jamie", initial: "J" },
       { name: "Marco", initial: "M" },
@@ -116,6 +115,22 @@ const ConfirmedTicket = React.memo(({ plan, index }: { plan: ConfirmedPlan, inde
 });
 
 const RoomListItem = React.memo(({ room, index, onPress }: { room: Room; index: number; onPress: (id: string) => void }) => {
+  const { hasStaleVotes } = useTimeVoting(room.id);
+
+  const getStatusDisplay = (status: RoomStatus): { label: string; variant: StatusVariant } => {
+    switch (status) {
+      case 'collecting': return { label: 'Waiting', variant: 'neutral' };
+      case 'processing': return { label: 'Syncing...', variant: 'indigo' };
+      case 'voting_slots': return { label: 'Voting open', variant: 'peach' };
+      case 'voting_activity': return { label: 'Pick activity', variant: 'peach' };
+      case 'confirmed': return { label: 'Confirmed', variant: 'mint' };
+      case 'expired': return { label: 'Expired', variant: 'neutral' };
+      default: return { label: 'Unknown', variant: 'neutral' };
+    }
+  };
+
+  const status = getStatusDisplay(room.sessionStatus);
+
   return (
     <Animated.View 
       entering={FadeInDown.duration(600).delay(200 + index * 50).easing(Easing.out(Easing.exp))}
@@ -124,12 +139,20 @@ const RoomListItem = React.memo(({ room, index, onPress }: { room: Room; index: 
         activeOpacity={0.8}
         onPress={() => onPress(room.id)}
         accessibilityRole="button"
-        accessibilityLabel={`Enter ${room.name} room. Status: ${room.status}. ${room.detail}`}
+        accessibilityLabel={`Enter ${room.name} room. Status: ${status.label}. ${room.detail}${hasStaleVotes ? '. Warning: stale votes detected.' : ''}`}
       >
-        <Card variant="peach" style={styles.roomCard}>
+        <Card variant="peach" style={[styles.roomCard, hasStaleVotes && { borderColor: colors.peachPunch, borderWidth: 1.5 } as any]}>
           <View style={styles.cardTop}>
-            <Text style={styles.roomName}>{room.name}</Text>
-            <StatusPill label={room.status} variant={room.statusVariant} />
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+              <Text style={styles.roomName}>{room.name}</Text>
+              {hasStaleVotes && (
+                <View style={{ backgroundColor: colors.peachPunch, paddingHorizontal: 6, paddingVertical: 2, borderRadius: radius.sm, flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+                  <WarningCircle size={12} color={colors.white} weight="fill" />
+                  <Text style={{ color: colors.white, fontSize: 10, fontFamily: fonts.bodySemibold }}>UPDATE NEEDED</Text>
+                </View>
+              )}
+            </View>
+            <StatusPill label={status.label} variant={status.variant} />
           </View>
           
           <View style={styles.cardBottom}>
@@ -194,6 +217,7 @@ export default function Home() {
         </Animated.View>
       ) : (
         <ScrollView 
+          style={{ flex: 1 }}
           contentContainerStyle={styles.list}
           showsVerticalScrollIndicator={false}
         >

@@ -5,7 +5,7 @@ import { View, Text, TouchableOpacity, ScrollView } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { colors } from '@/constants/theme';
 import { Sparkle, Scan, CalendarBlank, ListChecks } from 'phosphor-react-native';
-import Animated, { FadeIn } from 'react-native-reanimated';
+import Animated, { FadeIn, FadeInDown, FadeInUp, FadeOut } from 'react-native-reanimated';
 import { Button } from '@/components/Button';
 import { styles } from './_index.styles';
 
@@ -16,7 +16,11 @@ export default function Index() {
   if (authLoading) {
     return (
       <View style={styles.loadingContainer}>
-        <Animated.View entering={FadeIn.duration(800)} style={styles.loadingBrand}>
+        <Animated.View 
+          entering={FadeInDown.duration(800).damping(20)} 
+          exiting={FadeOut.duration(400)}
+          style={styles.loadingBrand}
+        >
           <Sparkle size={64} weight="fill" color={colors.indigoPunch} />
           <Text style={styles.loadingText}>SweetSync</Text>
         </Animated.View>
@@ -56,16 +60,23 @@ export default function Index() {
         showsVerticalScrollIndicator={false}
       >
         {/* Header - Brand Moment */}
-        <View style={styles.header}>
+        <Animated.View 
+          entering={FadeInDown.delay(200).duration(600)}
+          style={styles.header}
+        >
           <Sparkle size={48} weight="fill" color={colors.indigoPunch} />
           <Text style={styles.logoText}>SweetSync</Text>
           <Text style={styles.tagline}>Plan things together.</Text>
-        </View>
+        </Animated.View>
 
         {/* Feature List - The "How it Works" */}
         <View style={styles.featureList}>
           {features.map((item, index) => (
-            <View key={index} style={styles.featureItem}>
+            <Animated.View 
+              key={index} 
+              entering={FadeInUp.delay(400 + index * 100).duration(600)}
+              style={styles.featureItem}
+            >
               <View style={[styles.iconContainer, { backgroundColor: item.color + '10' }]}>
                 <item.icon size={24} weight="duotone" color={item.color} />
               </View>
@@ -73,12 +84,15 @@ export default function Index() {
                 <Text style={styles.featureTitle}>{item.title}</Text>
                 <Text style={styles.featureDesc}>{item.desc}</Text>
               </View>
-            </View>
+            </Animated.View>
           ))}
         </View>
 
         {/* Actions - Direct Path to Auth */}
-        <View style={styles.footer}>
+        <Animated.View 
+          entering={FadeInUp.delay(800).duration(600)}
+          style={styles.footer}
+        >
           <Button
             title="Create Account"
             onPress={() => router.push({ pathname: '/(auth)/sign-in', params: { mode: 'signup' } })}
@@ -94,7 +108,7 @@ export default function Index() {
               Already have an account? <Text style={styles.signInTextBold}>Sign In</Text>
             </Text>
           </TouchableOpacity>
-        </View>
+        </Animated.View>
       </ScrollView>
     </SafeAreaView>
   );

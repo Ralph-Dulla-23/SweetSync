@@ -7,11 +7,11 @@ export const styles = StyleSheet.create({
   loadingContainer: globalStyles.center,
   content: {
     ...globalStyles.scrollContent,
-    paddingTop: spacing[6],
+    paddingTop: spacing[5],
   },
   progressSection: {
-    marginBottom: spacing[10],
-    padding: spacing[6],
+    marginBottom: spacing[8],
+    padding: spacing[5],
     borderRadius: radius.lg,
     borderWidth: 1,
   },
@@ -25,8 +25,8 @@ export const styles = StyleSheet.create({
   },
   progressHeader: {
     ...globalStyles.row,
-    gap: spacing[5],
-    marginBottom: spacing[6],
+    gap: spacing[4],
+    marginBottom: spacing[5],
   },
   progressValueContainer: {
     flexDirection: "row",
@@ -58,8 +58,9 @@ export const styles = StyleSheet.create({
   sectionHeader: {
     ...globalStyles.row,
     gap: spacing[2],
-    marginBottom: spacing[4],
-    paddingHorizontal: 4,
+    marginBottom: spacing[3],
+    marginTop: 0,
+    paddingHorizontal: 0,
   },
   sectionTitle: {
     fontFamily: fonts.bodySemibold,
@@ -78,7 +79,7 @@ export const styles = StyleSheet.create({
   },
   memberRow: {
     ...globalStyles.rowBetween,
-    paddingHorizontal: spacing[4],
+    paddingHorizontal: spacing[5],
     paddingVertical: spacing[5],
     borderBottomWidth: 0.5,
     borderBottomColor: colors.borderDefault,
@@ -160,7 +161,6 @@ export const styles = StyleSheet.create({
   // Nudge All Styles
   nudgeAllBanner: {
     backgroundColor: colors.peachBase,
-    marginHorizontal: spacing[4],
     marginTop: spacing[4],
     borderRadius: radius.lg,
     borderWidth: 1,

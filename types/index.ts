@@ -7,14 +7,38 @@ export interface Room {
   id: string;
   name: string;
   description?: string;
-  status: RoomStatus;
+  sessionStatus: RoomStatus;
   hostId: string;
   members: Member[];
+  upcomingEvents?: Event[];
+  activitySuggestions?: ActivitySuggestion[];
   createdAt: string;
   updatedAt: string;
 }
 
-export type RoomStatus = 'voting' | 'waiting' | 'confirmed';
+export type RoomStatus = 'collecting' | 'processing' | 'voting_slots' | 'voting_activity' | 'confirmed' | 'expired';
+
+export interface Event {
+  id: string;
+  roomId: string;
+  title: string;
+  description?: string;
+  date: string;
+  startSlot: number;
+  endSlot: number;
+  members: string[]; // Member IDs
+  location?: string;
+  category?: 'social' | 'study' | 'food' | 'active';
+}
+
+export interface ActivitySuggestion {
+  id: string;
+  title: string;
+  description: string;
+  duration: number; // in slots (30m each)
+  category: 'social' | 'study' | 'food' | 'active';
+  votes?: number;
+}
 
 export interface Member {
   id: string;

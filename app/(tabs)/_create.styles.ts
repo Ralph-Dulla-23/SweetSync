@@ -132,6 +132,19 @@ export const styles = StyleSheet.create({
     fontSize: 16,
     color: colors.textPrimary,
   },
+  textArea: {
+    backgroundColor: colors.white,
+    borderRadius: radius.md,
+    borderWidth: 1,
+    borderColor: colors.borderDefault,
+    paddingHorizontal: spacing[4],
+    paddingTop: spacing[4],
+    height: 100,
+    fontFamily: fonts.body,
+    fontSize: 16,
+    color: colors.textPrimary,
+    textAlignVertical: 'top',
+  },
   aiSuggestion: {
     ...globalStyles.row,
     gap: spacing[3],
@@ -164,6 +177,11 @@ export const styles = StyleSheet.create({
   successHeader: {
     alignItems: 'center',
     marginBottom: spacing[8],
+    paddingTop: spacing[4],
+  },
+  celebrationEmoji: {
+    fontSize: 48,
+    marginBottom: spacing[2],
   },
   checkCircle: {
     width: 80,
@@ -172,10 +190,16 @@ export const styles = StyleSheet.create({
     backgroundColor: colors.mintPunch,
     ...globalStyles.center,
     marginBottom: spacing[4],
+    // Add a slight elevation/glow for celebratory feel
+    shadowColor: colors.mintPunch,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 5,
   },
   successTitle: {
     fontFamily: fonts.display,
-    fontSize: 28,
+    fontSize: 32,
     color: colors.textPrimary,
     textAlign: 'center',
   },
@@ -184,17 +208,19 @@ export const styles = StyleSheet.create({
     fontSize: 16,
     color: colors.textSecondary,
     textAlign: 'center',
-    marginTop: spacing[1],
+    marginTop: spacing[2],
     paddingHorizontal: spacing[4],
+    lineHeight: 22,
   },
   codeCard: {
-    backgroundColor: colors.white,
     borderRadius: radius.xl,
     padding: spacing[8],
     alignItems: 'center',
     borderWidth: 1,
     borderColor: colors.peachSoft,
     marginBottom: spacing[10],
+    // Subtly tinted background
+    backgroundColor: colors.peachBase,
   },
   codeLabel: {
     fontFamily: fonts.bodySemibold,

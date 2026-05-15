@@ -7,7 +7,7 @@ const MOCK_ROOMS: Record<string, Room> = {
     id: '1',
     name: 'Friday Gang',
     description: 'Coordinate with the squad',
-    status: 'voting',
+    sessionStatus: 'voting_slots',
     hostId: 'mock-user-123',
     members: [
       { id: '1', name: 'Raphael', status: 'uploaded', isHost: true },
@@ -16,18 +16,58 @@ const MOCK_ROOMS: Record<string, Room> = {
       { id: '4', name: 'Trisha', status: 'uploaded' },
       { id: '5', name: 'Ana', status: 'uploaded' },
     ],
+    upcomingEvents: [
+      {
+        id: 'e1',
+        roomId: '1',
+        title: 'Friday Night Tacos',
+        date: new Date(Date.now() + 86400000 * 2).toISOString().split('T')[0],
+        startSlot: 38, // 7 PM
+        endSlot: 42,   // 9 PM
+        location: 'Taco Bell',
+        category: 'food',
+        members: ['1', '2', '3', '4', '5']
+      }
+    ],
+    activitySuggestions: [
+      {
+        id: 's1',
+        title: 'Game Night',
+        description: 'Casual board games and drinks',
+        duration: 4,
+        category: 'social',
+        votes: 3
+      },
+      {
+        id: 's2',
+        title: 'Late Night Study',
+        description: 'Focus session for the upcoming exam',
+        duration: 6,
+        category: 'study',
+        votes: 1
+      }
+    ],
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
   },
   '2': {
     id: '2',
     name: 'Study Squad',
-    status: 'waiting',
+    sessionStatus: 'collecting',
     hostId: 'mock-user-123',
     members: [
       { id: '1', name: 'Raphael', status: 'uploaded', isHost: true },
       { id: '6', name: 'Kevin', status: 'pending' },
       { id: '7', name: 'Sarah', status: 'pending' },
+    ],
+    activitySuggestions: [
+      {
+        id: 's3',
+        title: 'Library Grind',
+        description: '4-hour session at the library',
+        duration: 8,
+        category: 'study',
+      }
     ],
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),

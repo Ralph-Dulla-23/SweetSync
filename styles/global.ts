@@ -16,7 +16,7 @@ export const globalStyles = StyleSheet.create({
   scrollContent: {
     paddingHorizontal: spacing[5],
     paddingTop: spacing[4],
-    paddingBottom: spacing[10],
+    paddingBottom: 120,
   },
   
   // Flexbox helpers

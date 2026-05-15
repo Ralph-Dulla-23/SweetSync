@@ -17,6 +17,7 @@ import { Button } from '@/components/Button';
 import { Sparkle, Plus, MagicWand } from 'phosphor-react-native';
 import Animated, { FadeInUp, FadeInDown, Layout } from 'react-native-reanimated';
 import { styles } from './_vote-activity.styles';
+import { CoordinationSkeleton } from '@/components/CoordinationSkeleton';
 
 // Optional Haptics
 let Haptics: any;
@@ -42,10 +43,17 @@ const mockActivities: ActivityOption[] = [
 export default function VoteActivityScreen() {
   const { id } = useLocalSearchParams();
   const router = useRouter();
+  const [initialLoading, setInitialLoading] = useState(true);
   const [activities, setActivities] = useState<ActivityOption[]>(mockActivities);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [newActivity, setNewActivity] = useState("");
   const [loading, setLoading] = useState(false);
+
+  React.useEffect(() => {
+    // Simulate initial data fetch
+    const timer = setTimeout(() => setInitialLoading(false), 1000);
+    return () => clearTimeout(timer);
+  }, []);
 
   const toggleVote = (activityId: string) => {
     if (Haptics) {
@@ -88,6 +96,10 @@ export default function VoteActivityScreen() {
     }, 2000);
   };
 
+  if (initialLoading) {
+    return <CoordinationSkeleton type="activity" />;
+  }
+
   return (
     <SafeAreaView style={styles.container}>
       <Header 
@@ -105,7 +117,10 @@ export default function VoteActivityScreen() {
           contentContainerStyle={styles.content}
           showsVerticalScrollIndicator={false}
         >
-          <View style={styles.hero}>
+          <Animated.View 
+            entering={FadeInDown.delay(200).duration(600)}
+            style={styles.hero}
+          >
             <View style={styles.iconCircle}>
               <MagicWand size={32} color={colors.peachPunch} weight="duotone" />
             </View>
@@ -115,22 +130,30 @@ export default function VoteActivityScreen() {
                 AI found these based on your squad's vibe.
               </Text>
             </View>
-          </View>
+          </Animated.View>
 
           <View style={styles.list}>
             {activities.map((activity, index) => (
-              <ActivityCard 
+              <Animated.View 
                 key={activity.id}
-                title={activity.title}
-                votes={activity.votes + (selectedIds.has(activity.id) ? 1 : 0)}
-                selected={selectedIds.has(activity.id)}
-                isAI={activity.isAI}
-                onPress={() => toggleVote(activity.id)}
-              />
+                entering={FadeInUp.delay(400 + index * 100).duration(600)}
+                layout={Layout.springify()}
+              >
+                <ActivityCard 
+                  title={activity.title}
+                  votes={activity.votes + (selectedIds.has(activity.id) ? 1 : 0)}
+                  selected={selectedIds.has(activity.id)}
+                  isAI={activity.isAI}
+                  onPress={() => toggleVote(activity.id)}
+                />
+              </Animated.View>
             ))}
           </View>
 
-          <View style={styles.addSection}>
+          <Animated.View 
+            entering={FadeInUp.delay(800).duration(600)}
+            style={styles.addSection}
+          >
             <Text style={styles.sectionLabel}>Something else?</Text>
             <View style={styles.inputRow}>
               <TextInput
@@ -147,7 +170,7 @@ export default function VoteActivityScreen() {
                 icon={<Plus size={24} color={colors.white} weight="bold" />}
               />
             </View>
-          </View>
+          </Animated.View>
         </ScrollView>
 
         <View style={styles.footer}>

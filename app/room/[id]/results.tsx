@@ -38,6 +38,7 @@ import { useRoom } from '@/hooks/useRoom';
 import { useAuth } from '@/hooks/useAuth';
 import { globalStyles } from '@/styles/global';
 import { styles } from './_results.styles';
+import { RoomInteriorSkeleton } from '@/components/RoomInteriorSkeleton';
 
 interface MockActivity {
   id: string;
@@ -64,6 +65,23 @@ export default function ResultsScreen() {
 
   const isHost = room?.hostId === user?.id;
 
+  // Pulse animation for the winner card
+  const pulse = useSharedValue(1);
+  React.useEffect(() => {
+    pulse.value = withRepeat(
+      withSequence(
+        withTiming(1.02, { duration: 1000, easing: Easing.inOut(Easing.sin) }),
+        withTiming(1, { duration: 1000, easing: Easing.inOut(Easing.sin) })
+      ),
+      -1,
+      true
+    );
+  }, []);
+
+  const animatedCardStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: pulse.value }],
+  }));
+
   const handleShare = async () => {
     try {
       await Share.share({
@@ -81,22 +99,9 @@ export default function ResultsScreen() {
     }
   };
 
-  // Pulse animation for the winner card
-  const pulse = useSharedValue(1);
-  React.useEffect(() => {
-    pulse.value = withRepeat(
-      withSequence(
-        withTiming(1.02, { duration: 1000, easing: Easing.inOut(Easing.sin) }),
-        withTiming(1, { duration: 1000, easing: Easing.inOut(Easing.sin) })
-      ),
-      -1,
-      true
-    );
-  }, []);
-
-  const animatedCardStyle = useAnimatedStyle(() => ({
-    transform: [{ scale: pulse.value }],
-  }));
+  if (roomLoading) {
+    return <RoomInteriorSkeleton />;
+  }
 
   if (isTie) {
     return (

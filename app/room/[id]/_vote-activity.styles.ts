@@ -6,7 +6,7 @@ export const styles = StyleSheet.create({
   container: globalStyles.screen,
   content: {
     ...globalStyles.scrollContent,
-    paddingBottom: 140,
+    paddingBottom: 120,
     paddingTop: spacing[4],
   },
   hero: {
@@ -109,5 +109,6 @@ export const styles = StyleSheet.create({
     backgroundColor: colors.white,
     borderTopWidth: 1,
     borderTopColor: colors.borderDefault,
+    paddingBottom: Platform.OS === 'ios' ? spacing[10] : spacing[5],
   },
 });

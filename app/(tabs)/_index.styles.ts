@@ -6,7 +6,7 @@ export const styles = StyleSheet.create({
   container: globalStyles.screen,
   list: {
     paddingTop: spacing[4],
-    paddingBottom: spacing[10],
+    paddingBottom: 120,
   },
   sectionHeader: {
     paddingHorizontal: spacing[5],

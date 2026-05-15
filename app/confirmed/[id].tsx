@@ -6,7 +6,8 @@ import {
   SafeAreaView, 
   ScrollView, 
   TouchableOpacity,
-  Image
+  Dimensions,
+  Share
 } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { colors, fonts, spacing, radius } from '@/constants/theme';
@@ -17,7 +18,6 @@ import {
   Calendar, 
   MapPin, 
   Users, 
-  CaretLeft, 
   DotsThreeVertical,
   CheckCircle,
   QrCode,
@@ -32,9 +32,21 @@ import Animated, {
   withSequence, 
   withTiming,
   withDelay,
-  Easing
+  Easing,
+  withSpring
 } from 'react-native-reanimated';
+import { useRoom } from '@/hooks/useRoom';
 import { styles } from './_[id].styles';
+
+// Optional Haptics
+let Haptics: any;
+try {
+  Haptics = require('expo-haptics');
+} catch (e) {
+  Haptics = null;
+}
+
+const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
 const CelebrationSparkle = ({ delay = 0, style }: { delay?: number, style?: any }) => {
   const scale = useSharedValue(0);
@@ -51,7 +63,7 @@ const CelebrationSparkle = ({ delay = 0, style }: { delay?: number, style?: any 
     ));
     opacity.value = withDelay(delay, withRepeat(
       withSequence(
-        withTiming(1, { duration: 1000 }),
+        withTiming(0.8, { duration: 1000 }),
         withTiming(0, { duration: 1000 })
       ),
       -1,
@@ -66,7 +78,7 @@ const CelebrationSparkle = ({ delay = 0, style }: { delay?: number, style?: any 
 
   return (
     <Animated.View style={[animatedStyle, style, { position: 'absolute' }]}>
-      <Sparkle size={24} color={colors.peachSoft} weight="fill" />
+      <Sparkle size={24} color={colors.peachPunch} weight="fill" />
     </Animated.View>
   );
 };
@@ -74,17 +86,53 @@ const CelebrationSparkle = ({ delay = 0, style }: { delay?: number, style?: any 
 export default function ConfirmedEventScreen() {
   const { id } = useLocalSearchParams();
   const router = useRouter();
+  const { room } = useRoom('1'); // Mock room for demo, in real app use ID
+
+  const rotation = useSharedValue(0);
+  const translateY = useSharedValue(50);
+
+  useEffect(() => {
+    if (Haptics) {
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+    }
+    
+    rotation.value = withRepeat(
+      withSequence(
+        withTiming(-1, { duration: 1500, easing: Easing.inOut(Easing.sin) }),
+        withTiming(1, { duration: 1500, easing: Easing.inOut(Easing.sin) })
+      ),
+      -1,
+      true
+    );
+  }, []);
+
+  const ticketAnimatedStyle = useAnimatedStyle(() => ({
+    transform: [
+      { perspective: 1000 },
+      { rotateZ: `${rotation.value}deg` }
+    ],
+  }));
 
   const mockEvent = {
-    title: "Friday Night Drinks",
-    roomName: "Friday Gang",
+    title: room?.upcomingEvents?.[0]?.title || "Friday Night Drinks",
+    roomName: room?.name || "Friday Gang",
     date: "Friday, May 15",
     time: "6:00 PM",
     location: "The Peach Pit, 123 Sweet St",
-    attendees: [
+    attendees: room?.members || [
       { name: "R" }, { name: "J" }, { name: "M" }, { name: "T" }, { name: "A" }
     ],
     isHost: true
+  };
+
+  const handleShare = async () => {
+    try {
+      await Share.share({
+        message: `It's on! 🍑\n\n${mockEvent.title}\n📅 ${mockEvent.date} at ${mockEvent.time}\n📍 ${mockEvent.location}\n\nSynced via SweetSync`,
+      });
+    } catch (error) {
+      console.log(error);
+    }
   };
 
   return (
@@ -93,26 +141,29 @@ export default function ConfirmedEventScreen() {
         title="Event Details" 
         showBack 
         rightElement={
-          <TouchableOpacity>
+          <TouchableOpacity onPress={() => {}}>
             <DotsThreeVertical size={24} color={colors.textPrimary} />
           </TouchableOpacity>
         }
       />
 
       <View style={{ position: 'absolute', top: 100, left: 0, right: 0, bottom: 0, pointerEvents: 'none' }}>
-        <CelebrationSparkle style={{ top: '10%', left: '10%' }} delay={0} />
-        <CelebrationSparkle style={{ top: '5%', right: '15%' }} delay={400} />
-        <CelebrationSparkle style={{ top: '40%', left: '5%' }} delay={800} />
-        <CelebrationSparkle style={{ top: '35%', right: '10%' }} delay={1200} />
-        <CelebrationSparkle style={{ bottom: '20%', left: '15%' }} delay={1600} />
-        <CelebrationSparkle style={{ bottom: '25%', right: '20%' }} delay={2000} />
+        <CelebrationSparkle style={{ top: '10%', left: '15%' }} delay={0} />
+        <CelebrationSparkle style={{ top: '5%', right: '20%' }} delay={400} />
+        <CelebrationSparkle style={{ top: '40%', left: '10%' }} delay={800} />
+        <CelebrationSparkle style={{ top: '35%', right: '15%' }} delay={1200} />
+        <CelebrationSparkle style={{ bottom: '20%', left: '20%' }} delay={1600} />
+        <CelebrationSparkle style={{ bottom: '25%', right: '25%' }} delay={2000} />
       </View>
 
       <ScrollView 
         contentContainerStyle={styles.content}
         showsVerticalScrollIndicator={false}
       >
-        <Animated.View entering={FadeInDown.duration(600).springify().damping(15)}>
+        <Animated.View 
+          entering={FadeInDown.duration(800).springify().damping(12)}
+          style={ticketAnimatedStyle}
+        >
           <View style={styles.ticketCard}>
             <View style={styles.ticketHeader}>
               <View style={styles.roomBadge}>
@@ -154,7 +205,7 @@ export default function ConfirmedEventScreen() {
                 <View>
                   <Text style={styles.detailValue}>{mockEvent.attendees.length} attending</Text>
                   <View style={styles.avatarRow}>
-                    <AvatarStack avatars={mockEvent.attendees} size={24} overlap={8} />
+                    <AvatarStack avatars={mockEvent.attendees.map(m => ({ name: m.name }))} size={24} overlap={8} />
                   </View>
                 </View>
               </View>
@@ -167,7 +218,9 @@ export default function ConfirmedEventScreen() {
             </View>
 
             <View style={styles.qrSection}>
-              <QrCode size={120} color={colors.textPrimary} weight="thin" />
+              <TouchableOpacity activeOpacity={0.9}>
+                <QrCode size={140} color={colors.textPrimary} weight="thin" />
+              </TouchableOpacity>
               <Text style={styles.qrNote}>Event ID: {id}</Text>
             </View>
           </View>
@@ -177,13 +230,15 @@ export default function ConfirmedEventScreen() {
           <Button 
             title="Add to Calendar" 
             variant="primary"
-            onPress={() => {}}
+            onPress={() => {
+              if (Haptics) Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+            }}
             style={styles.actionButton}
           />
           <Button 
             title="Share with Group" 
             variant="secondary"
-            onPress={() => {}}
+            onPress={handleShare}
             style={styles.actionButton}
           />
           <TouchableOpacity style={styles.cancelLink}>
@@ -194,5 +249,6 @@ export default function ConfirmedEventScreen() {
     </SafeAreaView>
   );
 }
+
 
 

@@ -11,14 +11,17 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import { colors, fonts, spacing, radius } from '@/constants/theme';
 import { Header } from '@/components/Header';
 import { SlotCard } from '@/components/SlotCard';
-import { VotePills, VoteType } from '@/components/VotePills';
+import { VotePills } from '@/components/VotePills';
 import { Button } from '@/components/Button';
 import { EmptyState } from '@/components/EmptyState';
-import { Info, Sparkle, Clock, Warning, CalendarStar } from 'phosphor-react-native';
+import { Info, Sparkle, Clock, Warning, CalendarStar, Calendar } from 'phosphor-react-native';
+import Animated, { FadeInUp, FadeInDown, Layout } from 'react-native-reanimated';
 import { styles } from './_vote-slots.styles';
 import { useGlobalAvailability } from '@/hooks/useGlobalAvailability';
+import { useTimeVoting, VoteType } from '@/hooks/useTimeVoting';
 import { getWeekDays, slotIndexToTime } from '@/lib/time';
 import { format, parseISO } from 'date-fns';
+import { CoordinationSkeleton } from '@/components/CoordinationSkeleton';
 
 // Optional Haptics
 let Haptics: any;
@@ -41,9 +44,16 @@ interface TimeSlotOption {
 export default function VoteSlotsScreen() {
   const { id } = useLocalSearchParams();
   const router = useRouter();
-  const [votes, setVotes] = useState<Record<string, VoteType>>({});
+  const { votes, castVote } = useTimeVoting(id as string);
+  const [initialLoading, setInitialLoading] = useState(true);
   const [loading, setLoading] = useState(false);
   const { checkConflict } = useGlobalAvailability();
+
+  React.useEffect(() => {
+    // Simulate initial data fetch
+    const timer = setTimeout(() => setInitialLoading(false), 1000);
+    return () => clearTimeout(timer);
+  }, []);
 
   const weekDays = useMemo(() => getWeekDays(), []);
 
@@ -53,14 +63,11 @@ export default function VoteSlotsScreen() {
     { id: '3', date: weekDays[1], slotIndex: 22, durationSlots: 4, freeCount: 3, totalCount: 5 }, // Tuesday 11am - CONFLICT with Study Session
   ], [weekDays]);
 
-  const handleVote = (slotId: string, type: VoteType) => {
+  const handleVote = (slot: TimeSlotOption, type: VoteType) => {
     if (Haptics) {
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     }
-    setVotes(prev => ({
-      ...prev,
-      [slotId]: type
-    }));
+    castVote(slot.id, slot.date, slot.slotIndex, slot.slotIndex + slot.durationSlots - 1, type);
   };
 
   const handleConfirm = () => {
@@ -83,6 +90,10 @@ export default function VoteSlotsScreen() {
       conflicts: checkConflict(slot.date, slot.slotIndex, slot.slotIndex + slot.durationSlots - 1)
     }));
   }, [mockSlotOptions, checkConflict]);
+
+  if (initialLoading) {
+    return <CoordinationSkeleton type="time" />;
+  }
 
   if (mockSlotOptions.length === 0) {
     return (
@@ -117,7 +128,10 @@ export default function VoteSlotsScreen() {
         contentContainerStyle={styles.content}
         showsVerticalScrollIndicator={false}
       >
-        <View style={styles.hero}>
+        <Animated.View 
+          entering={FadeInDown.delay(200).duration(600)}
+          style={styles.hero}
+        >
           <View style={styles.iconCircle}>
             <Clock size={32} color={colors.indigoPunch} weight="duotone" />
           </View>
@@ -127,53 +141,70 @@ export default function VoteSlotsScreen() {
               AI found {mockSlotOptions.length} gaps that work for the squad.
             </Text>
           </View>
-        </View>
+        </Animated.View>
 
         <View style={styles.slotList}>
           {slotOptionsWithConflicts.map((slot, index) => {
             const hasConflict = slot.conflicts.length > 0;
             const formattedDay = format(parseISO(slot.date), 'EEEE');
             const formattedTime = slotIndexToTime(slot.slotIndex);
+            const currentVoteType = votes[slot.id]?.type;
 
             return (
-              <View key={slot.id} style={styles.slotContainer}>
+              <Animated.View 
+                key={slot.id} 
+                entering={FadeInUp.delay(400 + index * 100).duration(600)}
+                layout={Layout.springify()}
+                style={[
+                  styles.slotContainer,
+                  slot.freeCount === slot.totalCount && { borderColor: colors.mintSoft, backgroundColor: colors.mintBase }
+                ]}
+              >
                 <SlotCard 
                   time={`${formattedDay} at ${formattedTime}`}
                   freeCount={slot.freeCount}
                   totalCount={slot.totalCount}
+                  transparent
+                  style={{ padding: spacing[4] }}
                 />
                 
                 {hasConflict && (
                   <View style={[
                     localStyles.conflictWarning,
-                    votes[slot.id] === 'free' && { borderColor: colors.peachPunch, borderWidth: 2 }
+                    currentVoteType === 'free' && { borderColor: colors.peachPunch, borderWidth: 1 }
                   ]}>
-                    <Warning size={14} color={colors.peachPunch} weight="bold" />
+                    <Calendar size={14} color={colors.peachPunch} weight="bold" />
                     <Text style={localStyles.conflictText}>
-                      {votes[slot.id] === 'free' 
-                        ? `Stale Vote! You're now busy with "${slot.conflicts[0].title}"` 
+                      {currentVoteType === 'free' 
+                        ? "Wait, your schedule changed!" 
                         : `Schedule Conflict: ${slot.conflicts[0].title}`}
                     </Text>
                   </View>
                 )}
 
-                <View style={styles.voteArea}>
+                <View style={[
+                  styles.voteArea,
+                  slot.freeCount === slot.totalCount && { borderTopColor: colors.mintSoft, backgroundColor: colors.mintSoft + '40' }
+                ]}>
                   <VotePills 
-                    selectedVote={votes[slot.id]}
-                    onVote={(type) => handleVote(slot.id, type)}
+                    selectedVote={currentVoteType}
+                    onVote={(type) => handleVote(slot, type)}
                   />
                 </View>
-              </View>
+              </Animated.View>
             );
           })}
         </View>
 
-        <View style={styles.infoBox}>
+        <Animated.View 
+          entering={FadeInUp.delay(800).duration(600)}
+          style={styles.infoBox}
+        >
           <Sparkle size={20} color={colors.peachPunch} weight="fill" />
           <Text style={styles.infoText}>
             Voting 'Prefer' helps the AI prioritize slots that are best for everyone. We'll suggest activities based on the winning time!
           </Text>
-        </View>
+        </Animated.View>
       </ScrollView>
 
       <View style={styles.footer}>
@@ -194,10 +225,10 @@ const localStyles = StyleSheet.create({
   conflictWarning: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#FFF1F1',
+    backgroundColor: colors.peachBase,
     paddingHorizontal: 12,
     paddingVertical: 8,
-    borderRadius: radius.sm,
+    borderRadius: radius.md,
     marginTop: -8,
     marginBottom: 8,
     marginHorizontal: 12,
