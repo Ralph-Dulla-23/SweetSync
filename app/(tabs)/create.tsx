@@ -188,7 +188,7 @@ export default function CreateScreen() {
             >
               <Text style={{ fontSize: 24, color: colors.textPrimary, fontFamily: fonts.bodySemibold }}>-</Text>
             </TouchableOpacity>
-            <Text style={{ fontSize: 20, fontFamily: fonts.headline, color: colors.peachPunch, width: 40, textAlign: 'center' }}>{expectedCount}</Text>
+            <Text style={{ fontSize: 20, fontFamily: fonts.display, color: colors.peachPunch, width: 40, textAlign: 'center' }}>{expectedCount}</Text>
             <TouchableOpacity 
               onPress={() => setExpectedCount(Math.min(20, expectedCount + 1))}
               style={{ width: 44, height: 44, borderRadius: radius.md, backgroundColor: colors.pageBg, alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: colors.borderDefault }}
