@@ -17,6 +17,7 @@ import {
 import { colors } from '@/constants/theme';
 import { AuthProvider } from '@/hooks/useAuth';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
+import { ToastProvider } from '@/components/Toast';
 
 SplashScreen.preventAutoHideAsync();
 
@@ -43,14 +44,16 @@ export default function RootLayout() {
       <AuthProvider>
         <SafeAreaProvider>
           <StatusBar style="dark" />
-          <View style={{ flex: 1, backgroundColor: colors.pageBg }}>
-            <Stack
-              screenOptions={{
-                headerShown: false,
-                contentStyle: { backgroundColor: colors.pageBg },
-              }}
-            />
-          </View>
+          <ToastProvider>
+            <View style={{ flex: 1, backgroundColor: colors.pageBg }}>
+              <Stack
+                screenOptions={{
+                  headerShown: false,
+                  contentStyle: { backgroundColor: colors.pageBg },
+                }}
+              />
+            </View>
+          </ToastProvider>
         </SafeAreaProvider>
       </AuthProvider>
     </GestureHandlerRootView>
