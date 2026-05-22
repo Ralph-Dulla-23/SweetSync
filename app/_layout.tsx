@@ -3,7 +3,7 @@ import { useCallback, useEffect } from 'react';
 import { View } from 'react-native';
 import { Stack } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
-import { SafeAreaProvider } from 'react-native-safe-area-context';
+import { SafeAreaProvider, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
 import {
   useFonts,
@@ -14,12 +14,32 @@ import {
   PlusJakartaSans_400Regular,
   PlusJakartaSans_600SemiBold,
 } from '@expo-google-fonts/plus-jakarta-sans';
-import { colors } from '@/constants/theme';
+import { colors, spacing } from '@/constants/theme';
 import { AuthProvider } from '@/hooks/useAuth';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
-import { ToastProvider } from '@/components/Toast';
+import Toast from 'react-native-toast-message';
+import { toastConfig } from '@/components/ToastConfig';
 
 SplashScreen.preventAutoHideAsync();
+
+function AppContent() {
+  const insets = useSafeAreaInsets();
+  
+  return (
+    <View style={{ flex: 1, backgroundColor: colors.pageBg }}>
+      <Stack
+        screenOptions={{
+          headerShown: false,
+          contentStyle: { backgroundColor: colors.pageBg },
+        }}
+      />
+      <Toast 
+        config={toastConfig} 
+        topOffset={insets.top + spacing[2]}
+      />
+    </View>
+  );
+}
 
 export default function RootLayout() {
   const [fontsLoaded] = useFonts({
@@ -44,16 +64,7 @@ export default function RootLayout() {
       <AuthProvider>
         <SafeAreaProvider>
           <StatusBar style="dark" />
-          <ToastProvider>
-            <View style={{ flex: 1, backgroundColor: colors.pageBg }}>
-              <Stack
-                screenOptions={{
-                  headerShown: false,
-                  contentStyle: { backgroundColor: colors.pageBg },
-                }}
-              />
-            </View>
-          </ToastProvider>
+          <AppContent />
         </SafeAreaProvider>
       </AuthProvider>
     </GestureHandlerRootView>

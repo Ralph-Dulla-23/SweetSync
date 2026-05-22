@@ -30,7 +30,8 @@ import Animated, {
   FadeOutLeft, 
   FadeInDown,
   Layout,
-  SlideInUp
+  SlideInUp,
+  ZoomIn
 } from 'react-native-reanimated';
 import { styles } from './_create.styles';
 import { useAuth } from '@/hooks/useAuth';
@@ -39,9 +40,12 @@ import { supabase } from '@/lib/supabase';
 type CreateStep = 'choice' | 'session_details' | 'room_details' | 'success';
 type CreateType = 'session' | 'room';
 
+import { useRoom } from '@/hooks/useRoom';
+
 export default function CreateScreen() {
   const router = useRouter();
   const { user } = useAuth();
+  const { createRoom: createRoomSim } = useRoom('');
   
   const [step, setStep] = useState<CreateStep>('choice');
   const [type, setType] = useState<CreateType>('session');
@@ -68,41 +72,13 @@ export default function CreateScreen() {
     setGeneratedCode(code);
 
     try {
-      if (!user) {
-        // Fallback for Demo Mode
-        console.warn('Running in Demo Mode. Simulating success.');
-        await new Promise(resolve => setTimeout(resolve, 1500));
-        setRoomId("demo-room-id");
-        setStep('success');
-        return;
-      }
-
-      // 1. Insert room
-      const { data: room, error: roomError } = await supabase
-        .from('rooms')
-        .insert({
-          name: name.trim(),
-          description: description.trim() || null,
-          host_id: user.id,
-          status: 'active'
-        })
-        .select()
-        .single();
-
-      if (roomError) throw roomError;
-
-      // 2. Add creator as a member
-      const { error: memberError } = await supabase
-        .from('members')
-        .insert({
-          room_id: room.id,
-          user_id: user.id,
-          status: 'joined'
-        });
-
-      if (memberError) throw memberError;
-
-      setRoomId(room.id);
+      // Use simulator for all creations in prototype mode
+      console.log('Using Simulator for creation.');
+      await new Promise(resolve => setTimeout(resolve, 800));
+      
+      const newRoom = createRoomSim(name.trim(), description.trim() || undefined);
+      
+      setRoomId(newRoom.id);
       setStep('success');
     } catch (error: any) {
       console.error('Error creating:', error);
@@ -282,41 +258,54 @@ export default function CreateScreen() {
 
   const renderSuccess = () => (
     <Animated.View 
-      entering={FadeInDown.springify()} 
+      entering={FadeInDown.springify().damping(15)} 
       style={styles.stepContainer}
     >
       <View style={styles.successHeader}>
-        <Animated.Text entering={FadeInDown.delay(200)} style={styles.celebrationEmoji}>🎉</Animated.Text>
-        <View style={styles.checkCircle}>
-          <Check size={40} color={colors.white} weight="bold" />
-        </View>
-        <Text style={styles.successTitle}>Invite the Squad!</Text>
+        <Animated.Text 
+          entering={ZoomIn.duration(600).delay(200)} 
+          style={styles.successTitle}
+        >
+          Invitation{'\n'}Ready!
+        </Animated.Text>
         <Text style={styles.successSubtitle}>
-          Your {type === 'room' ? 'room' : 'session'} "{name}" is ready. Share this code to start syncing.
+          Your {type === 'room' ? 'room' : 'session'} "{name}" is live. Share this ticket with the squad to start syncing.
         </Text>
       </View>
 
-      <Animated.View entering={FadeInDown.delay(400)} style={styles.codeCard}>
+      <Animated.View 
+        entering={ZoomIn.duration(600).delay(400)} 
+        style={styles.ticketCard}
+      >
+        <View style={styles.ticketCutoutLeft} />
+        <View style={styles.ticketCutoutRight} />
+        
         <Text style={styles.codeLabel}>JOIN CODE</Text>
         <Text style={styles.codeValue}>{generatedCode}</Text>
-        <TouchableOpacity style={styles.copyButton} onPress={handleCopyCode}>
-          <Copy size={20} color={colors.peachPunch} />
+        
+        <TouchableOpacity 
+          style={styles.copyButton} 
+          onPress={handleCopyCode}
+          activeOpacity={0.7}
+        >
+          <Copy size={20} color={colors.peachPunch} weight="bold" />
           <Text style={styles.copyText}>Copy Code</Text>
         </TouchableOpacity>
       </Animated.View>
 
       <View style={styles.successActions}>
         <Button 
-          title="Share Invite Link" 
-          variant="primary"
-          onPress={handleShare}
-          icon={<ShareNetwork size={22} color={colors.white} />}
+          title="Go to Room" 
+          variant="indigo"
+          onPress={() => router.push(`/room/${roomId}`)}
           style={styles.finalButton}
+          pulse
         />
         <Button 
-          title="Go to Room" 
+          title="Share Invite Link" 
           variant="secondary"
-          onPress={() => router.push(`/room/${roomId}`)}
+          onPress={handleShare}
+          icon={<ShareNetwork size={22} color={colors.peachPunch} weight="bold" />}
           style={styles.finalButton}
         />
       </View>
