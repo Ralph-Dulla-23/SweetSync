@@ -41,6 +41,8 @@ interface TimeSlotOption {
   myVote?: VoteType;
 }
 
+import { simulator } from '@/lib/simulator';
+
 export default function VoteSlotsScreen() {
   const { id } = useLocalSearchParams();
   const router = useRouter();
@@ -57,11 +59,9 @@ export default function VoteSlotsScreen() {
 
   const weekDays = useMemo(() => getWeekDays(), []);
 
-  const mockSlotOptions: TimeSlotOption[] = useMemo(() => [
-    { id: '1', date: weekDays[4], slotIndex: 36, durationSlots: 4, freeCount: 5, totalCount: 5 }, // Friday 6pm
-    { id: '2', date: weekDays[5], slotIndex: 32, durationSlots: 4, freeCount: 4, totalCount: 5 }, // Saturday 4pm
-    { id: '3', date: weekDays[1], slotIndex: 22, durationSlots: 4, freeCount: 3, totalCount: 5 }, // Tuesday 11am - CONFLICT with Study Session
-  ], [weekDays]);
+  const mockSlotOptions: TimeSlotOption[] = useMemo(() => {
+    return simulator.getRecommendedSlots(id as string);
+  }, [id, weekDays]);
 
   const handleVote = (slot: TimeSlotOption, type: VoteType) => {
     if (Haptics) {
@@ -78,6 +78,7 @@ export default function VoteSlotsScreen() {
     // Simulate API call
     setTimeout(() => {
       setLoading(false);
+      simulator.updateRoomStatus(id as string, 'voting_activity');
       router.push(`/room/${id}/vote-activity`);
     }, 1500);
   };

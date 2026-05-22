@@ -1,12 +1,12 @@
 import { useState, useCallback, useEffect } from 'react';
 import { Room, Member } from '@/types';
 import { simulator } from '@/lib/simulator';
-import { useToast } from '@/components/Toast';
+import { useSweetToast } from './useSweetToast';
 
 export function useRoom(roomId: string) {
   const [loading, setLoading] = useState(false);
   const [room, setRoom] = useState<Room | null>(null);
-  const { showToast } = useToast();
+  const toast = useSweetToast();
 
   const fetchRoomDetails = useCallback(() => {
     const data = simulator.getRoom(roomId);
@@ -19,30 +19,39 @@ export function useRoom(roomId: string) {
     const unsubscribe = simulator.subscribe(() => {
       fetchRoomDetails();
     });
-    return unsubscribe;
+    return () => {
+      unsubscribe();
+    };
   }, [fetchRoomDetails]);
 
   const updateMemberStatus = useCallback(async (userId: string, status: Member['status']) => {
-    try {
-      simulator.updateMemberStatus(roomId, userId, status);
-      showToast({ type: 'success', message: 'Status updated successfully' });
-    } catch (error) {
-      showToast({ type: 'error', message: 'Failed to update status' });
-    }
-  }, [roomId, showToast]);
+    simulator.updateMemberStatus(roomId, userId, status);
+  }, [roomId]);
 
   const nudgeMember = useCallback(async (userId: string) => {
-    // Placeholder for notification trigger
-    console.log(`Nudging member ${userId}...`);
-    showToast({ type: 'info', message: 'Nudge sent' });
-    // Simulated behavior: nudged member uploads after 2 seconds
-    setTimeout(() => {
-      simulator.updateMemberStatus(roomId, userId, 'uploaded');
-    }, 2000);
-  }, [roomId, showToast]);
+    try {
+      console.log(`Nudging member ${userId}...`);
+      // Simulated behavior: nudged member uploads after 2 seconds
+      setTimeout(() => {
+        simulator.updateMemberStatus(roomId, userId, 'uploaded');
+      }, 2000);
+      
+      toast.show({
+        type: 'success',
+        text1: 'Squad nudged! 🍑',
+        text2: 'Waiting for them to sync their calendar.'
+      });
+    } catch (error) {
+      toast.show({
+        type: 'error',
+        text1: 'Sync failed',
+        text2: 'Couldn\'t reach the squad. Try again?'
+      });
+    }
+  }, [roomId, toast]);
 
-  const createRoom = useCallback((name: string, description?: string) => {
-    return simulator.createRoom(name, description);
+  const createRoom = useCallback((name: string, description?: string, expectedCount: number = 2) => {
+    return simulator.createRoom(name, description, expectedCount);
   }, []);
 
   const updateStatus = useCallback((status: Room['sessionStatus']) => {
@@ -50,8 +59,21 @@ export function useRoom(roomId: string) {
   }, [roomId]);
 
   const startSimulation = useCallback(() => {
-    simulator.startSimulation(roomId);
-  }, [roomId]);
+    try {
+      simulator.startSimulation(roomId);
+      toast.show({
+        type: 'info',
+        text1: 'Prototype Mode Active 🪄',
+        text2: 'Simulating the squad joining & syncing...'
+      });
+    } catch (error) {
+      toast.show({
+        type: 'error',
+        text1: 'Simulation error',
+        text2: 'Could not start prototype sequence.'
+      });
+    }
+  }, [roomId, toast]);
 
   return {
     room,
@@ -79,7 +101,9 @@ export function useRooms() {
     const unsubscribe = simulator.subscribe(() => {
       fetchRooms();
     });
-    return unsubscribe;
+    return () => {
+      unsubscribe();
+    };
   }, [fetchRooms]);
 
   return {

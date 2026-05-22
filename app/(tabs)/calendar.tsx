@@ -154,7 +154,7 @@ export default function CalendarScreen() {
     selectedSlot, 
     handleCellPress, 
     clearSelection 
-  } = useHeatMap(5);
+  } = useHeatMap();
 
   const { isEmpty, mySchedule } = useGlobalAvailability();
 

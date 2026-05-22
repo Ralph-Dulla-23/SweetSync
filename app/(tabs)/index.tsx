@@ -5,7 +5,8 @@ import {
   ScrollView, 
   TouchableOpacity,
   TextInput,
-  Platform
+  Platform,
+  FlatList
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
@@ -26,7 +27,8 @@ import Animated, {
 } from "react-native-reanimated";
 import { styles } from "./_index.styles";
 import { useTimeVoting } from "@/hooks/useTimeVoting";
-import { RoomStatus } from "@/types";
+import { useRooms } from "@/hooks/useRoom";
+import { RoomStatus, Room } from "@/types";
 
 // Optional Haptics
 let Haptics: any;
@@ -36,7 +38,7 @@ try {
   Haptics = null;
 }
 
-interface Room {
+interface LocalRoom {
   id: string;
   name: string;
   sessionStatus: RoomStatus;
@@ -45,7 +47,7 @@ interface Room {
   detailColor: string;
 }
 
-const mockRooms: Room[] = [
+const mockRooms: LocalRoom[] = [
   {
     id: "1",
     name: "Friday Gang",
@@ -114,7 +116,7 @@ const ConfirmedTicket = React.memo(({ plan, index }: { plan: ConfirmedPlan, inde
   );
 });
 
-const RoomListItem = React.memo(({ room, index, onPress }: { room: Room; index: number; onPress: (id: string) => void }) => {
+const RoomListItem = React.memo(({ room, index, onPress }: { room: LocalRoom; index: number; onPress: (id: string) => void }) => {
   const { hasStaleVotes } = useTimeVoting(room.id);
 
   const getStatusDisplay = (status: RoomStatus): { label: string; variant: StatusVariant } => {
@@ -173,12 +175,13 @@ const RoomListItem = React.memo(({ room, index, onPress }: { room: Room; index: 
 
 export default function Home() {
   const router = useRouter();
+  const { rooms, loading: roomsLoading } = useRooms();
   const [loading, setLoading] = React.useState(true);
   const [joinCode, setJoinCode] = React.useState("");
   const [joining, setJoining] = React.useState(false);
 
   React.useEffect(() => {
-    const timer = setTimeout(() => setLoading(false), 1200);
+    const timer = setTimeout(() => setLoading(false), 800);
     return () => clearTimeout(timer);
   }, []);
 
@@ -202,6 +205,20 @@ export default function Home() {
     }, 1500);
   };
 
+  const getRoomDetail = (room: Room) => {
+    if (room.sessionStatus === 'collecting') {
+      const uploadedCount = room.members.filter(m => m.status === 'uploaded').length;
+      return `${uploadedCount} of ${room.members.length} uploaded`;
+    }
+    if (room.sessionStatus === 'voting_slots') {
+      return "Voting in progress";
+    }
+    if (room.sessionStatus === 'confirmed') {
+      return "Plan confirmed!";
+    }
+    return "";
+  };
+
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
       <Header 
@@ -211,93 +228,101 @@ export default function Home() {
         userAvatar 
       />
 
-      {loading ? (
+      {(loading || roomsLoading) ? (
         <Animated.View key="skeleton" exiting={FadeOut.duration(300)}>
           <HomeSkeleton />
         </Animated.View>
       ) : (
-        <ScrollView 
+        <FlatList 
           style={{ flex: 1 }}
           contentContainerStyle={styles.list}
           showsVerticalScrollIndicator={false}
-        >
-          <Animated.View entering={FadeInDown.duration(600).easing(Easing.out(Easing.exp))}>
-            <DashboardHero 
-              userName="Raphael" 
-              roomCount={mockRooms.length}
-              pendingVotes={2} 
-              onCreateRoom={() => {}}
-            />
-          </Animated.View>
-
-          <Animated.View 
-            entering={FadeInDown.duration(600).delay(100)}
-            style={styles.joinBarContainer}
-          >
-            <View style={styles.joinBar}>
-              <Hash size={20} color={colors.indigoPunch} weight="bold" />
-              <TextInput 
-                style={styles.joinInput}
-                placeholder="Enter Room Code"
-                placeholderTextColor={colors.textTertiary}
-                value={joinCode}
-                onChangeText={setJoinCode}
-                maxLength={10}
-                autoCapitalize="characters"
-                returnKeyType="join"
-                onSubmitEditing={handleJoinRoom}
-              />
-              <Button 
-                title="Join"
-                variant="indigo"
-                style={styles.joinButton}
-                disabled={joinCode.length < 4 || joining}
-                loading={joining}
-                onPress={handleJoinRoom}
-              />
-            </View>
-          </Animated.View>
-
-          {mockConfirmedPlans.length > 0 && (
+          data={rooms}
+          keyExtractor={(item) => item.id}
+          ListHeaderComponent={
             <>
-              <Animated.View 
-                entering={FadeInDown.duration(600).delay(200)} 
-                style={styles.sectionHeader}
-              >
-                <Text style={styles.sectionTitle}>Upcoming Plans</Text>
+              <Animated.View entering={FadeInDown.duration(600).easing(Easing.out(Easing.exp))}>
+                <DashboardHero 
+                  userName="You" 
+                  roomCount={rooms.length}
+                  pendingVotes={2} 
+                  onCreateRoom={() => router.push('/(tabs)/create')}
+                />
               </Animated.View>
-              <ScrollView 
-                horizontal 
-                showsHorizontalScrollIndicator={false}
-                contentContainerStyle={styles.horizontalScroll}
+
+              <Animated.View 
+                entering={FadeInDown.duration(600).delay(100)}
+                style={styles.joinBarContainer}
               >
-                {mockConfirmedPlans.map((plan, index) => (
-                  <ConfirmedTicket key={plan.id} plan={plan} index={index} />
-                ))}
-              </ScrollView>
+                <View style={styles.joinBar}>
+                  <Hash size={20} color={colors.indigoPunch} weight="bold" />
+                  <TextInput 
+                    style={styles.joinInput}
+                    placeholder="Enter Room Code"
+                    placeholderTextColor={colors.textTertiary}
+                    value={joinCode}
+                    onChangeText={setJoinCode}
+                    maxLength={10}
+                    autoCapitalize="characters"
+                    returnKeyType="join"
+                    onSubmitEditing={handleJoinRoom}
+                  />
+                  <Button 
+                    title="Join"
+                    variant="indigo"
+                    style={styles.joinButton}
+                    disabled={joinCode.length < 4 || joining}
+                    loading={joining}
+                    onPress={handleJoinRoom}
+                  />
+                </View>
+              </Animated.View>
+
+              {mockConfirmedPlans.length > 0 && (
+                <>
+                  <Animated.View 
+                    entering={FadeInDown.duration(600).delay(200)} 
+                    style={styles.sectionHeader}
+                  >
+                    <Text style={styles.sectionTitle}>Upcoming Plans</Text>
+                  </Animated.View>
+                  <ScrollView 
+                    horizontal 
+                    showsHorizontalScrollIndicator={false}
+                    contentContainerStyle={styles.horizontalScroll}
+                  >
+                    {mockConfirmedPlans.map((plan, index) => (
+                      <ConfirmedTicket key={plan.id} plan={plan} index={index} />
+                    ))}
+                  </ScrollView>
+                </>
+              )}
+
+              {rooms.length > 0 && (
+                <Animated.View 
+                  entering={FadeInDown.duration(600).delay(100).easing(Easing.out(Easing.exp))} 
+                  style={styles.sectionHeader}
+                >
+                  <Text style={styles.sectionTitle}>Active Squads</Text>
+                </Animated.View>
+              )}
             </>
-          )}
-
-          {mockRooms.length > 0 && (
-            <Animated.View 
-              entering={FadeInDown.duration(600).delay(100).easing(Easing.out(Easing.exp))} 
-              style={styles.sectionHeader}
-            >
-              <Text style={styles.sectionTitle}>Active Squads</Text>
-            </Animated.View>
-          )}
-
-          <View style={styles.cardGapContainer}>
-            {mockRooms.map((room, index) => (
+          }
+          renderItem={({ item: room, index }) => (
+            <View style={{ paddingHorizontal: spacing[5], marginBottom: index === rooms.length - 1 ? 0 : spacing[4] }}>
               <RoomListItem 
-                key={room.id} 
-                room={room} 
+                room={{
+                  ...room,
+                  detail: getRoomDetail(room),
+                  detailColor: room.sessionStatus === 'collecting' ? colors.textTertiary : colors.peachPunch,
+                  members: room.members.map(m => ({ name: m.name, initial: m.name[0] }))
+                } as any} 
                 index={index} 
                 onPress={handleRoomPress} 
               />
-            ))}
-          </View>
-        </ScrollView>
+            </View>
+          )}
+        />
       )}
     </SafeAreaView>
   );

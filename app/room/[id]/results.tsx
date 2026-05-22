@@ -110,6 +110,7 @@ export default function ResultsScreen() {
           title="It's a Tie!" 
           showBack 
           backLabel="Vote" 
+          userAvatar
         />
         <ScrollView contentContainerStyle={styles.content}>
           <Animated.View entering={FadeInDown.duration(600)}>
@@ -126,7 +127,7 @@ export default function ResultsScreen() {
             </View>
           </Animated.View>
 
-          <View style={{ gap: spacing[4], marginBottom: spacing[10] }}>
+          <View style={{ gap: spacing[4], marginBottom: spacing[6] }}>
             {tiedActivities.map((activity, index) => (
               <Animated.View 
                 key={activity.id} 
@@ -174,16 +175,23 @@ export default function ResultsScreen() {
             ))}
           </View>
 
-          {isHost && (
-            <Animated.View entering={FadeIn.delay(600)}>
+          <Animated.View entering={FadeIn.delay(600)} style={{ gap: spacing[4] }}>
+            {isHost && (
               <Button 
                 title={selectedWinner ? `Confirm "${selectedWinner.title}"` : "Pick a Winner"}
                 disabled={!selectedWinner}
                 onPress={handleBreakTie}
                 variant="primary"
               />
-            </Animated.View>
-          )}
+            )}
+            
+            <TouchableOpacity 
+              style={styles.backToRoom}
+              onPress={() => router.push(`/(tabs)`)}
+            >
+              <Text style={styles.backToRoomText}>Back to Dashboard</Text>
+            </TouchableOpacity>
+          </Animated.View>
         </ScrollView>
       </SafeAreaView>
     );

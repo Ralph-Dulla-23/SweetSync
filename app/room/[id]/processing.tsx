@@ -19,6 +19,7 @@ import Animated, {
   Extrapolate
 } from 'react-native-reanimated';
 import { styles } from './_processing.styles';
+import { simulator } from '@/lib/simulator';
 
 // Optional Haptics
 let Haptics: any;
@@ -165,6 +166,8 @@ export default function AIProcessingScreen() {
       if (Haptics) {
         Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
       }
+      // Update simulator status before transitioning
+      simulator.updateRoomStatus(id as string, 'voting_slots');
       router.replace(`/room/${id}/vote-slots`);
     }, 5800);
 
@@ -194,7 +197,7 @@ export default function AIProcessingScreen() {
         </View>
         
         <Animated.View entering={FadeInDown.delay(200).duration(800).springify()}>
-          <Text style={styles.headline}>Finding your{'\n'}free time...</Text>
+          <Text style={headlineStyle}>Finding your{'\n'}free time...</Text>
           <Text style={styles.subtitle}>Our AI is weaving its magic 🪄</Text>
         </Animated.View>
 
@@ -222,3 +225,5 @@ export default function AIProcessingScreen() {
     </View>
   );
 }
+
+const headlineStyle = [styles.headline];

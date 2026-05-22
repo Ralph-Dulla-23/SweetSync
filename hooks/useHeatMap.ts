@@ -1,64 +1,9 @@
-import { useState, useCallback, useMemo } from 'react';
+import { useState, useCallback, useMemo, useEffect } from 'react';
 import { TimeSlot, MyBlock, Preference } from '@/types';
 import { getWeekDays } from '@/lib/time';
+import { simulator } from '@/lib/simulator';
 
-// Utility for generating mock data outside of the hook
-export const generateMockHeatMapData = (totalMembers: number, mySchedule: Map<string, Preference>): TimeSlot[][] => {
-  const data: TimeSlot[][] = [];
-  const memberPool = ["Alex", "Jordan", "Taylor", "Riley", "Quinn"];
-  const weekDays = getWeekDays();
-  
-  for (let d = 0; d < 7; d++) {
-    const date = weekDays[d];
-    const dayData: TimeSlot[] = [];
-    
-    for (let s = 0; s < 48; s++) {
-      let freeCount = 0;
-      let preferredCount = 0;
-      
-      // Weekend: More free time
-      if (d >= 5) {
-        freeCount = Math.floor(Math.random() * 2) + 3; // 3-4 other members
-        preferredCount = Math.floor(Math.random() * 2);
-      } 
-      // Weekdays: Busy mornings, some free evenings
-      else {
-        if (s < 16) freeCount = Math.floor(Math.random() * 2); // Morning (0-8am)
-        else if (s > 40) freeCount = Math.floor(Math.random() * 2) + 1; // Evening (8pm+)
-        else freeCount = Math.floor(Math.random() * 3);
-        
-        preferredCount = freeCount > 1 ? 1 : 0;
-      }
-
-      const myPref = mySchedule.get(`${date}-${s}`) ?? 0;
-      const isMeBusy = myPref === 0;
-      const isMeFree = myPref === 1;
-      const isMePreferred = myPref === 2;
-      
-      const othersFree = memberPool.slice(0, freeCount);
-      const othersPreferred = othersFree.slice(0, preferredCount);
-      const othersBusy = memberPool.slice(freeCount);
-      
-      const finalMembers = [...othersFree, ...((isMeFree || isMePreferred) ? ["Me"] : [])];
-      const finalPreferredMembers = [...othersPreferred, ...(isMePreferred ? ["Me"] : [])];
-      const finalBusyMembers = [...othersBusy, ...(isMeBusy ? ["Me"] : [])];
-
-      dayData.push({
-        date,
-        slotIndex: s,
-        freeCount: finalMembers.length,
-        preferredCount: finalPreferredMembers.length,
-        members: finalMembers,
-        preferredMembers: finalPreferredMembers,
-        busyMembers: finalBusyMembers,
-      });
-    }
-    data.push(dayData);
-  }
-  return data;
-};
-
-export function useHeatMap(totalMembers: number = 5) {
+export function useHeatMap(roomId: string = '1') {
   const [selectedSlot, setSelectedSlot] = useState<TimeSlot | null>(null);
   const [isScanning, setIsScanning] = useState(false);
   const [scannedImageUri, setScannedImageUri] = useState<string | null>(null);
@@ -83,10 +28,31 @@ export function useHeatMap(totalMembers: number = 5) {
     return scheduleMap;
   }, [myBlocks]);
 
-  // Generate mock data using the utility
-  const mockData = useMemo(() => {
-    return generateMockHeatMapData(totalMembers, mySchedule);
-  }, [totalMembers, mySchedule]);
+  // Sync my local schedule with the simulator
+  useEffect(() => {
+    myBlocks.forEach(block => {
+      for (let s = block.startSlot; s <= block.endSlot; s++) {
+        simulator.updateMySchedule(block.date, s, block.preference);
+      }
+    });
+  }, [myBlocks]);
+
+  const [heatmapData, setHeatmapData] = useState<TimeSlot[][]>([]);
+
+  const fetchHeatmapData = useCallback(() => {
+    const data = simulator.getHeatMapData(roomId);
+    setHeatmapData(data);
+  }, [roomId]);
+
+  useEffect(() => {
+    fetchHeatmapData();
+    const unsubscribe = simulator.subscribe(() => {
+      fetchHeatmapData();
+    });
+    return () => {
+      unsubscribe();
+    };
+  }, [fetchHeatmapData]);
 
   const simulateOCR = useCallback((uri: string) => {
     setIsScanning(true);
@@ -109,6 +75,20 @@ export function useHeatMap(totalMembers: number = 5) {
   const confirmDraft = useCallback(() => {
     if (draftSchedule) {
       console.log("Confirming draft schedule...");
+      draftSchedule.forEach((pref, key) => {
+        const [date, slotStr] = key.split('-');
+        const slot = parseInt(slotStr);
+        simulator.updateMySchedule(date, slot, pref);
+        
+        // Also update local myBlocks for visual consistency
+        addBlock({
+          title: 'Scanned Slot',
+          date,
+          startSlot: slot,
+          endSlot: slot,
+          preference: pref,
+        });
+      });
       setDraftSchedule(null);
     }
   }, [draftSchedule]);
@@ -147,9 +127,14 @@ export function useHeatMap(totalMembers: number = 5) {
   }, []);
 
   const removeBlockAt = useCallback((date: string, slotIndex: number) => {
-    setMyBlocks(prev => prev.filter(b => 
-      !(b.date === date && slotIndex >= b.startSlot && slotIndex <= b.endSlot)
-    ));
+    setMyBlocks(prev => {
+      const filtered = prev.filter(b => 
+        !(b.date === date && slotIndex >= b.startSlot && slotIndex <= b.endSlot)
+      );
+      // Update simulator
+      simulator.updateMySchedule(date, slotIndex, 0);
+      return filtered;
+    });
   }, []);
 
   const clearSelection = useCallback(() => {
@@ -157,7 +142,7 @@ export function useHeatMap(totalMembers: number = 5) {
   }, []);
 
   return {
-    mockData,
+    mockData: heatmapData,
     magicSlots: [{ date: weekDays[5], slotIndex: 16 }, { date: weekDays[5], slotIndex: 17 }],
     selectedSlot,
     myBlocks,

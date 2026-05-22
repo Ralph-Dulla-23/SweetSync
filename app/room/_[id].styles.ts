@@ -132,9 +132,9 @@ export const styles = StyleSheet.create({
   nudgeButton: {
     ...globalStyles.row,
     gap: spacing[1],
-    paddingLeft: spacing[2],
-    paddingRight: spacing[3],
-    paddingVertical: spacing[2],
+    paddingLeft: spacing[3],
+    paddingRight: spacing[4],
+    height: 44, // WCAG Minimum
     borderRadius: radius.full,
     backgroundColor: colors.peachBase,
     borderWidth: 0.5,
@@ -142,7 +142,7 @@ export const styles = StyleSheet.create({
   },
   nudgeLabel: {
     fontFamily: fonts.bodySemibold,
-    fontSize: 12,
+    fontSize: 13,
     color: colors.peachPunch,
   },
   footer: {
@@ -166,7 +166,7 @@ export const styles = StyleSheet.create({
     borderRadius: radius.lg,
     borderWidth: 1,
     borderColor: colors.peachSoft,
-    padding: spacing[3],
+    padding: spacing[4],
     ...globalStyles.shadowSm,
   },
   nudgeAllContent: {
@@ -175,8 +175,8 @@ export const styles = StyleSheet.create({
     gap: spacing[3],
   },
   nudgeAllIcon: {
-    width: 40,
-    height: 40,
+    width: 44, // WCAG Minimum
+    height: 44, // WCAG Minimum
     borderRadius: radius.md,
     backgroundColor: colors.white,
     ...globalStyles.center,
@@ -196,8 +196,9 @@ export const styles = StyleSheet.create({
   },
   nudgeAllButton: {
     backgroundColor: colors.peachPunch,
-    paddingHorizontal: 12,
-    paddingVertical: 8,
+    paddingHorizontal: 16,
+    height: 44, // WCAG Minimum
+    justifyContent: 'center',
     borderRadius: radius.md,
   },
   nudgeAllButtonText: {
@@ -205,5 +206,56 @@ export const styles = StyleSheet.create({
     fontSize: 11,
     color: colors.white,
     letterSpacing: 0.5,
+  },
+  // Join Code Styles
+  joinCodeContainer: {
+    marginBottom: spacing[6],
+  },
+  joinCodeContent: {
+    backgroundColor: colors.surface,
+    padding: spacing[4],
+    borderRadius: radius.lg,
+    borderWidth: 1,
+    borderColor: colors.borderDefault,
+    borderStyle: 'dashed',
+    alignItems: 'center',
+  },
+  joinCodeLabel: {
+    fontFamily: fonts.bodySemibold,
+    fontSize: 10,
+    color: colors.textTertiary,
+    letterSpacing: 1.5,
+    marginBottom: 4,
+  },
+  joinCodeRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing[3],
+  },
+  joinCodeValue: {
+    fontFamily: fonts.display,
+    fontSize: 24,
+    color: colors.indigoPunch,
+    letterSpacing: 2,
+  },
+  copyButton: {
+    width: 44,
+    height: 44,
+    ...globalStyles.center,
+    backgroundColor: colors.peachBase,
+    borderRadius: radius.full,
+    borderWidth: 1,
+    borderColor: colors.peachSoft,
+  },
+  leaveButton: {
+    marginTop: spacing[10],
+    paddingVertical: spacing[4],
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  leaveButtonText: {
+    fontFamily: fonts.bodySemibold,
+    fontSize: 14,
+    color: colors.voteCantText,
   },
 });

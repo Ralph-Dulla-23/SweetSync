@@ -231,7 +231,7 @@ export default function GroupCalendar() {
     addBlock,
     removeBlockAt,
     clearSelection 
-  } = useHeatMap(5);
+  } = useHeatMap(id as string);
 
   // Merge global schedule into local view for 'My Schedule' tab
   const combinedSchedule = React.useMemo(() => {
@@ -287,13 +287,13 @@ export default function GroupCalendar() {
     setQuickAddVisible(false);
   };
 
-  const isNudgeSlot = selectedSlot && selectedSlot.freeCount === 4;
+  const isNudgeSlot = selectedSlot && selectedSlot.freeCount === (room?.members.length || 1) - 1;
 
   return (
     <SafeAreaView style={styles.container}>
       <Header 
         title="Availability" 
-        subtitle="Friday Gang • 5 members"
+        subtitle={`${room?.name || "Room"} • ${room?.members.length || 0} members`}
         showBack 
         backLabel="Room" 
       />
@@ -365,7 +365,7 @@ export default function GroupCalendar() {
 
         <HeatMap 
           data={mockData}
-          totalMembers={5}
+          totalMembers={room?.members.length || 1}
           magicSlots={magicSlots}
           onCellPress={handleCellPress}
           selectedSlot={selectedSlot}

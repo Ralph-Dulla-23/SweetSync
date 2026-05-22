@@ -29,7 +29,12 @@ export const ProgressBar = React.memo(({
   }));
 
   return (
-    <View style={[styles.container, { height, backgroundColor }]}>
+    <View 
+      style={[styles.container, { height, backgroundColor }]}
+      accessibilityRole="progressbar"
+      accessibilityLabel="Sync progress"
+      accessibilityValue={{ min: 0, max: 100, now: progress }}
+    >
       <Animated.View 
         style={[
           styles.fill, 

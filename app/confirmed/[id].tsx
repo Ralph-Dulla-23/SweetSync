@@ -86,7 +86,7 @@ const CelebrationSparkle = ({ delay = 0, style }: { delay?: number, style?: any 
 export default function ConfirmedEventScreen() {
   const { id } = useLocalSearchParams();
   const router = useRouter();
-  const { room } = useRoom('1'); // Mock room for demo, in real app use ID
+  const { room } = useRoom('1'); // Still using '1' for demo room for now
 
   const rotation = useSharedValue(0);
   const translateY = useSharedValue(50);

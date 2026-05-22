@@ -10,6 +10,7 @@ export interface Room {
   sessionStatus: RoomStatus;
   hostId: string;
   members: Member[];
+  expectedCount: number;
   upcomingEvents?: Event[];
   activitySuggestions?: ActivitySuggestion[];
   createdAt: string;

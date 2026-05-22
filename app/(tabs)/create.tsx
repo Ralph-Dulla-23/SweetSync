@@ -51,6 +51,7 @@ export default function CreateScreen() {
   const [type, setType] = useState<CreateType>('session');
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
+  const [expectedCount, setExpectedCount] = useState(3);
   const [loading, setLoading] = useState(false);
   const [generatedCode, setGeneratedCode] = useState("");
   const [roomId, setRoomId] = useState("");
@@ -76,7 +77,11 @@ export default function CreateScreen() {
       console.log('Using Simulator for creation.');
       await new Promise(resolve => setTimeout(resolve, 800));
       
-      const newRoom = createRoomSim(name.trim(), description.trim() || undefined);
+      const newRoom = createRoomSim(
+        name.trim(), 
+        description.trim() || undefined,
+        type === 'session' ? expectedCount : 0 // 0 for room means fluid
+      );
       
       setRoomId(newRoom.id);
       setStep('success');
@@ -174,6 +179,28 @@ export default function CreateScreen() {
           />
         </View>
 
+        <View style={styles.inputGroup}>
+          <Text style={styles.inputLabel}>HOW MANY FRIENDS ARE YOU EXPECTING?</Text>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing[4], marginTop: spacing[2] }}>
+            <TouchableOpacity 
+              onPress={() => setExpectedCount(Math.max(2, expectedCount - 1))}
+              style={{ width: 44, height: 44, borderRadius: radius.md, backgroundColor: colors.pageBg, alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: colors.borderDefault }}
+            >
+              <Text style={{ fontSize: 24, color: colors.textPrimary, fontFamily: fonts.bodySemibold }}>-</Text>
+            </TouchableOpacity>
+            <Text style={{ fontSize: 20, fontFamily: fonts.headline, color: colors.peachPunch, width: 40, textAlign: 'center' }}>{expectedCount}</Text>
+            <TouchableOpacity 
+              onPress={() => setExpectedCount(Math.min(20, expectedCount + 1))}
+              style={{ width: 44, height: 44, borderRadius: radius.md, backgroundColor: colors.pageBg, alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: colors.borderDefault }}
+            >
+              <Text style={{ fontSize: 24, color: colors.textPrimary, fontFamily: fonts.bodySemibold }}>+</Text>
+            </TouchableOpacity>
+            <Text style={{ flex: 1, fontFamily: fonts.body, fontSize: 13, color: colors.textTertiary }}>
+              Helps us track when the squad is ready!
+            </Text>
+          </View>
+        </View>
+
         <View style={styles.aiSuggestion}>
           <MagicWand size={18} color={colors.indigoPunch} weight="fill" />
           <Text style={styles.aiSuggestionText}>
@@ -225,10 +252,10 @@ export default function CreateScreen() {
         </View>
 
         <View style={styles.inputGroup}>
-          <Text style={styles.inputLabel}>DESCRIPTION (OPTIONAL)</Text>
+          <Text style={styles.inputLabel}>SQUAD GOALS (OPTIONAL)</Text>
           <TextInput 
             style={styles.textArea}
-            placeholder="What's this squad about?"
+            placeholder="What's this squad all about? 🍑"
             placeholderTextColor={colors.textTertiary}
             value={description}
             onChangeText={setDescription}
@@ -258,25 +285,19 @@ export default function CreateScreen() {
 
   const renderSuccess = () => (
     <Animated.View 
-      entering={FadeInDown.springify().damping(15)} 
+      entering={FadeInDown.duration(800).damping(20)} 
       style={styles.stepContainer}
     >
       <View style={styles.successHeader}>
-        <Animated.Text 
-          entering={ZoomIn.duration(600).delay(200)} 
-          style={styles.successTitle}
-        >
+        <Text style={styles.successTitle}>
           Invitation{'\n'}Ready!
-        </Animated.Text>
+        </Text>
         <Text style={styles.successSubtitle}>
           Your {type === 'room' ? 'room' : 'session'} "{name}" is live. Share this ticket with the squad to start syncing.
         </Text>
       </View>
 
-      <Animated.View 
-        entering={ZoomIn.duration(600).delay(400)} 
-        style={styles.ticketCard}
-      >
+      <View style={styles.ticketCard}>
         <View style={styles.ticketCutoutLeft} />
         <View style={styles.ticketCutoutRight} />
         
@@ -291,7 +312,7 @@ export default function CreateScreen() {
           <Copy size={20} color={colors.peachPunch} weight="bold" />
           <Text style={styles.copyText}>Copy Code</Text>
         </TouchableOpacity>
-      </Animated.View>
+      </View>
 
       <View style={styles.successActions}>
         <Button 

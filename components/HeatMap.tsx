@@ -233,36 +233,53 @@ const DayColumn = React.memo(({
   onCellPress,
   onToggleCell,
 }: DayColumnProps) => {
+  // Memoize the mapping logic to prevent recalculation unless data changes
+  const renderedCells = useMemo(() => {
+    return slots.map((slot) => {
+      const slotKey = `${slot.date}-${slot.slotIndex}`;
+      const isMagic = !isEditMode && magicSlotsSet.has(slotKey);
+      const isUncertain = uncertainSlotsSet.has(slotKey);
+      const isSelected = !isEditMode && selectedSlot?.date === slot.date && selectedSlot?.slotIndex === slot.slotIndex;
+      const myPreference = mySchedule.get(slotKey) ?? 0;
+      const blockTitle = myBlocksMap.get(slotKey) || null;
+      
+      return (
+        <HeatCell 
+          key={slotKey}
+          slot={slot}
+          totalMembers={totalMembers}
+          isMagic={isMagic}
+          isSelected={isSelected}
+          isUncertain={isUncertain}
+          myPreference={myPreference}
+          isEditMode={isEditMode}
+          blockTitle={blockTitle}
+          pulse={pulse}
+          onPress={onCellPress}
+          onToggle={onToggleCell}
+        />
+      );
+    });
+  }, [
+    slots, 
+    totalMembers, 
+    magicSlotsSet, 
+    uncertainSlotsSet, 
+    selectedSlot, 
+    mySchedule, 
+    myBlocksMap, 
+    isEditMode, 
+    pulse, 
+    onCellPress, 
+    onToggleCell
+  ]);
+
   return (
     <Animated.View 
       entering={FadeInUp.delay(dayIndex * 50).duration(400)}
       style={styles.column}
     >
-      {slots.map((slot) => {
-        const slotKey = `${slot.date}-${slot.slotIndex}`;
-        const isMagic = !isEditMode && magicSlotsSet.has(slotKey);
-        const isUncertain = uncertainSlotsSet.has(slotKey);
-        const isSelected = !isEditMode && selectedSlot?.date === slot.date && selectedSlot?.slotIndex === slot.slotIndex;
-        const myPreference = mySchedule.get(slotKey) ?? 0;
-        const blockTitle = myBlocksMap.get(slotKey) || null;
-        
-        return (
-          <HeatCell 
-            key={slotKey}
-            slot={slot}
-            totalMembers={totalMembers}
-            isMagic={isMagic}
-            isSelected={isSelected}
-            isUncertain={isUncertain}
-            myPreference={myPreference}
-            isEditMode={isEditMode}
-            blockTitle={blockTitle}
-            pulse={pulse}
-            onPress={onCellPress}
-            onToggle={onToggleCell}
-          />
-        );
-      })}
+      {renderedCells}
     </Animated.View>
   );
 });

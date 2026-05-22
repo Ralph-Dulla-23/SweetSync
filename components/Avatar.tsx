@@ -36,6 +36,8 @@ export const Avatar = React.memo(({ uri, name, size = 40, color, style }: Avatar
         },
         style,
       ]}
+      accessibilityRole="image"
+      accessibilityLabel={name ? `Avatar of ${name}` : 'User avatar'}
     >
       {uri ? (
         <Image

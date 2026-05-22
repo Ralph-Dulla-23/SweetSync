@@ -1,5 +1,6 @@
 import React from "react";
 import * as Linking from 'expo-linking';
+import * as Clipboard from 'expo-clipboard';
 import { 
   View, 
   Text, 
@@ -7,11 +8,12 @@ import {
   ScrollView, 
   TouchableOpacity,
   ActivityIndicator,
-  Share
+  Share,
+  AccessibilityInfo
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useLocalSearchParams, useRouter } from "expo-router";
-import { CheckCircle, Bell, UsersThree, CaretRight, Calendar, Sparkle, MagicWand } from "phosphor-react-native";
+import { CheckCircle, Bell, UsersThree, CaretRight, Calendar, Sparkle, MagicWand, Copy } from "phosphor-react-native";
 import { colors, fonts, spacing, radius } from "@/constants/theme";
 import { Header } from "@/components/Header";
 import { ProgressBar } from "@/components/ProgressBar";
@@ -27,6 +29,7 @@ import { UpcomingEventCard } from "@/components/UpcomingEventCard";
 import { ActivityDiscovery } from "@/components/ActivityDiscovery";
 import { useRoom } from "@/hooks/useRoom";
 import { useAuth } from "@/hooks/useAuth";
+import { useSweetToast } from "@/hooks/useSweetToast";
 import { styles } from "./_[id].styles";
 
 function useIsFirstRender() {
@@ -164,7 +167,10 @@ const MemberRow = React.memo(({ member, index, isLast, onNudge, isFirstRender = 
     if (Haptics) {
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
     }
+    AccessibilityInfo.announceForAccessibility(`Nudged ${member.name}`);
   };
+
+  const statusText = member.status === "uploaded" ? "Synced" : nudged ? "Nudged (on cooldown)" : "Waiting for upload";
 
   return (
     <Animated.View 
@@ -175,8 +181,10 @@ const MemberRow = React.memo(({ member, index, isLast, onNudge, isFirstRender = 
           styles.memberRow, 
           isLast && styles.noBorder
         ]}
+        accessible={true}
+        accessibilityLabel={`${member.name}, ${member.isHost ? 'Host, ' : ''}${statusText}`}
       >
-        <View style={styles.memberLeft}>
+        <View style={styles.memberLeft} importantForAccessibility="no-hide-descendants">
           <Avatar 
             name={member.name} 
             uri={member.avatarUri}
@@ -191,14 +199,14 @@ const MemberRow = React.memo(({ member, index, isLast, onNudge, isFirstRender = 
                 styles.memberStatus,
                 member.status === "pending" && styles.pendingText
               ]} numberOfLines={1} ellipsizeMode="tail">
-                {member.status === "uploaded" ? "Synced" : nudged ? "Nudged (on cooldown)" : "Waiting for upload"}
+                {statusText}
               </Text>
             </View>
           </View>
         </View>
         
         {member.status === "uploaded" ? (
-          <View style={styles.statusIndicator}>
+          <View style={styles.statusIndicator} importantForAccessibility="no-hide-descendants">
             <CheckCircle size={26} weight="fill" color={colors.mintPunch} />
           </View>
         ) : (
@@ -235,7 +243,11 @@ export default function RoomInterior() {
   const { id } = useLocalSearchParams();
   const router = useRouter();
   const { user } = useAuth();
+  const toast = useSweetToast();
   const { room, loading, nudgeMember, updateStatus, startSimulation } = useRoom(id as string);
+  const isFirstRender = useIsFirstRender();
+
+  const isHost = room?.hostId === user?.id;
 
   const handleNudge = React.useCallback((memberId: string) => {
     nudgeMember(memberId);
@@ -261,7 +273,25 @@ export default function RoomInterior() {
     }
   };
 
+  const handleCopyCode = React.useCallback(async () => {
+    if (!room) return;
+    await Clipboard.setStringAsync(room.id);
+    if (Haptics) {
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+    }
+    AccessibilityInfo.announceForAccessibility("Join code copied to clipboard");
+    // In a real app, we might show a Toast here too
+  }, [room]);
+
   const handleProceed = React.useCallback(() => {
+    if (!isHost && room?.sessionStatus === 'collecting') {
+      toast.show({
+        type: 'info',
+        text1: 'Waiting for Host',
+        text2: 'Only the squad leader can reveal the magic! 🍑'
+      });
+      return;
+    }
     // Navigate to respective flow based on status
     if (room?.sessionStatus === 'collecting') {
       updateStatus('processing');
@@ -274,7 +304,7 @@ export default function RoomInterior() {
       const eventId = room.upcomingEvents?.[0]?.id;
       if (eventId) router.push(`/confirmed/${eventId}`);
     }
-  }, [id, room?.sessionStatus, router, updateStatus, room?.upcomingEvents]);
+  }, [id, room?.sessionStatus, router, updateStatus, room?.upcomingEvents, isHost, toast]);
 
   const handleSimulate = React.useCallback(() => {
     startSimulation();
@@ -287,23 +317,39 @@ export default function RoomInterior() {
     return <RoomInteriorSkeleton />;
   }
 
-  const isHost = room.hostId === user?.id;
+  const uploadedCount = room.members.filter(m => m.status === "uploaded").length;
   const pendingMembers = room.members.filter(m => m.status === "pending");
-  const uploadedCount = room.members.length - pendingMembers.length;
-  const totalCount = room.members.length;
-  const progress = (uploadedCount / totalCount) * 100;
-  const isReady = uploadedCount === totalCount;
-  const canProceed = uploadedCount >= Math.ceil(totalCount / 2);
+  
+  // Logic from study: Rooms use current members as denominator if expectedCount is 0
+  const totalCount = room.expectedCount > 0 ? room.expectedCount : Math.max(room.members.length, 1);
+  const progress = Math.min((uploadedCount / totalCount) * 100, 100);
+  
+  const isReady = uploadedCount >= totalCount;
+  const canProceed = uploadedCount >= 3 || (uploadedCount / totalCount >= 0.5);
 
   // Dynamic CTA mapping based on PRD Session State Machine
   const getMainCTA = () => {
-    const defaultAction = () => router.push(`/room/${id}/processing`);
+    const defaultAction = () => handleProceed();
     
     switch (room.sessionStatus) {
       case 'collecting':
-        if (isReady) return { title: "Reveal the Magic", variant: "indigo", onPress: defaultAction, label: "Reveal magic slots" };
-        if (canProceed) return { title: "Reveal Early", variant: "primary", onPress: defaultAction, label: "Reveal provisional slots" };
-        return { title: "Waiting for Sync", variant: "ghost", onPress: () => {}, disabled: true, label: "Waiting for more friends to sync" };
+        if (isReady) return { title: "Reveal the Magic", variant: "indigo", onPress: defaultAction, label: "Reveal magic slots", disabled: !isHost };
+        if (canProceed) return { title: "Reveal Early", variant: "primary", onPress: defaultAction, label: "Reveal provisional slots", disabled: !isHost };
+        return { 
+          title: "Waiting for Squad...", 
+          variant: "ghost", 
+          onPress: () => {
+            if (isHost) {
+              toast.show({
+                type: 'info',
+                text1: 'Not quite ready! 🍑',
+                text2: `We need at least 50% or 3 friends synced to reveal slots.`
+              });
+            }
+          }, 
+          disabled: false, // Make it pressable so we can show the toast
+          label: "Waiting for more friends to sync" 
+        };
       
       case 'processing':
         return { title: "AI is Thinking...", variant: "ghost", onPress: () => {}, disabled: true, label: "Syncing schedules" };
@@ -327,7 +373,6 @@ export default function RoomInterior() {
   };
 
   const cta = getMainCTA();
-  const isFirstRender = useIsFirstRender();
 
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
@@ -343,8 +388,29 @@ export default function RoomInterior() {
         contentContainerStyle={styles.content}
         showsVerticalScrollIndicator={false}
       >
+        {/* Join Code Display */}
+        <Animated.View 
+          entering={isFirstRender ? FadeInDown.duration(600).delay(100) : undefined}
+          style={styles.joinCodeContainer}
+        >
+          <View style={styles.joinCodeContent}>
+            <Text style={styles.joinCodeLabel}>ROOM CODE</Text>
+            <View style={styles.joinCodeRow}>
+              <Text style={styles.joinCodeValue}>{room.id.toUpperCase()}</Text>
+              <TouchableOpacity 
+                style={styles.copyButton}
+                onPress={handleCopyCode}
+                accessibilityLabel="Copy room code"
+                accessibilityRole="button"
+              >
+                <Copy size={18} color={colors.peachPunch} weight="bold" />
+              </TouchableOpacity>
+            </View>
+          </View>
+        </Animated.View>
+
         {/* Simulation Banner (Host Only) */}
-        {isHost && room.sessionStatus === 'collecting' && room.members.length < 5 && (
+        {isHost && room.sessionStatus === 'collecting' && uploadedCount < totalCount && (
           <Animated.View entering={isFirstRender ? FadeInDown.duration(600) : undefined}>
             <TouchableOpacity 
               style={[styles.nudgeAllBanner, { backgroundColor: colors.indigoBase, borderColor: colors.indigoSoft, marginBottom: spacing[6] }]}
@@ -545,6 +611,15 @@ export default function RoomInterior() {
             </Text>
           )}
         </Animated.View>
+
+        <TouchableOpacity 
+          style={styles.leaveButton}
+          onPress={() => router.replace('/(tabs)')}
+          accessibilityLabel="Leave this room"
+          accessibilityRole="button"
+        >
+          <Text style={styles.leaveButtonText}>Leave Room</Text>
+        </TouchableOpacity>
       </ScrollView>
     </SafeAreaView>
   );
