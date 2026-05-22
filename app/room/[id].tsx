@@ -11,7 +11,7 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useLocalSearchParams, useRouter } from "expo-router";
-import { CheckCircle, Bell, UsersThree, CaretRight, Calendar, Sparkle } from "phosphor-react-native";
+import { CheckCircle, Bell, UsersThree, CaretRight, Calendar, Sparkle, MagicWand } from "phosphor-react-native";
 import { colors, fonts, spacing, radius } from "@/constants/theme";
 import { Header } from "@/components/Header";
 import { ProgressBar } from "@/components/ProgressBar";
@@ -28,6 +28,14 @@ import { ActivityDiscovery } from "@/components/ActivityDiscovery";
 import { useRoom } from "@/hooks/useRoom";
 import { useAuth } from "@/hooks/useAuth";
 import { styles } from "./_[id].styles";
+
+function useIsFirstRender() {
+  const isFirst = React.useRef(true);
+  React.useEffect(() => {
+    isFirst.current = false;
+  }, []);
+  return isFirst.current;
+}
 
 // Optional Haptics
 let Haptics: any;
@@ -107,7 +115,7 @@ const localStyles = StyleSheet.create({
   },
 });
 
-const NudgeAllBanner = ({ pendingCount, onNudgeAll }: { pendingCount: number; onNudgeAll: () => void }) => {
+const NudgeAllBanner = ({ pendingCount, onNudgeAll, isFirstRender = true }: { pendingCount: number; onNudgeAll: () => void; isFirstRender?: boolean }) => {
   const [nudgedAll, setNudgedAll] = React.useState(false);
 
   const handlePress = () => {
@@ -122,7 +130,7 @@ const NudgeAllBanner = ({ pendingCount, onNudgeAll }: { pendingCount: number; on
 
   return (
     <Animated.View 
-      entering={FadeInDown.duration(600)}
+      entering={isFirstRender ? FadeInDown.duration(600) : undefined}
       style={[styles.nudgeAllBanner, { marginTop: 0, marginBottom: spacing[8] }]}
     >
       <View style={styles.nudgeAllContent}>
@@ -144,7 +152,7 @@ const NudgeAllBanner = ({ pendingCount, onNudgeAll }: { pendingCount: number; on
   );
 };
 
-const MemberRow = React.memo(({ member, index, isLast, onNudge }: { member: any; index: number; isLast: boolean; onNudge: (id: string) => void }) => {
+const MemberRow = React.memo(({ member, index, isLast, onNudge, isFirstRender = true }: { member: any; index: number; isLast: boolean; onNudge: (id: string) => void; isFirstRender?: boolean }) => {
   // Simulate a 12-hour cool-down using a mock state/timestamp logic
   // In a real app, this would be fetched from the member's relation metadata
   const [nudged, setNudged] = React.useState(member.lastNudgeAt ? (Date.now() - member.lastNudgeAt < 12 * 60 * 60 * 1000) : false);
@@ -160,7 +168,7 @@ const MemberRow = React.memo(({ member, index, isLast, onNudge }: { member: any;
 
   return (
     <Animated.View 
-      entering={FadeInUp.duration(600).delay(200 + index * 50).springify().damping(18)}
+      entering={isFirstRender ? FadeInUp.duration(600).delay(200 + index * 50).springify().damping(18) : undefined}
     >
       <View 
         style={[
@@ -176,13 +184,13 @@ const MemberRow = React.memo(({ member, index, isLast, onNudge }: { member: any;
             color={member.status === "uploaded" ? colors.peachPunch : colors.textTertiary} 
           />
           <View style={styles.memberInfo}>
-            <Text style={styles.memberName}>{member.name}</Text>
+            <Text style={styles.memberName} numberOfLines={1} ellipsizeMode="tail">{member.name}</Text>
             <View style={styles.statusRow}>
               {member.isHost && <Text style={styles.hostTag}>Host</Text>}
               <Text style={[
                 styles.memberStatus,
                 member.status === "pending" && styles.pendingText
-              ]}>
+              ]} numberOfLines={1} ellipsizeMode="tail">
                 {member.status === "uploaded" ? "Synced" : nudged ? "Nudged (on cooldown)" : "Waiting for upload"}
               </Text>
             </View>
@@ -227,7 +235,7 @@ export default function RoomInterior() {
   const { id } = useLocalSearchParams();
   const router = useRouter();
   const { user } = useAuth();
-  const { room, loading, nudgeMember } = useRoom(id as string);
+  const { room, loading, nudgeMember, updateStatus, startSimulation } = useRoom(id as string);
 
   const handleNudge = React.useCallback((memberId: string) => {
     nudgeMember(memberId);
@@ -252,6 +260,28 @@ export default function RoomInterior() {
       console.log(error);
     }
   };
+
+  const handleProceed = React.useCallback(() => {
+    // Navigate to respective flow based on status
+    if (room?.sessionStatus === 'collecting') {
+      updateStatus('processing');
+      router.push(`/room/${id}/processing`);
+    } else if (room?.sessionStatus === 'voting_slots') {
+      router.push(`/room/${id}/vote-slots`);
+    } else if (room?.sessionStatus === 'voting_activity') {
+      router.push(`/room/${id}/vote-activity`);
+    } else if (room?.sessionStatus === 'confirmed') {
+      const eventId = room.upcomingEvents?.[0]?.id;
+      if (eventId) router.push(`/confirmed/${eventId}`);
+    }
+  }, [id, room?.sessionStatus, router, updateStatus, room?.upcomingEvents]);
+
+  const handleSimulate = React.useCallback(() => {
+    startSimulation();
+    if (Haptics) {
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    }
+  }, [startSimulation]);
 
   if (loading || !room) {
     return <RoomInteriorSkeleton />;
@@ -297,6 +327,7 @@ export default function RoomInterior() {
   };
 
   const cta = getMainCTA();
+  const isFirstRender = useIsFirstRender();
 
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
@@ -312,6 +343,28 @@ export default function RoomInterior() {
         contentContainerStyle={styles.content}
         showsVerticalScrollIndicator={false}
       >
+        {/* Simulation Banner (Host Only) */}
+        {isHost && room.sessionStatus === 'collecting' && room.members.length < 5 && (
+          <Animated.View entering={isFirstRender ? FadeInDown.duration(600) : undefined}>
+            <TouchableOpacity 
+              style={[styles.nudgeAllBanner, { backgroundColor: colors.indigoBase, borderColor: colors.indigoSoft, marginBottom: spacing[6] }]}
+              onPress={handleSimulate}
+            >
+              <View style={styles.nudgeAllContent}>
+                <View style={[styles.nudgeAllIcon, { backgroundColor: colors.white }]}>
+                  <MagicWand size={20} color={colors.indigoPunch} weight="fill" />
+                </View>
+                <View style={{ flex: 1 }}>
+                  <Text style={[styles.nudgeAllTitle, { color: colors.indigoPunch }]}>Prototype Mode</Text>
+                  <Text style={[styles.nudgeAllSubtitle, { color: colors.textSecondary }]}>Tap to simulate friends joining & syncing</Text>
+                </View>
+                <View style={[styles.nudgeAllButton, { backgroundColor: colors.indigoPunch }]}>
+                  <Text style={[styles.nudgeAllButtonText, { color: colors.white }]}>START</Text>
+                </View>
+              </View>
+            </TouchableOpacity>
+          </Animated.View>
+        )}
         {/* Progress Section - Deeply Branded */}
         <Card 
           variant={isReady || room.sessionStatus === 'confirmed' ? 'mint' : 'peach'} 
@@ -340,7 +393,7 @@ export default function RoomInterior() {
 
         {/* Quick Actions Row */}
         <Animated.View 
-          entering={FadeInUp.duration(600).delay(200)}
+          entering={isFirstRender ? FadeInUp.duration(600).delay(200) : undefined}
           style={localStyles.quickActionsRow}
         >
           <TouchableOpacity 
@@ -390,13 +443,14 @@ export default function RoomInterior() {
           <NudgeAllBanner 
             pendingCount={pendingMembers.length} 
             onNudgeAll={handleNudgeAll} 
+            isFirstRender={isFirstRender}
           />
         )}
 
         {/* Confirmed Events */}
         {room.upcomingEvents && room.upcomingEvents.length > 0 && (
           <Animated.View 
-            entering={FadeInUp.duration(600).delay(400)}
+            entering={isFirstRender ? FadeInUp.duration(600).delay(400) : undefined}
             style={{ marginBottom: spacing[8] }}
           >
             <View style={styles.sectionHeader}>
@@ -416,13 +470,13 @@ export default function RoomInterior() {
 
         {/* AI Suggestions */}
         {room.activitySuggestions && room.activitySuggestions.length > 0 && (
-          <Animated.View entering={FadeInUp.duration(600).delay(600)}>
+          <Animated.View entering={isFirstRender ? FadeInUp.duration(600).delay(600) : undefined}>
             <ActivityDiscovery suggestions={room.activitySuggestions} />
           </Animated.View>
         )}
 
         {/* Member List - Social and Responsive */}
-        <Animated.View entering={FadeInUp.duration(600).delay(800)}>
+        <Animated.View entering={isFirstRender ? FadeInUp.duration(600).delay(800) : undefined}>
           <View style={styles.sectionHeader}>
             <UsersThree size={16} color={colors.textTertiary} weight="bold" />
             <Text style={styles.sectionTitle}>The Squad</Text>
@@ -454,14 +508,17 @@ export default function RoomInterior() {
                 index={index}
                 isLast={index === room.members.length - 1}
                 onNudge={handleNudge}
+                isFirstRender={isFirstRender}
               />
             ))}
           </View>
         </Animated.View>
 
+        {/* Spacer to push footer down without massive ScrollView padding */}
+        <View style={{ flex: 1 }} />
 
         {/* Action Area */}
-        <Animated.View entering={FadeInUp.duration(600).delay(1000)} style={styles.footer}>
+        <Animated.View entering={isFirstRender ? FadeInUp.duration(600).delay(1000) : undefined} style={styles.footer}>
           <Button 
             title={cta.title} 
             variant={cta.variant as any}

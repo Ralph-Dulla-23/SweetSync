@@ -6,8 +6,10 @@ export const styles = StyleSheet.create({
   container: globalStyles.screen,
   loadingContainer: globalStyles.center,
   content: {
-    ...globalStyles.scrollContent,
+    paddingHorizontal: spacing[5],
     paddingTop: spacing[5],
+    paddingBottom: spacing[8],
+    flexGrow: 1,
   },
   progressSection: {
     marginBottom: spacing[8],
@@ -144,7 +146,6 @@ export const styles = StyleSheet.create({
     color: colors.peachPunch,
   },
   footer: {
-    marginTop: "auto",
     gap: spacing[3],
     alignItems: "center",
   },
