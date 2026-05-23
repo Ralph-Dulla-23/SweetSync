@@ -5,9 +5,10 @@ import {
   Pressable, 
 } from 'react-native';
 import { colors, fonts } from '@/constants/theme';
-import { getHeatShade } from '@/lib/heatmap';
+import { getHeatShade, getHeatShadeIndex } from '@/lib/heatmap';
 import { Sparkle, Users, Warning } from 'phosphor-react-native';
 import { TimeSlot, MyBlock, Preference } from '@/types';
+import { springConfigs } from '@/constants/animation';
 import Animated, { 
   useSharedValue, 
   useAnimatedStyle, 
@@ -18,7 +19,9 @@ import Animated, {
   interpolateColor,
   FadeInUp,
   SharedValue,
-  withDelay
+  withDelay,
+  runOnJS,
+  withSpring
 } from 'react-native-reanimated';
 import { styles } from './HeatMap.styles';
 import { slotIndexToTime } from '@/lib/time';
@@ -37,54 +40,79 @@ interface HeatCellProps {
   onToggle: (date: string, slotIndex: number) => void;
 }
 
-// Lightweight static cell for the majority of the grid
-const StaticHeatCell = React.memo(({
+const HeatCell = React.memo(({
   slot,
-  backgroundColor,
-  isEditMode,
-  isMeBusy,
-  isUncertain,
-  blockTitle,
-  onPress,
-  onToggle,
-}: any) => {
-  return (
-    <Pressable 
-      onPress={() => isEditMode ? onToggle(slot.date, slot.slotIndex) : onPress(slot)}
-      style={styles.cellWrapper}
-    >
-      <View
-        style={[
-          styles.cell, 
-          { backgroundColor },
-          isEditMode && !isMeBusy && styles.myBusyCell,
-          isUncertain && { borderColor: colors.peachPunch, borderWidth: 1, borderStyle: 'dashed' }
-        ]}
-      >
-        {isEditMode && !isMeBusy && blockTitle && (
-          <Text style={styles.cellTitle} numberOfLines={1}>{blockTitle}</Text>
-        )}
-      </View>
-    </Pressable>
-  );
-});
-
-// Heavier cell only for magic/selected/uncertain slots with animations
-const AnimatedHeatCell = React.memo(({
-  slot,
-  backgroundColor,
+  totalMembers,
   isMagic,
   isSelected,
   isUncertain,
+  myPreference,
   isEditMode,
-  isMeBusy,
   blockTitle,
   pulse,
   onPress,
   onToggle,
-  freeCount,
-}: any) => {
-  const magicAnimatedStyle = useAnimatedStyle(() => {
+}: HeatCellProps) => {
+  const isMeBusy = myPreference === 0;
+  
+  // Task G: Shade Index for background color transitions
+  const targetIndex = useMemo(() => {
+    if (isEditMode) {
+      if (isMeBusy) return 0; // pageBg
+      return myPreference === 2 ? 4 : 3; // indigoNeon (4) or indigoPunch (3)
+    }
+    return getHeatShadeIndex(slot.freeCount, totalMembers);
+  }, [isEditMode, isMeBusy, myPreference, slot.freeCount, totalMembers]);
+
+  const colorIndex = useSharedValue(targetIndex);
+
+  useEffect(() => {
+    colorIndex.value = withTiming(targetIndex, {
+      duration: 220,
+      easing: Easing.out(Easing.cubic),
+    });
+  }, [targetIndex]);
+
+  const animatedBackground = useAnimatedStyle(() => {
+    return {
+      backgroundColor: interpolateColor(
+        colorIndex.value,
+        [0, 1, 2, 3, 4],
+        [
+          colors.pageBg,
+          colors.indigoBase,
+          colors.indigoSoft,
+          colors.indigoMid,
+          colors.indigoPunch,
+        ]
+      ),
+    };
+  });
+
+  // Task H: Tap ring expansion
+  const ringScale = useSharedValue(1);
+  
+  const handlePress = () => {
+    if (isEditMode) {
+      onToggle(slot.date, slot.slotIndex);
+      return;
+    }
+
+    if (isMagic) {
+      ringScale.value = withSequence(
+        withSpring(1.2, springConfigs.bouncy),
+        withTiming(1, { duration: 100 })
+      );
+      // Open details after ring responds
+      setTimeout(() => {
+        onPress(slot);
+      }, 150);
+    } else {
+      onPress(slot);
+    }
+  };
+
+  const ringAnimatedStyle = useAnimatedStyle(() => {
     if (!isMagic && !isUncertain) return {};
     const borderColor = isUncertain ? colors.peachPunch : colors.peachPunch;
     return {
@@ -94,13 +122,15 @@ const AnimatedHeatCell = React.memo(({
         [borderColor, isUncertain ? colors.white : colors.peachSoft]
       ),
       borderWidth: (isMagic ? 1.5 : 2) + pulse.value * 1,
+      transform: [{ scale: ringScale.value }],
     };
   });
 
-  const scale = useSharedValue(1);
+  // Selection scale animation
+  const selectionScale = useSharedValue(1);
   useEffect(() => {
     if (isSelected) {
-      scale.value = withSequence(
+      selectionScale.value = withSequence(
         withTiming(1.15, { duration: 150, easing: Easing.out(Easing.quad) }),
         withTiming(1, { duration: 150, easing: Easing.in(Easing.quad) })
       );
@@ -108,23 +138,23 @@ const AnimatedHeatCell = React.memo(({
   }, [isSelected]);
 
   const selectedAnimatedStyle = useAnimatedStyle(() => ({
-    transform: [{ scale: scale.value }],
+    transform: [{ scale: selectionScale.value }],
   }));
 
   return (
     <Pressable 
-      onPress={() => isEditMode ? onToggle(slot.date, slot.slotIndex) : onPress(slot)}
+      onPress={handlePress}
       style={styles.cellWrapper}
     >
       <Animated.View
         style={[
           styles.cell, 
-          { backgroundColor },
+          animatedBackground,
           isMagic && styles.magicSlotCell,
           isSelected && styles.selectedCell,
           isUncertain && { borderWidth: 2, borderStyle: 'solid' },
           isEditMode && !isMeBusy && styles.myBusyCell,
-          magicAnimatedStyle,
+          ringAnimatedStyle,
           selectedAnimatedStyle,
         ]}
       >
@@ -141,7 +171,7 @@ const AnimatedHeatCell = React.memo(({
         {isSelected && (
           <View style={styles.selectionIndicator}>
             <Users size={12} weight="bold" color={colors.white} />
-            <Text style={styles.selectionText}>{freeCount}</Text>
+            <Text style={styles.selectionText}>{slot.freeCount}</Text>
           </View>
         )}
         {isEditMode && !isMeBusy && blockTitle && (
@@ -149,58 +179,6 @@ const AnimatedHeatCell = React.memo(({
         )}
       </Animated.View>
     </Pressable>
-  );
-});
-
-const HeatCell = React.memo(({
-  slot,
-  totalMembers,
-  isMagic,
-  isSelected,
-  isUncertain,
-  myPreference,
-  isEditMode,
-  blockTitle,
-  pulse,
-  onPress,
-  onToggle,
-}: HeatCellProps) => {
-  const isMeBusy = myPreference === 0;
-  
-  const backgroundColor = isEditMode 
-    ? (isMeBusy ? colors.pageBg : (myPreference === 2 ? colors.indigoNeon : colors.indigoPunch))
-    : getHeatShade(slot.freeCount, slot.preferredCount, totalMembers);
-
-  if (isMagic || isSelected || isUncertain) {
-    return (
-      <AnimatedHeatCell 
-        slot={slot}
-        backgroundColor={backgroundColor}
-        isMagic={isMagic}
-        isSelected={isSelected}
-        isUncertain={isUncertain}
-        isEditMode={isEditMode}
-        isMeBusy={isMeBusy}
-        blockTitle={blockTitle}
-        pulse={pulse}
-        onPress={onPress}
-        onToggle={onToggle}
-        freeCount={slot.freeCount}
-      />
-    );
-  }
-
-  return (
-    <StaticHeatCell 
-      slot={slot}
-      backgroundColor={backgroundColor}
-      isEditMode={isEditMode}
-      isMeBusy={isMeBusy}
-      isUncertain={isUncertain}
-      blockTitle={blockTitle}
-      onPress={onPress}
-      onToggle={onToggle}
-    />
   );
 });
 
@@ -407,4 +385,3 @@ export const HeatMap: React.FC<HeatMapProps> = ({
     </View>
   );
 };
-

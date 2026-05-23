@@ -14,8 +14,16 @@ import { SlotCard } from '@/components/SlotCard';
 import { VotePills } from '@/components/VotePills';
 import { Button } from '@/components/Button';
 import { EmptyState } from '@/components/EmptyState';
-import { Info, Sparkle, Clock, Warning, CalendarStar, Calendar } from 'phosphor-react-native';
-import Animated, { FadeInUp, FadeInDown, Layout } from 'react-native-reanimated';
+import { Info, Sparkle, Clock, Warning, CalendarStar, Calendar, WarningCircle } from 'phosphor-react-native';
+import Animated, { 
+  FadeInUp, 
+  FadeInDown, 
+  Layout, 
+  SlideInDown, 
+  SlideOutUp,
+  FadeOutDown
+} from 'react-native-reanimated';
+import { springConfigs } from '@/constants/animation';
 import { styles } from './_vote-slots.styles';
 import { useGlobalAvailability } from '@/hooks/useGlobalAvailability';
 import { useTimeVoting, VoteType } from '@/hooks/useTimeVoting';
@@ -174,17 +182,21 @@ export default function VoteSlotsScreen() {
                   />
                   
                   {hasConflict && (
-                    <View style={[
-                      localStyles.conflictWarning,
-                      currentVoteType === 'free' && { borderColor: colors.peachPunch, borderWidth: 1 }
-                    ]}>
-                      <Calendar size={14} color={colors.peachPunch} weight="bold" />
+                    <Animated.View 
+                      entering={SlideInDown.springify().damping(springConfigs.snappy.damping).stiffness(springConfigs.snappy.stiffness)}
+                      exiting={SlideOutUp.duration(200)}
+                      style={[
+                        localStyles.conflictWarning,
+                        currentVoteType === 'free' && { borderColor: colors.peachPunch, borderWidth: 1 }
+                      ]}
+                    >
+                      <WarningCircle size={16} color={colors.peachPunch} weight="fill" />
                       <Text style={localStyles.conflictText}>
                         {currentVoteType === 'free' 
-                          ? "Wait, your schedule changed!" 
-                          : `Schedule Conflict: ${slot.conflicts[0].title}`}
+                          ? "You have a tentative event at this time" 
+                          : `Conflict: ${slot.conflicts[0].title}`}
                       </Text>
-                    </View>
+                    </Animated.View>
                   )}
 
                   <View style={[

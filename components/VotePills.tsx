@@ -9,7 +9,9 @@ import Animated, {
   withSequence, 
   withTiming, 
   withSpring,
-  Easing 
+  Easing,
+  SlideInUp,
+  SlideOutUp
 } from 'react-native-reanimated';
 import { styles } from './VotePills.styles';
 
@@ -20,6 +22,21 @@ try {
 } catch (e) {
   Haptics = null;
 }
+
+const AnimatedCount = React.memo(({ count, color }: { count: number; color: string }) => {
+  return (
+    <View style={{ height: 20, overflow: 'hidden', justifyContent: 'center' }}>
+      <Animated.Text
+        key={count}
+        entering={SlideInUp.duration(180).easing(Easing.out(Easing.cubic))}
+        exiting={SlideOutUp.duration(180).easing(Easing.in(Easing.cubic))}
+        style={[styles.text, { color, marginLeft: 4 }]}
+      >
+        ({count})
+      </Animated.Text>
+    </View>
+  );
+});
 
 export type VoteType = 'free' | 'prefer' | 'cant';
 
@@ -99,16 +116,18 @@ const AnimatedVotePill = React.memo(({
             backgroundColor: background, 
             borderColor: border,
             borderWidth: selected ? 2 : 1,
-            opacity: selected ? 1 : 0.6
+            opacity: selected ? 1 : 0.6,
+            flexDirection: 'row',
+            alignItems: 'center',
+            justifyContent: 'center'
           }
         ]}
         accessibilityRole="button"
         accessibilityState={{ selected }}
         accessibilityLabel={`${label} ${count !== undefined ? `(${count} votes)` : ''}`}
       >
-        <Text style={[styles.text, { color: text }]}>
-          {label} {count !== undefined && `(${count})`}
-        </Text>
+        <Text style={[styles.text, { color: text }]}>{label}</Text>
+        {count !== undefined && <AnimatedCount count={count} color={text} />}
       </Animated.View>
     </TouchableOpacity>
   );
@@ -140,13 +159,15 @@ export const VotePill = React.memo(({ type, selected = false, onPress, count }: 
             backgroundColor: background, 
             borderColor: border,
             borderWidth: 1,
-            opacity: 0.6
+            opacity: 0.6,
+            flexDirection: 'row',
+            alignItems: 'center',
+            justifyContent: 'center'
           }
         ]}
       >
-        <Text style={[styles.text, { color: text }]}>
-          {label} {count !== undefined && `(${count})`}
-        </Text>
+        <Text style={[styles.text, { color: text }]}>{label}</Text>
+        {count !== undefined && <AnimatedCount count={count} color={text} />}
       </View>
     </View>
   );
