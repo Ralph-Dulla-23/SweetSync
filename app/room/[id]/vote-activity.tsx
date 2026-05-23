@@ -15,7 +15,7 @@ import { Header } from '@/components/Header';
 import { ActivityCard } from '@/components/ActivityCard';
 import { Button } from '@/components/Button';
 import { Sparkle, Plus, MagicWand } from 'phosphor-react-native';
-import Animated, { FadeInUp, FadeInDown, Layout } from 'react-native-reanimated';
+import Animated, { FadeInUp, FadeInDown, FadeOutDown, Layout } from 'react-native-reanimated';
 import { styles } from './_vote-activity.styles';
 import { CoordinationSkeleton } from '@/components/CoordinationSkeleton';
 
@@ -183,6 +183,17 @@ export default function VoteActivityScreen() {
           />
         </View>
       </KeyboardAvoidingView>
+    </SafeAreaView>
+  );
+}
+abled={selectedIds.size === 0 || loading}
+              loading={loading}
+              variant="primary"
+              onPress={handleFinalize}
+            />
+          </View>
+        </KeyboardAvoidingView>
+      </Animated.View>
     </SafeAreaView>
   );
 }

@@ -147,67 +147,72 @@ export default function Onboarding() {
 
   return (
     <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
-      <View style={styles.header}>
-        <TouchableOpacity 
-          onPress={() => router.push('/(auth)/sign-in')}
-          activeOpacity={0.7}
-        >
-          <Text style={styles.skipText}>Skip</Text>
-        </TouchableOpacity>
-      </View>
-
-      <FlatList
-        ref={flatListRef}
-        data={steps}
-        renderItem={renderStep}
-        horizontal
-        pagingEnabled
-        showsHorizontalScrollIndicator={false}
-        onScroll={handleScroll}
-        keyExtractor={(item) => item.id}
-        scrollEventThrottle={16}
-        getItemLayout={(_, index) => ({
-          length: width,
-          offset: width * index,
-          index,
-        })}
-      />
-
-      <View style={styles.footer}>
-        <View style={styles.pagination}>
-          {steps.map((_, index) => (
-            <View
-              key={index}
-              style={[
-                styles.dot,
-                activeIndex === index && styles.activeDot,
-                activeIndex === index && { backgroundColor: steps[index].iconColor }
-              ]}
-            />
-          ))}
+      <Animated.View 
+        style={{ flex: 1 }}
+        exiting={FadeOutDown.duration(400)}
+      >
+        <View style={styles.header}>
+          <TouchableOpacity 
+            onPress={() => router.push('/(auth)/sign-in')}
+            activeOpacity={0.7}
+          >
+            <Text style={styles.skipText}>Skip</Text>
+          </TouchableOpacity>
         </View>
 
-        <TouchableOpacity 
-          onPress={handleNext}
-          activeOpacity={0.8}
-          style={[
-            styles.nextButton,
-            { backgroundColor: steps[activeIndex].iconColor },
-            activeIndex === steps.length - 1 && styles.nextButtonExpanded
-          ]}
-        >
-          {activeIndex === steps.length - 1 ? (
-            <Animated.Text 
-              entering={FadeIn.duration(400)} 
-              style={styles.nextButtonText}
-            >
-              Get Started
-            </Animated.Text>
-          ) : (
-            <CaretRight size={24} weight="bold" color={colors.white} />
-          )}
-        </TouchableOpacity>
-      </View>
+        <FlatList
+          ref={flatListRef}
+          data={steps}
+          renderItem={renderStep}
+          horizontal
+          pagingEnabled
+          showsHorizontalScrollIndicator={false}
+          onScroll={handleScroll}
+          keyExtractor={(item) => item.id}
+          scrollEventThrottle={16}
+          getItemLayout={(_, index) => ({
+            length: width,
+            offset: width * index,
+            index,
+          })}
+        />
+
+        <View style={styles.footer}>
+          <View style={styles.pagination}>
+            {steps.map((_, index) => (
+              <View
+                key={index}
+                style={[
+                  styles.dot,
+                  activeIndex === index && styles.activeDot,
+                  activeIndex === index && { backgroundColor: steps[index].iconColor }
+                ]}
+              />
+            ))}
+          </View>
+
+          <TouchableOpacity 
+            onPress={handleNext}
+            activeOpacity={0.8}
+            style={[
+              styles.nextButton,
+              { backgroundColor: steps[activeIndex].iconColor },
+              activeIndex === steps.length - 1 && styles.nextButtonExpanded
+            ]}
+          >
+            {activeIndex === steps.length - 1 ? (
+              <Animated.Text 
+                entering={FadeIn.duration(400)} 
+                style={styles.nextButtonText}
+              >
+                Get Started
+              </Animated.Text>
+            ) : (
+              <CaretRight size={24} weight="bold" color={colors.white} />
+            )}
+          </TouchableOpacity>
+        </View>
+      </Animated.View>
     </SafeAreaView>
   );
 }

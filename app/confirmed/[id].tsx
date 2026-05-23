@@ -163,6 +163,7 @@ export default function ConfirmedEventScreen() {
       >
         <Animated.View 
           entering={FadeInDown.duration(800).springify().damping(springConfigs.bouncy.damping).stiffness(springConfigs.bouncy.stiffness)}
+          exiting={FadeOutDown.springify().damping(springConfigs.bouncy.damping).stiffness(springConfigs.bouncy.stiffness)}
           style={ticketAnimatedStyle}
         >
           <View style={styles.ticketCard}>

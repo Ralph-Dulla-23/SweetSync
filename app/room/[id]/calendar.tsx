@@ -285,123 +285,128 @@ export default function GroupCalendar() {
 
   return (
     <SafeAreaView style={styles.container}>
-      <Header 
-        title="Availability" 
-        subtitle={`${room?.name || "Room"} • ${room?.members.length || 0} members`}
-        showBack 
-        backLabel="Room" 
-      />
-
-      <View style={styles.tabContainer}>
-        <TouchableOpacity 
-          style={[styles.tab, activeTab === 'group' && styles.activeTab]}
-          onPress={() => setActiveTab('group')}
-        >
-          <Text style={activeTab === 'group' ? styles.activeTabText : styles.inactiveTabText}>Group View</Text>
-        </TouchableOpacity>
-        <TouchableOpacity 
-          style={[styles.tab, activeTab === 'mine' && styles.activeTab]}
-          onPress={() => setActiveTab('mine')}
-        >
-          <Text style={activeTab === 'mine' ? styles.activeTabText : styles.inactiveTabText}>My Schedule</Text>
-        </TouchableOpacity>
-      </View>
-
-      <ScrollView 
-        showsVerticalScrollIndicator={false}
-        contentContainerStyle={styles.scrollContent}
+      <Animated.View 
+        style={{ flex: 1 }}
+        exiting={FadeOutUp.duration(400)}
       >
-        {activeTab === 'mine' && (
-          <View style={styles.mineHeader}>
-            <Animated.View entering={FadeInDown.delay(100).duration(500)}>
-              <View style={styles.impactBanner}>
-                <Sparkle size={18} color={colors.peachPunch} weight="fill" />
-                <Text style={styles.impactText}>
-                  Your schedule helps find <Text style={styles.bold}>{potentialMagicSlots.length} new "Magic Slots"</Text> for the group.
-                </Text>
-              </View>
-            </Animated.View>
+        <Header 
+          title="Availability" 
+          subtitle={`${room?.name || "Room"} • ${room?.members.length || 0} members`}
+          showBack 
+          backLabel="Room" 
+        />
 
-            {emptyDays.length > 0 && (
-              <Animated.View entering={FadeInDown.delay(200).duration(500)}>
-                <View style={styles.warningBanner}>
-                  <Info size={16} color={colors.peachDeep} weight="bold" />
-                  <Text style={styles.warningText}>
-                    Update your schedule to help find better times!
+        <View style={styles.tabContainer}>
+          <TouchableOpacity 
+            style={[styles.tab, activeTab === 'group' && styles.activeTab]}
+            onPress={() => setActiveTab('group')}
+          >
+            <Text style={activeTab === 'group' ? styles.activeTabText : styles.inactiveTabText}>Group View</Text>
+          </TouchableOpacity>
+          <TouchableOpacity 
+            style={[styles.tab, activeTab === 'mine' && styles.activeTab]}
+            onPress={() => setActiveTab('mine')}
+          >
+            <Text style={activeTab === 'mine' ? styles.activeTabText : styles.inactiveTabText}>My Schedule</Text>
+          </TouchableOpacity>
+        </View>
+
+        <ScrollView 
+          showsVerticalScrollIndicator={false}
+          contentContainerStyle={styles.scrollContent}
+        >
+          {activeTab === 'mine' && (
+            <View style={styles.mineHeader}>
+              <Animated.View entering={FadeInDown.delay(100).duration(500)}>
+                <View style={styles.impactBanner}>
+                  <Sparkle size={18} color={colors.peachPunch} weight="fill" />
+                  <Text style={styles.impactText}>
+                    Your schedule helps find <Text style={styles.bold}>{potentialMagicSlots.length} new "Magic Slots"</Text> for the group.
                   </Text>
                 </View>
               </Animated.View>
-            )}
 
-            <Animated.View entering={FadeInDown.delay(300).duration(500)}>
-              <View style={styles.editNotice}>
-                <Info size={16} color={colors.indigoPunch} />
-                <Text style={styles.editNoticeText}>Tap to mark busy blocks (30m intervals)</Text>
-              </View>
-            </Animated.View>
-            
-            <Button 
-              onPress={handleScanPress}
-              disabled={isScanning}
-              style={styles.scanButton}
-            >
-              {isScanning ? (
-                <ActivityIndicator color={colors.white} size="small" />
-              ) : (
-                <>
-                  <Camera size={20} color={colors.white} weight="fill" />
-                  <Text style={styles.scanButtonText}>Scan Schedule</Text>
-                </>
+              {emptyDays.length > 0 && (
+                <Animated.View entering={FadeInDown.delay(200).duration(500)}>
+                  <View style={styles.warningBanner}>
+                    <Info size={16} color={colors.peachDeep} weight="bold" />
+                    <Text style={styles.warningText}>
+                      Update your schedule to help find better times!
+                    </Text>
+                  </View>
+                </Animated.View>
               )}
-            </Button>
-          </View>
-        )}
 
-        <HeatMap 
-          data={mockData}
-          totalMembers={room?.members.length || 1}
-          magicSlots={magicSlots}
-          onCellPress={handleCellPress}
-          selectedSlot={selectedSlot}
-          isEditMode={activeTab === 'mine'}
-          onToggleCell={handleToggleCell}
-          mySchedule={combinedSchedule}
-          myBlocks={myBlocks}
-        />
+              <Animated.View entering={FadeInDown.delay(300).duration(500)}>
+                <View style={styles.editNotice}>
+                  <Info size={16} color={colors.indigoPunch} />
+                  <Text style={styles.editNoticeText}>Tap to mark busy blocks (30m intervals)</Text>
+                </View>
+              </Animated.View>
+              
+              <Button 
+                onPress={handleScanPress}
+                disabled={isScanning}
+                style={styles.scanButton}
+              >
+                {isScanning ? (
+                  <ActivityIndicator color={colors.white} size="small" />
+                ) : (
+                  <>
+                    <Camera size={20} color={colors.white} weight="fill" />
+                    <Text style={styles.scanButtonText}>Scan Schedule</Text>
+                  </>
+                )}
+              </Button>
+            </View>
+          )}
 
-        {/* Improved Legend */}
-        {activeTab === 'group' ? (
-          <View style={styles.legendContainer}>
-            <View style={styles.legendRow}>
-              <Text style={styles.legendText}>Busy</Text>
-              <View style={styles.legendGradient}>
-                <View style={[styles.legendStep, { backgroundColor: colors.pageBg }]} />
-                <View style={[styles.legendStep, { backgroundColor: colors.indigoBase }]} />
-                <View style={[styles.legendStep, { backgroundColor: colors.indigoSoft }]} />
-                <View style={[styles.legendStep, { backgroundColor: colors.indigoMid }]} />
-                <View style={[styles.legendStep, { backgroundColor: colors.indigoPunch }]} />
-                <View style={[styles.legendStep, { backgroundColor: colors.indigoNeon }]} />
+          <HeatMap 
+            data={mockData}
+            totalMembers={room?.members.length || 1}
+            magicSlots={magicSlots}
+            onCellPress={handleCellPress}
+            selectedSlot={selectedSlot}
+            isEditMode={activeTab === 'mine'}
+            onToggleCell={handleToggleCell}
+            mySchedule={combinedSchedule}
+            myBlocks={myBlocks}
+          />
+
+          {/* Improved Legend */}
+          {activeTab === 'group' ? (
+            <View style={styles.legendContainer}>
+              <View style={styles.legendRow}>
+                <Text style={styles.legendText}>Busy</Text>
+                <View style={styles.legendGradient}>
+                  <View style={[styles.legendStep, { backgroundColor: colors.pageBg }]} />
+                  <View style={[styles.legendStep, { backgroundColor: colors.indigoBase }]} />
+                  <View style={[styles.legendStep, { backgroundColor: colors.indigoSoft }]} />
+                  <View style={[styles.legendStep, { backgroundColor: colors.indigoMid }]} />
+                  <View style={[styles.legendStep, { backgroundColor: colors.indigoPunch }]} />
+                  <View style={[styles.legendStep, { backgroundColor: colors.indigoNeon }]} />
+                </View>
+                <Text style={styles.legendText}>Prefer</Text>
               </View>
-              <Text style={styles.legendText}>Prefer</Text>
+              <View style={styles.magicSlotInfo}>
+                <Sparkle size={14} weight="fill" color={colors.peachPunch} />
+                <Text style={styles.magicSlotText}>AI-found "Magic Slots"</Text>
+              </View>
             </View>
-            <View style={styles.magicSlotInfo}>
-              <Sparkle size={14} weight="fill" color={colors.peachPunch} />
-              <Text style={styles.magicSlotText}>AI-found "Magic Slots"</Text>
+          ) : (
+            <View style={styles.legendContainer}>
+              <View style={styles.legendRow}>
+                <View style={[styles.legendBox, { backgroundColor: colors.indigoPunch }]} />
+                <Text style={styles.legendText}>Busy</Text>
+                <View style={[styles.legendBox, { backgroundColor: colors.indigoNeon, marginLeft: 16 }]} />
+                <Text style={styles.legendText}>Preferred</Text>
+                <View style={[styles.legendBox, { backgroundColor: colors.pageBg, marginLeft: 16 }]} />
+                <Text style={styles.legendText}>Free</Text>
+              </View>
             </View>
-          </View>
-        ) : (
-          <View style={styles.legendContainer}>
-            <View style={styles.legendRow}>
-              <View style={[styles.legendBox, { backgroundColor: colors.indigoPunch }]} />
-              <Text style={styles.legendText}>Busy</Text>
-              <View style={[styles.legendBox, { backgroundColor: colors.indigoNeon, marginLeft: 16 }]} />
-              <Text style={styles.legendText}>Preferred</Text>
-              <View style={[styles.legendBox, { backgroundColor: colors.pageBg, marginLeft: 16 }]} />
-              <Text style={styles.legendText}>Free</Text>
-            </View>
-          </View>
-        )}
-      </ScrollView>
+          )}
+        </ScrollView>
+      </Animated.View>
 
       {/* OCR Confirmation Modal (Full Screen) */}
       <RNModal visible={!!draftSchedule} animationType="slide">

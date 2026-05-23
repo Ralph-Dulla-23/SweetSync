@@ -376,251 +376,256 @@ export default function RoomInterior() {
 
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
-      <Header 
-        title={room.name} 
-        subtitle={room.description || "Coordinate with the squad"}
-        showBack 
-        backLabel="Rooms" 
-        userAvatar
-      />
-
-      <ScrollView 
-        contentContainerStyle={styles.content}
-        showsVerticalScrollIndicator={false}
+      <Animated.View 
+        style={{ flex: 1 }}
+        exiting={FadeOutUp.duration(400)}
       >
-        {/* Join Code Display */}
-        <Animated.View 
-          entering={isFirstRender ? FadeInDown.duration(600).delay(100) : undefined}
-          style={styles.joinCodeContainer}
-        >
-          <View style={styles.joinCodeContent}>
-            <Text style={styles.joinCodeLabel}>ROOM CODE</Text>
-            <View style={styles.joinCodeRow}>
-              <Text style={styles.joinCodeValue}>{room.id.toUpperCase()}</Text>
-              <TouchableOpacity 
-                style={styles.copyButton}
-                onPress={handleCopyCode}
-                accessibilityLabel="Copy room code"
-                accessibilityRole="button"
-              >
-                <Copy size={18} color={colors.peachPunch} weight="bold" />
-              </TouchableOpacity>
-            </View>
-          </View>
-        </Animated.View>
+        <Header 
+          title={room.name} 
+          subtitle={room.description || "Coordinate with the squad"}
+          showBack 
+          backLabel="Rooms" 
+          userAvatar
+        />
 
-        {/* Simulation Banner (Host Only) */}
-        {isHost && room.sessionStatus === 'collecting' && uploadedCount < totalCount && (
-          <Animated.View entering={isFirstRender ? FadeInDown.duration(600) : undefined}>
-            <TouchableOpacity 
-              style={[styles.nudgeAllBanner, { backgroundColor: colors.indigoBase, borderColor: colors.indigoSoft, marginBottom: spacing[6] }]}
-              onPress={handleSimulate}
-            >
-              <View style={styles.nudgeAllContent}>
-                <View style={[styles.nudgeAllIcon, { backgroundColor: colors.white }]}>
-                  <MagicWand size={20} color={colors.indigoPunch} weight="fill" />
-                </View>
-                <View style={{ flex: 1 }}>
-                  <Text style={[styles.nudgeAllTitle, { color: colors.indigoPunch }]}>Prototype Mode</Text>
-                  <Text style={[styles.nudgeAllSubtitle, { color: colors.textSecondary }]}>Tap to simulate friends joining & syncing</Text>
-                </View>
-                <View style={[styles.nudgeAllButton, { backgroundColor: colors.indigoPunch }]}>
-                  <Text style={[styles.nudgeAllButtonText, { color: colors.white }]}>START</Text>
-                </View>
+        <ScrollView 
+          contentContainerStyle={styles.content}
+          showsVerticalScrollIndicator={false}
+        >
+          {/* Join Code Display */}
+          <Animated.View 
+            entering={isFirstRender ? FadeInDown.duration(600).delay(100) : undefined}
+            style={styles.joinCodeContainer}
+          >
+            <View style={styles.joinCodeContent}>
+              <Text style={styles.joinCodeLabel}>ROOM CODE</Text>
+              <View style={styles.joinCodeRow}>
+                <Text style={styles.joinCodeValue}>{room.id.toUpperCase()}</Text>
+                <TouchableOpacity 
+                  style={styles.copyButton}
+                  onPress={handleCopyCode}
+                  accessibilityLabel="Copy room code"
+                  accessibilityRole="button"
+                >
+                  <Copy size={18} color={colors.peachPunch} weight="bold" />
+                </TouchableOpacity>
               </View>
+            </View>
+          </Animated.View>
+
+          {/* Simulation Banner (Host Only) */}
+          {isHost && room.sessionStatus === 'collecting' && uploadedCount < totalCount && (
+            <Animated.View entering={isFirstRender ? FadeInDown.duration(600) : undefined}>
+              <TouchableOpacity 
+                style={[styles.nudgeAllBanner, { backgroundColor: colors.indigoBase, borderColor: colors.indigoSoft, marginBottom: spacing[6] }]}
+                onPress={handleSimulate}
+              >
+                <View style={styles.nudgeAllContent}>
+                  <View style={[styles.nudgeAllIcon, { backgroundColor: colors.white }]}>
+                    <MagicWand size={20} color={colors.indigoPunch} weight="fill" />
+                  </View>
+                  <View style={{ flex: 1 }}>
+                    <Text style={[styles.nudgeAllTitle, { color: colors.indigoPunch }]}>Prototype Mode</Text>
+                    <Text style={[styles.nudgeAllSubtitle, { color: colors.textSecondary }]}>Tap to simulate friends joining & syncing</Text>
+                  </View>
+                  <View style={[styles.nudgeAllButton, { backgroundColor: colors.indigoPunch }]}>
+                    <Text style={[styles.nudgeAllButtonText, { color: colors.white }]}>START</Text>
+                  </View>
+                </View>
+              </TouchableOpacity>
+            </Animated.View>
+          )}
+          {/* Progress Section - Deeply Branded */}
+          <Card 
+            variant={isReady || room.sessionStatus === 'confirmed' ? 'mint' : 'peach'} 
+            style={styles.progressSection}
+          >
+            <View style={styles.progressHeader}>
+              <View style={styles.progressValueContainer}>
+                <Text style={[styles.progressMainValue, { color: isReady || room.sessionStatus === 'confirmed' ? colors.mintPunch : colors.peachPunch }]}>
+                  {uploadedCount}
+                </Text>
+                <Text style={styles.progressTotalValue}>/{totalCount}</Text>
+              </View>
+              <View style={styles.progressInfo}>
+                <Text style={styles.progressTitle}>Syncing Souls</Text>
+                <Text style={styles.progressSubtitle}>
+                  {isReady || room.sessionStatus === 'confirmed' ? "The squad is fully synced" : `${totalCount - uploadedCount} friends to go`}
+                </Text>
+              </View>
+            </View>
+            <ProgressBar 
+              progress={progress} 
+              color={isReady || room.sessionStatus === 'confirmed' ? colors.mintPunch : colors.peachPunch} 
+              height={10} 
+            />
+          </Card>
+
+          {/* Quick Actions Row */}
+          <Animated.View 
+            entering={isFirstRender ? FadeInUp.duration(600).delay(200) : undefined}
+            style={localStyles.quickActionsRow}
+          >
+            <TouchableOpacity 
+              style={localStyles.quickAction}
+              onPress={handleInvite}
+              accessibilityLabel="Invite members"
+              accessibilityRole="button"
+            >
+              <View style={[localStyles.actionIcon, { backgroundColor: colors.peachBase }]}>
+                <UsersThree size={24} color={colors.peachPunch} />
+              </View>
+              <Text style={localStyles.actionLabel}>Invite</Text>
+            </TouchableOpacity>
+            <TouchableOpacity 
+              style={localStyles.quickAction} 
+              onPress={() => router.push(`/room/${id}/calendar?tab=mine`)}
+              accessibilityLabel="Update my schedule"
+              accessibilityRole="button"
+            >
+              <View style={[localStyles.actionIcon, { backgroundColor: colors.indigoBase }]}>
+                <Calendar size={24} color={colors.indigoPunch} />
+              </View>
+              <Text style={localStyles.actionLabel}>Schedule</Text>
+            </TouchableOpacity>
+            <TouchableOpacity 
+              style={localStyles.quickAction}
+              onPress={() => {
+                if (room.sessionStatus === 'voting_activity') {
+                  router.push(`/room/${id}/vote-activity`);
+                } else {
+                  // If not in voting phase yet, we can still suggest ideas
+                  // For now, route to the same screen but it should handle the 'suggest' only mode
+                  router.push(`/room/${id}/vote-activity?mode=suggest`);
+                }
+              }}
+              accessibilityLabel="View activity ideas"
+              accessibilityRole="button"
+            >
+              <View style={[localStyles.actionIcon, { backgroundColor: colors.mintBase }]}>
+                <Sparkle size={24} color={colors.mintPunch} weight="fill" />
+              </View>
+              <Text style={localStyles.actionLabel}>Ideas</Text>
             </TouchableOpacity>
           </Animated.View>
-        )}
-        {/* Progress Section - Deeply Branded */}
-        <Card 
-          variant={isReady || room.sessionStatus === 'confirmed' ? 'mint' : 'peach'} 
-          style={styles.progressSection}
-        >
-          <View style={styles.progressHeader}>
-            <View style={styles.progressValueContainer}>
-              <Text style={[styles.progressMainValue, { color: isReady || room.sessionStatus === 'confirmed' ? colors.mintPunch : colors.peachPunch }]}>
-                {uploadedCount}
-              </Text>
-              <Text style={styles.progressTotalValue}>/{totalCount}</Text>
-            </View>
-            <View style={styles.progressInfo}>
-              <Text style={styles.progressTitle}>Syncing Souls</Text>
-              <Text style={styles.progressSubtitle}>
-                {isReady || room.sessionStatus === 'confirmed' ? "The squad is fully synced" : `${totalCount - uploadedCount} friends to go`}
-              </Text>
-            </View>
-          </View>
-          <ProgressBar 
-            progress={progress} 
-            color={isReady || room.sessionStatus === 'confirmed' ? colors.mintPunch : colors.peachPunch} 
-            height={10} 
-          />
-        </Card>
 
-        {/* Quick Actions Row */}
-        <Animated.View 
-          entering={isFirstRender ? FadeInUp.duration(600).delay(200) : undefined}
-          style={localStyles.quickActionsRow}
-        >
-          <TouchableOpacity 
-            style={localStyles.quickAction}
-            onPress={handleInvite}
-            accessibilityLabel="Invite members"
-            accessibilityRole="button"
-          >
-            <View style={[localStyles.actionIcon, { backgroundColor: colors.peachBase }]}>
-              <UsersThree size={24} color={colors.peachPunch} />
-            </View>
-            <Text style={localStyles.actionLabel}>Invite</Text>
-          </TouchableOpacity>
-          <TouchableOpacity 
-            style={localStyles.quickAction} 
-            onPress={() => router.push(`/room/${id}/calendar?tab=mine`)}
-            accessibilityLabel="Update my schedule"
-            accessibilityRole="button"
-          >
-            <View style={[localStyles.actionIcon, { backgroundColor: colors.indigoBase }]}>
-              <Calendar size={24} color={colors.indigoPunch} />
-            </View>
-            <Text style={localStyles.actionLabel}>Schedule</Text>
-          </TouchableOpacity>
-          <TouchableOpacity 
-            style={localStyles.quickAction}
-            onPress={() => {
-              if (room.sessionStatus === 'voting_activity') {
-                router.push(`/room/${id}/vote-activity`);
-              } else {
-                // If not in voting phase yet, we can still suggest ideas
-                // For now, route to the same screen but it should handle the 'suggest' only mode
-                router.push(`/room/${id}/vote-activity?mode=suggest`);
-              }
-            }}
-            accessibilityLabel="View activity ideas"
-            accessibilityRole="button"
-          >
-            <View style={[localStyles.actionIcon, { backgroundColor: colors.mintBase }]}>
-              <Sparkle size={24} color={colors.mintPunch} weight="fill" />
-            </View>
-            <Text style={localStyles.actionLabel}>Ideas</Text>
-          </TouchableOpacity>
-        </Animated.View>
+          {isHost && pendingMembers.length > 1 && room.sessionStatus === 'collecting' && (
+            <NudgeAllBanner 
+              pendingCount={pendingMembers.length} 
+              onNudgeAll={handleNudgeAll} 
+              isFirstRender={isFirstRender}
+            />
+          )}
 
-        {isHost && pendingMembers.length > 1 && room.sessionStatus === 'collecting' && (
-          <NudgeAllBanner 
-            pendingCount={pendingMembers.length} 
-            onNudgeAll={handleNudgeAll} 
-            isFirstRender={isFirstRender}
-          />
-        )}
+          {/* Confirmed Events */}
+          {room.upcomingEvents && room.upcomingEvents.length > 0 && (
+            <Animated.View 
+              entering={isFirstRender ? FadeInUp.duration(600).delay(400) : undefined}
+              style={{ marginBottom: spacing[8] }}
+            >
+              <View style={styles.sectionHeader}>
+                <CheckCircle size={16} color={colors.mintPunch} weight="bold" />
+                <Text style={styles.sectionTitle}>Confirmed Plans</Text>
+              </View>
+              {room.upcomingEvents.map(event => (
+                <UpcomingEventCard 
+                  key={event.id} 
+                  event={event} 
+                  members={room.members} 
+                  onPress={() => router.push(`/confirmed/${event.id}`)}
+                />
+              ))}
+            </Animated.View>
+          )}
 
-        {/* Confirmed Events */}
-        {room.upcomingEvents && room.upcomingEvents.length > 0 && (
-          <Animated.View 
-            entering={isFirstRender ? FadeInUp.duration(600).delay(400) : undefined}
-            style={{ marginBottom: spacing[8] }}
-          >
+          {/* AI Suggestions */}
+          {room.activitySuggestions && room.activitySuggestions.length > 0 && (
+            <Animated.View entering={isFirstRender ? FadeInUp.duration(600).delay(600) : undefined}>
+              <ActivityDiscovery suggestions={room.activitySuggestions} />
+            </Animated.View>
+          )}
+
+          {/* Member List - Social and Responsive */}
+          <Animated.View entering={isFirstRender ? FadeInUp.duration(600).delay(800) : undefined}>
             <View style={styles.sectionHeader}>
-              <CheckCircle size={16} color={colors.mintPunch} weight="bold" />
-              <Text style={styles.sectionTitle}>Confirmed Plans</Text>
+              <UsersThree size={16} color={colors.textTertiary} weight="bold" />
+              <Text style={styles.sectionTitle}>The Squad</Text>
             </View>
-            {room.upcomingEvents.map(event => (
-              <UpcomingEventCard 
-                key={event.id} 
-                event={event} 
-                members={room.members} 
-                onPress={() => router.push(`/confirmed/${event.id}`)}
-              />
-            ))}
-          </Animated.View>
-        )}
 
-        {/* AI Suggestions */}
-        {room.activitySuggestions && room.activitySuggestions.length > 0 && (
-          <Animated.View entering={isFirstRender ? FadeInUp.duration(600).delay(600) : undefined}>
-            <ActivityDiscovery suggestions={room.activitySuggestions} />
-          </Animated.View>
-        )}
+            <TouchableOpacity 
+              style={localStyles.heatmapButton}
+              onPress={() => router.push(`/room/${id}/calendar`)}
+              accessibilityLabel="View group availability heatmap"
+              accessibilityRole="button"
+            >
+              <View style={localStyles.heatmapButtonContent}>
+                <View style={localStyles.heatmapIconContainer}>
+                  <UsersThree size={20} color={colors.indigoPunch} weight="duotone" />
+                </View>
+                <View style={{ flex: 1 }}>
+                  <Text style={localStyles.heatmapButtonTitle}>View Group Heatmap</Text>
+                  <Text style={localStyles.heatmapButtonSubtitle}>See everyone's availability & add your own</Text>
+                </View>
+                <CaretRight size={20} color={colors.textTertiary} />
+              </View>
+            </TouchableOpacity>
 
-        {/* Member List - Social and Responsive */}
-        <Animated.View entering={isFirstRender ? FadeInUp.duration(600).delay(800) : undefined}>
-          <View style={styles.sectionHeader}>
-            <UsersThree size={16} color={colors.textTertiary} weight="bold" />
-            <Text style={styles.sectionTitle}>The Squad</Text>
-          </View>
+            <View style={styles.memberList}>
+              {room.members.map((member, index) => (
+                <MemberRow 
+                  key={member.id}
+                  member={member}
+                  index={index}
+                  isLast={index === room.members.length - 1}
+                  onNudge={handleNudge}
+                  isFirstRender={isFirstRender}
+                />
+              ))}
+            </View>
+          </Animated.View>
+
+          {/* Spacer to push footer down without massive ScrollView padding */}
+          <View style={{ flex: 1 }} />
+
+          {/* Action Area */}
+          <Animated.View entering={isFirstRender ? FadeInUp.duration(600).delay(1000) : undefined} style={styles.footer}>
+            <Button 
+              title={cta.title} 
+              variant={cta.variant as any}
+              disabled={cta.disabled}
+              onPress={cta.onPress}
+              style={styles.mainButton}
+              accessibilityLabel={cta.label}
+            />
+            {room.sessionStatus === 'collecting' && !isReady && (
+              <Text style={[styles.footerNote, canProceed && { color: colors.peachPunch, fontFamily: fonts.bodySemibold }]}>
+                {canProceed 
+                  ? "Proceed anyway? AI will show gaps based on synced data." 
+                  : "Waiting for the squad to reveal free time 🍑"}
+              </Text>
+            )}
+            {room.sessionStatus === 'voting_slots' && (
+              <Text style={styles.footerNote}>
+                AI found {uploadedCount} free windows. Pick your favorites!
+              </Text>
+            )}
+            {room.sessionStatus === 'confirmed' && (
+              <Text style={[styles.footerNote, { color: colors.mintPunch, fontFamily: fonts.bodySemibold }]}>
+                Plan confirmed! Check your device calendar. 📅
+              </Text>
+            )}
+          </Animated.View>
 
           <TouchableOpacity 
-            style={localStyles.heatmapButton}
-            onPress={() => router.push(`/room/${id}/calendar`)}
-            accessibilityLabel="View group availability heatmap"
+            style={styles.leaveButton}
+            onPress={() => router.replace('/(tabs)')}
+            accessibilityLabel="Leave this room"
             accessibilityRole="button"
           >
-            <View style={localStyles.heatmapButtonContent}>
-              <View style={localStyles.heatmapIconContainer}>
-                <UsersThree size={20} color={colors.indigoPunch} weight="duotone" />
-              </View>
-              <View style={{ flex: 1 }}>
-                <Text style={localStyles.heatmapButtonTitle}>View Group Heatmap</Text>
-                <Text style={localStyles.heatmapButtonSubtitle}>See everyone's availability & add your own</Text>
-              </View>
-              <CaretRight size={20} color={colors.textTertiary} />
-            </View>
+            <Text style={styles.leaveButtonText}>Leave Room</Text>
           </TouchableOpacity>
-
-          <View style={styles.memberList}>
-            {room.members.map((member, index) => (
-              <MemberRow 
-                key={member.id}
-                member={member}
-                index={index}
-                isLast={index === room.members.length - 1}
-                onNudge={handleNudge}
-                isFirstRender={isFirstRender}
-              />
-            ))}
-          </View>
-        </Animated.View>
-
-        {/* Spacer to push footer down without massive ScrollView padding */}
-        <View style={{ flex: 1 }} />
-
-        {/* Action Area */}
-        <Animated.View entering={isFirstRender ? FadeInUp.duration(600).delay(1000) : undefined} style={styles.footer}>
-          <Button 
-            title={cta.title} 
-            variant={cta.variant as any}
-            disabled={cta.disabled}
-            onPress={cta.onPress}
-            style={styles.mainButton}
-            accessibilityLabel={cta.label}
-          />
-          {room.sessionStatus === 'collecting' && !isReady && (
-            <Text style={[styles.footerNote, canProceed && { color: colors.peachPunch, fontFamily: fonts.bodySemibold }]}>
-              {canProceed 
-                ? "Proceed anyway? AI will show gaps based on synced data." 
-                : "Waiting for the squad to reveal free time 🍑"}
-            </Text>
-          )}
-          {room.sessionStatus === 'voting_slots' && (
-            <Text style={styles.footerNote}>
-              AI found {uploadedCount} free windows. Pick your favorites!
-            </Text>
-          )}
-          {room.sessionStatus === 'confirmed' && (
-            <Text style={[styles.footerNote, { color: colors.mintPunch, fontFamily: fonts.bodySemibold }]}>
-              Plan confirmed! Check your device calendar. 📅
-            </Text>
-          )}
-        </Animated.View>
-
-        <TouchableOpacity 
-          style={styles.leaveButton}
-          onPress={() => router.replace('/(tabs)')}
-          accessibilityLabel="Leave this room"
-          accessibilityRole="button"
-        >
-          <Text style={styles.leaveButtonText}>Leave Room</Text>
-        </TouchableOpacity>
-      </ScrollView>
+        </ScrollView>
+      </Animated.View>
     </SafeAreaView>
   );
 }

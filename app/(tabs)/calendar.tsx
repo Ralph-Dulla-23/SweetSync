@@ -19,6 +19,7 @@ import {
 import Animated, { 
   FadeIn, 
   FadeInDown, 
+  FadeOutUp,
   Layout, 
   SlideInDown,
   useSharedValue,
@@ -258,6 +259,18 @@ const localStyles = StyleSheet.create({
   emptyContainer: {
     flex: 1,
     justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: spacing[8],
+    gap: spacing[4],
+  },
+  emptyText: {
+    fontFamily: fonts.bodySemibold,
+    fontSize: 14,
+    color: colors.textSecondary,
+    textAlign: 'center',
+  }
+});
+'center',
     alignItems: 'center',
     paddingHorizontal: spacing[8],
     gap: spacing[4],

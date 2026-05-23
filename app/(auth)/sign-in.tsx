@@ -23,6 +23,7 @@ import { useAuth } from '@/hooks/useAuth';
 import Animated, { 
   FadeIn, 
   FadeInDown, 
+  FadeOutDown,
   Layout, 
   useSharedValue,
   useAnimatedStyle,
@@ -325,6 +326,13 @@ export default function SignIn() {
               </View>
             </View>
           </Animated.View>
+        </Animated.ScrollView>
+      </KeyboardAvoidingView>
+    </SafeAreaView>
+  );
+}
+
+Animated.View>
         </Animated.ScrollView>
       </KeyboardAvoidingView>
     </SafeAreaView>

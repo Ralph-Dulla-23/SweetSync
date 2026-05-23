@@ -13,6 +13,7 @@ import Animated, {
   withDelay,
   FadeIn,
   FadeInDown,
+  FadeOutUp,
   Easing,
   cancelAnimation,
   Layout,
@@ -231,6 +232,17 @@ export default function AIProcessingScreen() {
           );
         })}
       </View>
+    </View>
+  );
+}
+
+const headlineStyle = [styles.headline];
+              index={index} 
+              />
+            );
+          })}
+        </View>
+      </Animated.View>
     </View>
   );
 }
