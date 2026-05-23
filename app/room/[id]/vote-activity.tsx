@@ -11,6 +11,7 @@ import {
 } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { colors, fonts, spacing, radius } from '@/constants/theme';
+import { springConfigs } from '@/constants/animation';
 import { Header } from '@/components/Header';
 import { ActivityCard } from '@/components/ActivityCard';
 import { Button } from '@/components/Button';
@@ -122,7 +123,7 @@ export default function VoteActivityScreen() {
           showsVerticalScrollIndicator={false}
         >
           <Animated.View 
-            entering={FadeInDown.delay(200).duration(600)}
+            entering={FadeInDown.delay(200).springify().damping(springConfigs.snappy.damping).stiffness(springConfigs.snappy.stiffness)}
             style={styles.hero}
           >
             <View style={styles.iconCircle}>
@@ -140,8 +141,8 @@ export default function VoteActivityScreen() {
             {activities.map((activity, index) => (
               <Animated.View 
                 key={activity.id}
-                entering={FadeInUp.delay(400 + index * 100).duration(600)}
-                layout={Layout.springify()}
+                entering={FadeInUp.delay(400 + index * 100).springify().damping(springConfigs.snappy.damping).stiffness(springConfigs.snappy.stiffness)}
+                layout={Layout.springify().damping(springConfigs.snappy.damping).stiffness(springConfigs.snappy.stiffness)}
               >
                 <ActivityCard 
                   title={activity.title}
@@ -155,7 +156,7 @@ export default function VoteActivityScreen() {
           </View>
 
           <Animated.View 
-            entering={FadeInUp.delay(800).duration(600)}
+            entering={FadeInUp.delay(800).springify().damping(springConfigs.snappy.damping).stiffness(springConfigs.snappy.stiffness)}
             style={styles.addSection}
           >
             <Text style={styles.sectionLabel}>Something else?</Text>

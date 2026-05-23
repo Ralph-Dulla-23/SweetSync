@@ -333,10 +333,4 @@ export default function SignIn() {
   );
 }
 
-Animated.View>
-        </Animated.ScrollView>
-      </KeyboardAvoidingView>
-    </SafeAreaView>
-  );
-}
 

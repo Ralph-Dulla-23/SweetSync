@@ -10,6 +10,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { colors, fonts, spacing, radius } from '@/constants/theme';
+import { springConfigs } from '@/constants/animation';
 import { Header } from '@/components/Header';
 import { AvatarStack } from '@/components/AvatarStack';
 import { 
@@ -218,8 +219,8 @@ export default function VotesScreen() {
               {tasks.map((vote, index) => (
                 <Animated.View 
                   key={vote.id}
-                  entering={FadeInUp.delay(100 + index * 100)}
-                  layout={Layout.springify()}
+                  entering={FadeInUp.delay(100 + index * 50).springify().damping(springConfigs.elegant.damping).stiffness(springConfigs.elegant.stiffness)}
+                  layout={Layout.springify().damping(springConfigs.elegant.damping).stiffness(springConfigs.elegant.stiffness)}
                 >
                   <TaskCard vote={vote} onClear={(id) => setTasks(prev => prev.filter(t => t.id !== id))} />
                 </Animated.View>
