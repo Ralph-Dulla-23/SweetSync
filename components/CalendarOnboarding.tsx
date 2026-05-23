@@ -6,7 +6,8 @@ import {
   Modal, 
   TouchableOpacity, 
   Dimensions,
-  SafeAreaView
+  SafeAreaView,
+  Platform
 } from 'react-native';
 import { colors, fonts, spacing, radius } from '@/constants/theme';
 import { Sparkle, Users, CalendarBlank, CaretRight, Check } from 'phosphor-react-native';
@@ -20,6 +21,30 @@ import Animated, {
 import * as SecureStore from 'expo-secure-store';
 
 const { width, height } = Dimensions.get('window');
+
+// Safe storage wrapper for Web support
+const getStorageItem = async (key: string) => {
+  try {
+    if (Platform.OS === 'web') {
+      return localStorage.getItem(key);
+    }
+    return await SecureStore.getItemAsync(key);
+  } catch (e) {
+    return null;
+  }
+};
+
+const setStorageItem = async (key: string, value: string) => {
+  try {
+    if (Platform.OS === 'web') {
+      localStorage.setItem(key, value);
+      return;
+    }
+    await SecureStore.setItemAsync(key, value);
+  } catch (e) {
+    // Fail silently
+  }
+};
 
 interface Step {
   id: string;
@@ -40,14 +65,14 @@ export const CalendarOnboarding = ({ onComplete }: { onComplete: () => void }) =
   }, []);
 
   const checkStatus = async () => {
-    const seen = await SecureStore.getItemAsync(ONBOARDING_KEY);
+    const seen = await getStorageItem(ONBOARDING_KEY);
     if (!seen) {
       setVisible(true);
     }
   };
 
   const handleComplete = async () => {
-    await SecureStore.setItemAsync(ONBOARDING_KEY, 'true');
+    await setStorageItem(ONBOARDING_KEY, 'true');
     setVisible(false);
     onComplete();
   };
