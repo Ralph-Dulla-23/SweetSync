@@ -106,13 +106,17 @@ export default function VoteActivityScreen() {
         title="What's the plan?" 
         subtitle="Step 2 of 2" 
         showBack 
-        backLabel="Times" 
+        backLabel="Time" 
       />
 
-      <KeyboardAvoidingView 
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      <Animated.View 
         style={{ flex: 1 }}
+        exiting={FadeOutDown.springify().damping(springConfigs.snappy.damping).stiffness(springConfigs.snappy.stiffness)}
       >
+        <KeyboardAvoidingView 
+          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+          style={{ flex: 1 }}
+        >
         <ScrollView 
           contentContainerStyle={styles.content}
           showsVerticalScrollIndicator={false}
@@ -183,17 +187,7 @@ export default function VoteActivityScreen() {
           />
         </View>
       </KeyboardAvoidingView>
-    </SafeAreaView>
-  );
-}
-abled={selectedIds.size === 0 || loading}
-              loading={loading}
-              variant="primary"
-              onPress={handleFinalize}
-            />
-          </View>
-        </KeyboardAvoidingView>
-      </Animated.View>
-    </SafeAreaView>
-  );
+    </Animated.View>
+  </SafeAreaView>
+);
 }

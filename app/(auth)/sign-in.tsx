@@ -192,6 +192,7 @@ export default function SignIn() {
       >
         <Animated.ScrollView 
           entering={FadeInDown.springify().damping(springConfigs.elegant.damping).stiffness(springConfigs.elegant.stiffness)}
+          exiting={FadeOutDown.springify().damping(springConfigs.elegant.damping).stiffness(springConfigs.elegant.stiffness)}
           showsVerticalScrollIndicator={false}
           contentContainerStyle={styles.scrollContent}
         >

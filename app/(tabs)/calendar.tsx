@@ -181,10 +181,14 @@ export default function CalendarScreen() {
         title="Calendar" 
         rightElement={<Text style={styles.month}>May 2026</Text>}
       />
-      <ScrollView 
-        showsVerticalScrollIndicator={false}
-        contentContainerStyle={[styles.scrollContent, { paddingBottom: 120 + insets.bottom }]}
+      <Animated.View 
+        style={{ flex: 1 }}
+        exiting={FadeOutUp.springify().damping(springConfigs.elegant.damping).stiffness(springConfigs.elegant.stiffness)}
       >
+        <ScrollView 
+          showsVerticalScrollIndicator={false}
+          contentContainerStyle={[styles.scrollContent, { paddingBottom: 120 + insets.bottom }]}
+        >
         <View style={styles.sectionHeader}>
           <Text style={styles.sectionTitle}>Global Availability</Text>
           <Text style={styles.sectionSubtitle}>Combined view of all your rooms</Text>
@@ -251,6 +255,7 @@ export default function CalendarScreen() {
         selectedSlot={selectedSlot}
         clearSelection={clearSelection}
       />
+      </Animated.View>
     </SafeAreaView>
   );
 }
@@ -259,18 +264,6 @@ const localStyles = StyleSheet.create({
   emptyContainer: {
     flex: 1,
     justifyContent: 'center',
-    alignItems: 'center',
-    paddingHorizontal: spacing[8],
-    gap: spacing[4],
-  },
-  emptyText: {
-    fontFamily: fonts.bodySemibold,
-    fontSize: 14,
-    color: colors.textSecondary,
-    textAlign: 'center',
-  }
-});
-'center',
     alignItems: 'center',
     paddingHorizontal: spacing[8],
     gap: spacing[4],

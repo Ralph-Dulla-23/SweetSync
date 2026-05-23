@@ -12,10 +12,11 @@ import {
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { colors, fonts, spacing, radius } from '@/constants/theme';
+import { springConfigs } from '@/constants/animation';
 import { Header } from '@/components/Header';
 import { Button } from '@/components/Button';
 import { Users, CaretRight, ShieldCheck } from 'phosphor-react-native';
-import Animated, { FadeInDown, FadeIn } from 'react-native-reanimated';
+import Animated, { FadeInDown, FadeIn, FadeOutDown } from 'react-native-reanimated';
 import { styles } from './_join.styles';
 
 export default function JoinRoomScreen() {
@@ -52,7 +53,10 @@ export default function JoinRoomScreen() {
         style={styles.keyboardView}
       >
         <View style={styles.content}>
-          <Animated.View entering={FadeInDown.duration(600)}>
+          <Animated.View 
+            entering={FadeInDown.springify().damping(springConfigs.elegant.damping).stiffness(springConfigs.elegant.stiffness)}
+            exiting={FadeOutDown.springify().damping(springConfigs.elegant.damping).stiffness(springConfigs.elegant.stiffness)}
+          >
             <View style={styles.hero}>
               <View style={styles.iconCircle}>
                 <Users size={32} color={colors.peachPunch} weight="duotone" />

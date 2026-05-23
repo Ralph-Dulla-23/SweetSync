@@ -193,51 +193,46 @@ export default function AIProcessingScreen() {
 
   return (
     <View style={styles.container}>
-      {/* Background Magic Particles */}
-      {Array.from({ length: 15 }).map((_, i) => (
-        <Particle key={i} index={i} />
-      ))}
+      <Animated.View 
+        entering={FadeIn}
+        exiting={FadeOutUp.duration(400)}
+        style={{ flex: 1 }}
+      >
+        {/* Background Magic Particles */}
+        {Array.from({ length: 15 }).map((_, i) => (
+          <Particle key={i} index={i} />
+        ))}
 
-      <View style={styles.centerCluster}>
-        <View style={styles.pulseContainer}>
-          <PulseRing />
-          <Animated.View entering={FadeIn.duration(1000)}>
-            <Sparkle size={56} color={colors.indigoPunch} weight="fill" />
-          </Animated.View>
-        </View>
-        
-        <Animated.View entering={FadeInDown.delay(200).duration(800).springify()}>
-          <Text style={headlineStyle}>Finding your{'\n'}free time...</Text>
-          <Text style={styles.subtitle}>Our AI is weaving its magic 🪄</Text>
-        </Animated.View>
-
-        <View style={styles.progressBarContainer}>
-          <Animated.View style={[styles.progressBarFill, progressBarStyle]} />
-        </View>
-      </View>
-
-      <View style={styles.statusList}>
-        {STAGES.map((label, index) => {
-          let status: 'done' | 'loading' | 'pending' = 'pending';
-          if (index < currentStage) status = 'done';
-          else if (index === currentStage) status = 'loading';
+        <View style={styles.centerCluster}>
+          <View style={styles.pulseContainer}>
+            <PulseRing />
+            <Animated.View entering={FadeIn.duration(1000)}>
+              <Sparkle size={56} color={colors.indigoPunch} weight="fill" />
+            </Animated.View>
+          </View>
           
-          return (
-            <StatusRow 
-              key={label}
-              label={label} 
-              status={status} 
-              index={index} 
-            />
-          );
-        })}
-      </View>
-    </View>
-  );
-}
+          <Animated.View entering={FadeInDown.delay(200).duration(800).springify()}>
+            <Text style={headlineStyle}>Finding your{'\n'}free time...</Text>
+            <Text style={styles.subtitle}>Our AI is weaving its magic 🪄</Text>
+          </Animated.View>
 
-const headlineStyle = [styles.headline];
-              index={index} 
+          <View style={styles.progressBarContainer}>
+            <Animated.View style={[styles.progressBarFill, progressBarStyle]} />
+          </View>
+        </View>
+
+        <View style={styles.statusList}>
+          {STAGES.map((label, index) => {
+            let status: 'done' | 'loading' | 'pending' = 'pending';
+            if (index < currentStage) status = 'done';
+            else if (index === currentStage) status = 'loading';
+            
+            return (
+              <StatusRow 
+                key={label}
+                label={label} 
+                status={status} 
+                index={index} 
               />
             );
           })}
@@ -248,3 +243,4 @@ const headlineStyle = [styles.headline];
 }
 
 const headlineStyle = [styles.headline];
+
