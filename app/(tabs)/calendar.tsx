@@ -81,7 +81,7 @@ function InteractiveBottomSheet({ selectedSlot, clearSelection }: any) {
           if (e.translationY > 80 || e.velocityY > 500) {
             runOnJS(handleDismiss)();
           } else {
-            translateY.value = withSpring(OPEN_Y, SPRING_CONFIG);
+            translateY.value = withSpring(OPEN_Y, springConfigs.gestural);
           }
         })
       }

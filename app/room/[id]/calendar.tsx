@@ -13,6 +13,7 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { colors, spacing, radius, fonts } from "@/constants/theme";
+import { springConfigs } from "@/constants/animation";
 import { Header } from "@/components/Header";
 import { Sparkle, Info, X, Users, Camera, Bell, Eye, EyeSlash, Warning, CaretRight } from "phosphor-react-native";
 import Animated, { 
@@ -57,15 +58,8 @@ function InteractiveBottomSheet({ selectedSlot, clearSelection, isNudgeSlot, id,
   // Internal state to hold data during transition
   const [internalSlot, setInternalSlot] = React.useState<any>(null);
 
-  const SPRING_CONFIG = { 
-    damping: 25, 
-    stiffness: 180,
-    mass: 1,
-    overshootClamping: true // Absolute no bounce to prevent "jumping" feel
-  };
-
   const handleDismiss = React.useCallback(() => {
-    translateY.value = withSpring(HIDDEN_Y, SPRING_CONFIG, (finished) => {
+    translateY.value = withSpring(HIDDEN_Y, springConfigs.gestural, (finished) => {
       if (finished) {
         runOnJS(setInternalSlot)(null);
         runOnJS(clearSelection)();
@@ -76,7 +70,7 @@ function InteractiveBottomSheet({ selectedSlot, clearSelection, isNudgeSlot, id,
   React.useEffect(() => {
     if (selectedSlot) {
       setInternalSlot(selectedSlot);
-      translateY.value = withSpring(OPEN_Y, SPRING_CONFIG);
+      translateY.value = withSpring(OPEN_Y, springConfigs.gestural);
     } else if (internalSlot) {
       // Trigger dismissal animation if external state is cleared
       handleDismiss();
@@ -118,7 +112,7 @@ function InteractiveBottomSheet({ selectedSlot, clearSelection, isNudgeSlot, id,
           if (e.translationY > 80 || e.velocityY > 500) {
             runOnJS(handleDismiss)();
           } else {
-            translateY.value = withSpring(OPEN_Y, SPRING_CONFIG);
+            translateY.value = withSpring(OPEN_Y, springConfigs.gestural);
           }
         })
       }

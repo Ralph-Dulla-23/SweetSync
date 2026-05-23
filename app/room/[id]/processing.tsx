@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, Dimensions } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { colors, fonts, spacing } from '@/constants/theme';
+import { springConfigs } from '@/constants/animation';
 import { Sparkle, CheckCircle, CircleNotch } from 'phosphor-react-native';
 import Animated, { 
   useSharedValue, 
@@ -100,8 +101,16 @@ const StatusRow = ({ label, status, index }: { label: string; status: 'done' | '
 
   return (
     <Animated.View 
-      entering={FadeInDown.delay(400 + index * 150).duration(800).springify().damping(15)}
-      layout={Layout.springify()}
+      entering={FadeInDown.delay(400 + index * 150)
+        .duration(800)
+        .springify()
+        .damping(springConfigs.snappy.damping)
+        .stiffness(springConfigs.snappy.stiffness)
+      }
+      layout={Layout.springify()
+        .damping(springConfigs.snappy.damping)
+        .stiffness(springConfigs.snappy.stiffness)
+      }
       style={styles.statusRow}
     >
       <View style={[
