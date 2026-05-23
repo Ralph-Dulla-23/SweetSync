@@ -8,7 +8,7 @@ import { HeatMap } from '@/components/HeatMap';
 import { EmptyState } from '@/components/EmptyState';
 import { useHeatMap } from '@/hooks/useHeatMap';
 import { useGlobalAvailability } from '@/hooks/useGlobalAvailability';
-import { Info, Sparkle, X, Users, CalendarBlank } from 'phosphor-react-native';
+import { Info, Sparkle, X, Users, CalendarBlank, Question } from 'phosphor-react-native';
 import { styles } from './_calendar.styles';
 import { format, parseISO } from 'date-fns';
 import { slotIndexToTime } from '@/lib/time';
@@ -28,6 +28,7 @@ import Animated, {
   runOnJS,
   SlideOutDown
 } from 'react-native-reanimated';
+import { CalendarOnboarding } from '@/components/CalendarOnboarding';
 
 // --- Interactive Bottom Sheet Sub-component ---
 function InteractiveBottomSheet({ selectedSlot, clearSelection }: any) {
@@ -143,6 +144,8 @@ function InteractiveBottomSheet({ selectedSlot, clearSelection }: any) {
 // --- Main Screen ---
 export default function CalendarScreen() {
   const insets = useSafeAreaInsets();
+  const [showHelp, setShowHelp] = React.useState(false);
+  
   const { 
     mockData, 
     magicSlots, 
@@ -179,8 +182,19 @@ export default function CalendarScreen() {
     <SafeAreaView style={styles.container} edges={['top']}>
       <Header 
         title="Calendar" 
-        rightElement={<Text style={styles.month}>May 2026</Text>}
+        rightElement={
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing[3] }}>
+            <TouchableOpacity onPress={() => setShowHelp(true)}>
+              <Question size={24} color={colors.textSecondary} />
+            </TouchableOpacity>
+            <Text style={styles.month}>May 2026</Text>
+          </View>
+        }
       />
+      
+      <CalendarOnboarding onComplete={() => setShowHelp(false)} />
+      {showHelp && <CalendarOnboarding onComplete={() => setShowHelp(false)} />}
+
       <Animated.View 
         style={{ flex: 1 }}
         exiting={FadeOutUp.springify().damping(springConfigs.elegant.damping).stiffness(springConfigs.elegant.stiffness)}

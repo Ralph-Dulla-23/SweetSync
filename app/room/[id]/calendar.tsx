@@ -15,7 +15,7 @@ import { useLocalSearchParams, useRouter } from "expo-router";
 import { colors, spacing, radius, fonts } from "@/constants/theme";
 import { springConfigs } from "@/constants/animation";
 import { Header } from "@/components/Header";
-import { Sparkle, Info, X, Users, Camera, Bell, Eye, EyeSlash, Warning, CaretRight } from "phosphor-react-native";
+import { Sparkle, Info, X, Users, Camera, Bell, Eye, EyeSlash, Warning, CaretRight, Question } from "phosphor-react-native";
 import Animated, { 
   FadeIn, 
   FadeInDown, 
@@ -44,6 +44,7 @@ import { format, parseISO } from "date-fns";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { useRoom } from "@/hooks/useRoom";
+import { CalendarOnboarding } from "@/components/CalendarOnboarding";
 
 // --- Interactive Bottom Sheet Sub-component ---
 function InteractiveBottomSheet({ selectedSlot, clearSelection, isNudgeSlot, id, router, sessionStatus }: any) {
@@ -196,6 +197,7 @@ export default function GroupCalendar() {
   const [loading, setLoading] = React.useState(true);
   const [activeTab, setActiveTab] = React.useState<'group' | 'mine'>('group');
   const [showImagePreview, setShowImagePreview] = React.useState(true);
+  const [showHelp, setShowHelp] = React.useState(false);
 
   const { mySchedule: globalSchedule } = useGlobalAvailability();
 
@@ -286,6 +288,9 @@ export default function GroupCalendar() {
 
   return (
     <SafeAreaView style={styles.container}>
+      <CalendarOnboarding onComplete={() => setShowHelp(false)} />
+      {showHelp && <CalendarOnboarding onComplete={() => setShowHelp(false)} />}
+      
       <Animated.View 
         style={{ flex: 1 }}
         exiting={FadeOutUp.duration(400)}
@@ -295,6 +300,11 @@ export default function GroupCalendar() {
           subtitle={`${room?.name || "Room"} • ${room?.members.length || 0} members`}
           showBack 
           backLabel="Room" 
+          rightElement={
+            <TouchableOpacity onPress={() => setShowHelp(true)} style={{ padding: 4 }}>
+              <Question size={24} color={colors.textSecondary} />
+            </TouchableOpacity>
+          }
         />
 
         <View style={styles.tabContainer}>
