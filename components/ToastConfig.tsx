@@ -3,12 +3,13 @@ import { View, Text, StyleSheet } from 'react-native';
 import { ToastConfig } from 'react-native-toast-message';
 import { CheckCircle, XCircle, Info } from 'phosphor-react-native';
 import { colors, fonts, spacing, radius } from '@/constants/theme';
+import { springConfigs } from '@/constants/animation';
 import Animated, { ZoomIn } from 'react-native-reanimated';
 
 export const toastConfig: ToastConfig = {
   success: ({ text1, text2 }) => (
     <Animated.View 
-      entering={ZoomIn.duration(300).springify().damping(20).stiffness(100)}
+      entering={ZoomIn.duration(300).springify().damping(springConfigs.snappy.damping).stiffness(springConfigs.snappy.stiffness)}
       style={[styles.container, styles.successContainer]}
       accessibilityRole="alert"
       accessibilityLabel={`Success: ${text1}${text2 ? `. ${text2}` : ''}`}
@@ -22,7 +23,7 @@ export const toastConfig: ToastConfig = {
   ),
   error: ({ text1, text2 }) => (
     <Animated.View 
-      entering={ZoomIn.duration(300).springify().damping(20).stiffness(100)}
+      entering={ZoomIn.duration(300).springify().damping(springConfigs.snappy.damping).stiffness(springConfigs.snappy.stiffness)}
       style={[styles.container, styles.errorContainer]}
       accessibilityRole="alert"
       accessibilityLabel={`Error: ${text1}${text2 ? `. ${text2}` : ''}`}
@@ -36,7 +37,7 @@ export const toastConfig: ToastConfig = {
   ),
   info: ({ text1, text2 }) => (
     <Animated.View 
-      entering={ZoomIn.duration(300).springify().damping(20).stiffness(100)}
+      entering={ZoomIn.duration(300).springify().damping(springConfigs.snappy.damping).stiffness(springConfigs.snappy.stiffness)}
       style={[styles.container, styles.infoContainer]}
       accessibilityRole="alert"
       accessibilityLabel={`Information: ${text1}${text2 ? `. ${text2}` : ''}`}

@@ -174,7 +174,7 @@ const MemberRow = React.memo(({ member, index, isLast, onNudge, isFirstRender = 
 
   return (
     <Animated.View 
-      entering={isFirstRender ? FadeInUp.duration(600).delay(200 + index * 50).springify().damping(18) : undefined}
+      entering={isFirstRender ? FadeInUp.duration(600).delay(200 + index * 50).springify().damping(springConfigs.elegant.damping).stiffness(springConfigs.elegant.stiffness) : undefined}
     >
       <View 
         style={[

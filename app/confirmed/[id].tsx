@@ -11,6 +11,7 @@ import {
 } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { colors, fonts, spacing, radius } from '@/constants/theme';
+import { springConfigs } from '@/constants/animation';
 import { Header } from '@/components/Header';
 import { Button } from '@/components/Button';
 import { AvatarStack } from '@/components/AvatarStack';
@@ -161,7 +162,7 @@ export default function ConfirmedEventScreen() {
         showsVerticalScrollIndicator={false}
       >
         <Animated.View 
-          entering={FadeInDown.duration(800).springify().damping(12)}
+          entering={FadeInDown.duration(800).springify().damping(springConfigs.bouncy.damping).stiffness(springConfigs.bouncy.stiffness)}
           style={ticketAnimatedStyle}
         >
           <View style={styles.ticketCard}>

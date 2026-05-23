@@ -10,6 +10,7 @@ import {
   Alert
 } from 'react-native';
 import { colors, fonts, spacing, radius } from "@/constants/theme";
+import { springConfigs } from "@/constants/animation";
 import { 
   Plus, 
   Users, 
@@ -285,7 +286,7 @@ export default function CreateScreen() {
 
   const renderSuccess = () => (
     <Animated.View 
-      entering={FadeInDown.duration(800).damping(20)} 
+      entering={FadeInDown.duration(800).springify().damping(springConfigs.bouncy.damping).stiffness(springConfigs.bouncy.stiffness)} 
       style={styles.stepContainer}
     >
       <View style={styles.successHeader}>
