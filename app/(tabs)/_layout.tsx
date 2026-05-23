@@ -9,6 +9,7 @@ import {
   UserCircle 
 } from 'phosphor-react-native';
 import { colors } from '@/constants/theme';
+import { springConfigs } from '@/constants/animation';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Animated, { 
   useSharedValue, 
@@ -60,10 +61,7 @@ function CustomTabBar({ state, descriptors, navigation, insets }: any) {
 
   useEffect(() => {
     // Update pill position when tab changes
-    translateX.value = withSpring(activeIndex, {
-      damping: 18,
-      stiffness: 120,
-    });
+    translateX.value = withSpring(activeIndex, springConfigs.snappy);
   }, [activeIndex]);
 
   return (

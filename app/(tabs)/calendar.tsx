@@ -2,6 +2,7 @@ import React from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { colors, fonts, spacing, radius } from '@/constants/theme';
+import { springConfigs } from '@/constants/animation';
 import { Header } from '@/components/Header';
 import { HeatMap } from '@/components/HeatMap';
 import { EmptyState } from '@/components/EmptyState';
@@ -40,15 +41,8 @@ function InteractiveBottomSheet({ selectedSlot, clearSelection }: any) {
   // Internal state to hold data during transition
   const [internalSlot, setInternalSlot] = React.useState<any>(null);
 
-  const SPRING_CONFIG = { 
-    damping: 25, 
-    stiffness: 200, // Slightly snappier
-    mass: 1,
-    overshootClamping: true
-  };
-
   const handleDismiss = React.useCallback(() => {
-    translateY.value = withSpring(HIDDEN_Y, SPRING_CONFIG, (finished) => {
+    translateY.value = withSpring(HIDDEN_Y, springConfigs.gestural, (finished) => {
       if (finished) {
         runOnJS(setInternalSlot)(null);
         runOnJS(clearSelection)();
@@ -59,7 +53,7 @@ function InteractiveBottomSheet({ selectedSlot, clearSelection }: any) {
   React.useEffect(() => {
     if (selectedSlot) {
       setInternalSlot(selectedSlot);
-      translateY.value = withSpring(OPEN_Y, SPRING_CONFIG);
+      translateY.value = withSpring(OPEN_Y, springConfigs.gestural);
     } else if (internalSlot) {
       handleDismiss();
     }

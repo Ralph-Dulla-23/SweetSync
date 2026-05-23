@@ -14,6 +14,7 @@ import {
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { CaretLeft, Envelope, Lock, Sparkle } from 'phosphor-react-native';
 import { colors, fonts, spacing, radius } from '@/constants/theme';
+import { springConfigs } from '@/constants/animation';
 import { Button } from '@/components/Button';
 import { GoogleIcon } from '@/components/GoogleIcon';
 import { supabase } from '@/lib/supabase';
@@ -29,13 +30,6 @@ import Animated, {
   runOnJS,
 } from 'react-native-reanimated';
 import { styles } from './_sign-in.styles';
-
-const SPRING_CONFIG = { 
-  damping: 25, 
-  stiffness: 200, 
-  mass: 1,
-  overshootClamping: true
-};
 
 export default function SignIn() {
   const router = useRouter();
@@ -196,7 +190,7 @@ export default function SignIn() {
         style={styles.keyboardView}
       >
         <Animated.ScrollView 
-          entering={FadeInDown.duration(800).damping(20)}
+          entering={FadeInDown.springify().damping(springConfigs.elegant.damping).stiffness(springConfigs.elegant.stiffness)}
           showsVerticalScrollIndicator={false}
           contentContainerStyle={styles.scrollContent}
         >
@@ -209,7 +203,7 @@ export default function SignIn() {
             </TouchableOpacity>
           </View>
 
-          <Animated.View layout={Layout.springify().damping(25).stiffness(200)}>
+          <Animated.View layout={Layout.springify().damping(springConfigs.elegant.damping).stiffness(springConfigs.elegant.stiffness)}>
             {renderHeader()}
 
             <View style={styles.form}>

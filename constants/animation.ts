@@ -21,6 +21,12 @@ export const springConfigs = {
     damping: 20,
     stiffness: 90,
     mass: 1,
+  },
+  // Gesture-driven (High stiffness for hand tracking)
+  gestural: {
+    damping: 22,
+    stiffness: 250,
+    mass: 1,
   }
 } as const;
 
