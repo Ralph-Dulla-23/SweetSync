@@ -192,8 +192,10 @@ export default function CalendarScreen() {
         }
       />
       
-      <CalendarOnboarding onComplete={() => setShowHelp(false)} />
-      {showHelp && <CalendarOnboarding onComplete={() => setShowHelp(false)} />}
+      <CalendarOnboarding 
+        forceShow={showHelp} 
+        onComplete={() => setShowHelp(false)} 
+      />
 
       <Animated.View 
         style={{ flex: 1 }}

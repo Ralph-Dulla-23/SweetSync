@@ -56,13 +56,24 @@ interface Step {
 
 const ONBOARDING_KEY = 'sweetsync_calendar_onboarding_seen';
 
-export const CalendarOnboarding = ({ onComplete }: { onComplete: () => void }) => {
+export const CalendarOnboarding = ({ 
+  onComplete, 
+  forceShow = false 
+}: { 
+  onComplete: () => void;
+  forceShow?: boolean;
+}) => {
   const [visible, setVisible] = useState(false);
   const [currentStep, setCurrentStep] = useState(0);
 
   React.useEffect(() => {
-    checkStatus();
-  }, []);
+    if (forceShow) {
+      setVisible(true);
+      setCurrentStep(0); // Reset to first step
+    } else {
+      checkStatus();
+    }
+  }, [forceShow]);
 
   const checkStatus = async () => {
     const seen = await getStorageItem(ONBOARDING_KEY);
@@ -128,26 +139,37 @@ export const CalendarOnboarding = ({ onComplete }: { onComplete: () => void }) =
   return (
     <Modal transparent visible={visible} animationType="fade">
       <View style={styles.overlay}>
-        <Animated.View entering={FadeInDown.duration(400)} style={styles.container}>
-          <View style={styles.content}>
+        <Animated.View 
+          entering={FadeInDown.duration(400)} 
+          style={styles.container}
+        >
+          {/* Header Actions */}
+          <View style={styles.topActions}>
+            <TouchableOpacity onPress={handleComplete}>
+              <Text style={styles.skipLink}>Skip</Text>
+            </TouchableOpacity>
+          </View>
+
+          <View style={styles.contentWrapper}>
             <Animated.View 
-              key={step.id} 
-              entering={SlideInRight.duration(300)} 
-              exiting={SlideOutLeft.duration(300)}
+              key={currentStep} 
+              entering={FadeIn.duration(300)} 
+              exiting={FadeOut.duration(200)}
               style={styles.stepContent}
             >
-              <View style={styles.header}>
-                <View style={styles.iconCircle}>
-                  {step.icon}
-                </View>
-                <Text style={styles.title}>{step.title}</Text>
+              <View style={styles.iconCircle}>
+                {step.icon}
               </View>
+              
+              <Text style={styles.title}>{step.title}</Text>
 
               <View style={styles.illustrationContainer}>
                 {step.illustration}
               </View>
 
-              <Text style={styles.description}>{step.description}</Text>
+              <View style={styles.descriptionContainer}>
+                <Text style={styles.description}>{step.description}</Text>
+              </View>
             </Animated.View>
           </View>
 
@@ -163,6 +185,7 @@ export const CalendarOnboarding = ({ onComplete }: { onComplete: () => void }) =
 
             <TouchableOpacity 
               style={styles.nextButton}
+              activeOpacity={0.8}
               onPress={() => {
                 if (currentStep < steps.length - 1) {
                   setCurrentStep(currentStep + 1);
@@ -190,13 +213,14 @@ export const CalendarOnboarding = ({ onComplete }: { onComplete: () => void }) =
 const styles = StyleSheet.create({
   overlay: {
     flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.6)',
+    backgroundColor: 'rgba(0,0,0,0.7)',
     justifyContent: 'center',
     alignItems: 'center',
     padding: spacing[6],
   },
   container: {
     width: '100%',
+    maxWidth: 400,
     backgroundColor: colors.surface,
     borderRadius: radius.xl,
     padding: spacing[6],
@@ -205,37 +229,53 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.2,
     shadowRadius: 20,
     elevation: 10,
+    overflow: 'hidden',
   },
-  content: {
-    minHeight: 280,
+  topActions: {
+    flexDirection: 'row',
+    justifyContent: 'flex-end',
+    marginBottom: spacing[2],
+  },
+  skipLink: {
+    fontFamily: fonts.bodySemibold,
+    fontSize: 14,
+    color: colors.textTertiary,
+    padding: 4,
+  },
+  contentWrapper: {
+    minHeight: 340, // Fixed height to prevent layout jumps/clipping
+    justifyContent: 'center',
   },
   stepContent: {
     alignItems: 'center',
-  },
-  header: {
-    alignItems: 'center',
-    marginBottom: spacing[6],
+    width: '100%',
   },
   iconCircle: {
-    width: 56,
-    height: 56,
-    borderRadius: 28,
+    width: 64,
+    height: 64,
+    borderRadius: 32,
     backgroundColor: colors.indigoBase,
     justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: spacing[3],
+    marginBottom: spacing[4],
   },
   title: {
     fontFamily: fonts.display,
-    fontSize: 22,
+    fontSize: 24,
     color: colors.textPrimary,
     textAlign: 'center',
+    marginBottom: spacing[6],
   },
   illustrationContainer: {
     height: 120,
+    width: '100%',
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: spacing[6],
+  },
+  descriptionContainer: {
+    width: '100%',
+    paddingHorizontal: spacing[2],
   },
   description: {
     fontFamily: fonts.body,
@@ -246,11 +286,11 @@ const styles = StyleSheet.create({
   },
   gridIllustration: {
     flexDirection: 'row',
-    gap: 8,
+    gap: 10,
   },
   cell: {
-    width: 40,
-    height: 40,
+    width: 44,
+    height: 44,
     borderRadius: radius.sm,
   },
   magicIllustration: {
@@ -258,31 +298,37 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   toggleIllustration: {
-    width: 200,
-    padding: 10,
+    width: 220,
+    padding: 12,
     backgroundColor: colors.pageBg,
     borderRadius: radius.full,
+    borderWidth: 1,
+    borderColor: colors.borderDefault,
   },
   tabBar: {
     flexDirection: 'row',
-    gap: 4,
+    gap: 6,
   },
   activeTab: {
     flex: 1,
     backgroundColor: colors.surface,
-    paddingVertical: 8,
+    paddingVertical: 10,
     borderRadius: radius.full,
     alignItems: 'center',
-    ...colors.shadowSm,
+    shadowColor: colors.black,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 2,
   },
   inactiveTab: {
     flex: 1,
-    paddingVertical: 8,
+    paddingVertical: 10,
     alignItems: 'center',
   },
   tabText: {
     fontFamily: fonts.bodySemibold,
-    fontSize: 12,
+    fontSize: 13,
     color: colors.textPrimary,
   },
   footer: {
@@ -290,19 +336,22 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     marginTop: spacing[8],
+    paddingTop: spacing[4],
+    borderTopWidth: 1,
+    borderTopColor: colors.pageBg,
   },
   dots: {
     flexDirection: 'row',
-    gap: 6,
+    gap: 8,
   },
   dot: {
-    width: 6,
-    height: 6,
-    borderRadius: 3,
+    width: 8,
+    height: 8,
+    borderRadius: 4,
     backgroundColor: colors.borderDefault,
   },
   activeDot: {
-    width: 20,
+    width: 24,
     backgroundColor: colors.indigoPunch,
   },
   nextButton: {
@@ -310,13 +359,16 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     backgroundColor: colors.indigoPunch,
     paddingVertical: spacing[3],
-    paddingHorizontal: spacing[5],
+    paddingHorizontal: spacing[6],
     borderRadius: radius.full,
     gap: 8,
+    minWidth: 120,
+    justifyContent: 'center',
   },
   nextText: {
     fontFamily: fonts.bodySemibold,
-    fontSize: 15,
+    fontSize: 16,
     color: colors.white,
   }
 });
+

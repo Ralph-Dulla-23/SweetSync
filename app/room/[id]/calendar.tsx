@@ -288,8 +288,10 @@ export default function GroupCalendar() {
 
   return (
     <SafeAreaView style={styles.container}>
-      <CalendarOnboarding onComplete={() => setShowHelp(false)} />
-      {showHelp && <CalendarOnboarding onComplete={() => setShowHelp(false)} />}
+      <CalendarOnboarding 
+        forceShow={showHelp} 
+        onComplete={() => setShowHelp(false)} 
+      />
       
       <Animated.View 
         style={{ flex: 1 }}
