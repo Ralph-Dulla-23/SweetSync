@@ -23,6 +23,8 @@ import { Card } from "@/components/Card";
 import Animated, { 
   FadeInUp, 
   FadeInDown,
+  FadeOutUp,
+  FadeOutDown,
 } from "react-native-reanimated";
 import { RoomInteriorSkeleton } from "@/components/RoomInteriorSkeleton";
 import { UpcomingEventCard } from "@/components/UpcomingEventCard";

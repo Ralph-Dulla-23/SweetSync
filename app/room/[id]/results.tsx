@@ -26,6 +26,7 @@ import Animated, {
   FadeIn, 
   FadeInDown, 
   FadeInUp,
+  FadeOutUp,
   withRepeat,
   withSequence,
   withTiming,

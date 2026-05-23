@@ -19,6 +19,7 @@ import { Sparkle, Info, X, Users, Camera, Bell, Eye, EyeSlash, Warning, CaretRig
 import Animated, { 
   FadeIn, 
   FadeInDown, 
+  FadeOutUp,
   Layout, 
   SlideInDown,
   useSharedValue,

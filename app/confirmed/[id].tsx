@@ -27,6 +27,7 @@ import {
 import Animated, { 
   FadeInDown, 
   FadeIn, 
+  FadeOutDown,
   useSharedValue, 
   useAnimatedStyle, 
   withRepeat, 
