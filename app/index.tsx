@@ -1,10 +1,13 @@
 import React from 'react';
 import { Redirect, useRouter } from 'expo-router';
 import { useAuth } from '@/hooks/useAuth';
-import { View, ActivityIndicator, StyleSheet, Text, TouchableOpacity, SafeAreaView, ScrollView } from 'react-native';
-import { colors, fonts, spacing, radius } from '@/constants/theme';
+import { View, Text, TouchableOpacity, ScrollView } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { colors } from '@/constants/theme';
 import { Sparkle, Scan, CalendarBlank, ListChecks } from 'phosphor-react-native';
+import Animated, { FadeIn, FadeInDown, FadeInUp, FadeOut } from 'react-native-reanimated';
 import { Button } from '@/components/Button';
+import { styles } from './_index.styles';
 
 export default function Index() {
   const { session, loading: authLoading } = useAuth();
@@ -13,7 +16,14 @@ export default function Index() {
   if (authLoading) {
     return (
       <View style={styles.loadingContainer}>
-        <ActivityIndicator size="small" color={colors.peachPunch} />
+        <Animated.View 
+          entering={FadeInDown.duration(800).damping(20)} 
+          exiting={FadeOut.duration(400)}
+          style={styles.loadingBrand}
+        >
+          <Sparkle size={64} weight="fill" color={colors.indigoPunch} />
+          <Text style={styles.loadingText}>SweetSync</Text>
+        </Animated.View>
       </View>
     );
   }
@@ -44,22 +54,29 @@ export default function Index() {
   ];
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
       <ScrollView 
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
         {/* Header - Brand Moment */}
-        <View style={styles.header}>
+        <Animated.View 
+          entering={FadeInDown.delay(200).duration(600)}
+          style={styles.header}
+        >
           <Sparkle size={48} weight="fill" color={colors.indigoPunch} />
           <Text style={styles.logoText}>SweetSync</Text>
           <Text style={styles.tagline}>Plan things together.</Text>
-        </View>
+        </Animated.View>
 
         {/* Feature List - The "How it Works" */}
         <View style={styles.featureList}>
           {features.map((item, index) => (
-            <View key={index} style={styles.featureItem}>
+            <Animated.View 
+              key={index} 
+              entering={FadeInUp.delay(400 + index * 100).duration(600)}
+              style={styles.featureItem}
+            >
               <View style={[styles.iconContainer, { backgroundColor: item.color + '10' }]}>
                 <item.icon size={24} weight="duotone" color={item.color} />
               </View>
@@ -67,12 +84,15 @@ export default function Index() {
                 <Text style={styles.featureTitle}>{item.title}</Text>
                 <Text style={styles.featureDesc}>{item.desc}</Text>
               </View>
-            </View>
+            </Animated.View>
           ))}
         </View>
 
         {/* Actions - Direct Path to Auth */}
-        <View style={styles.footer}>
+        <Animated.View 
+          entering={FadeInUp.delay(800).duration(600)}
+          style={styles.footer}
+        >
           <Button
             title="Create Account"
             onPress={() => router.push({ pathname: '/(auth)/sign-in', params: { mode: 'signup' } })}
@@ -88,97 +108,8 @@ export default function Index() {
               Already have an account? <Text style={styles.signInTextBold}>Sign In</Text>
             </Text>
           </TouchableOpacity>
-        </View>
+        </Animated.View>
       </ScrollView>
     </SafeAreaView>
   );
 }
-
-const styles = StyleSheet.create({
-  loadingContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: colors.surface,
-  },
-  container: {
-    flex: 1,
-    backgroundColor: colors.peachBase,
-  },
-  scrollContent: {
-    flexGrow: 1,
-    paddingHorizontal: 24,
-    paddingTop: 60,
-    paddingBottom: 40,
-  },
-  header: {
-    alignItems: 'center',
-    marginBottom: 48,
-  },
-  logoText: {
-    marginTop: 16,
-    fontFamily: fonts.display,
-    fontSize: 36,
-    color: colors.textPrimary,
-  },
-  tagline: {
-    marginTop: 8,
-    fontFamily: fonts.body,
-    fontSize: 16,
-    color: colors.textSecondary,
-  },
-  featureList: {
-    gap: 32,
-    marginBottom: 64,
-  },
-  featureItem: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    gap: 16,
-  },
-  iconContainer: {
-    width: 48,
-    height: 48,
-    borderRadius: 12,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  featureText: {
-    flex: 1,
-    gap: 4,
-  },
-  featureTitle: {
-    fontFamily: fonts.bodySemibold,
-    fontSize: 17,
-    color: colors.textPrimary,
-  },
-  featureDesc: {
-    fontFamily: fonts.body,
-    fontSize: 14,
-    color: colors.textSecondary,
-    lineHeight: 20,
-  },
-  footer: {
-    gap: 16,
-    alignItems: 'center',
-    marginTop: 'auto',
-  },
-  button: {
-    width: '100%',
-    height: 54,
-    backgroundColor: colors.peachPunch,
-    borderRadius: 12,
-  },
-  signInLink: {
-    paddingVertical: 8,
-  },
-  signInText: {
-    fontFamily: fonts.body,
-    fontSize: 14,
-    color: colors.textSecondary,
-  },
-  signInTextBold: {
-    fontFamily: fonts.bodySemibold,
-    color: colors.indigoPunch,
-  },
-});

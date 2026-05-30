@@ -7,14 +7,39 @@ export interface Room {
   id: string;
   name: string;
   description?: string;
-  status: RoomStatus;
+  sessionStatus: RoomStatus;
   hostId: string;
   members: Member[];
+  expectedCount: number;
+  upcomingEvents?: Event[];
+  activitySuggestions?: ActivitySuggestion[];
   createdAt: string;
   updatedAt: string;
 }
 
-export type RoomStatus = 'voting' | 'waiting' | 'confirmed';
+export type RoomStatus = 'collecting' | 'processing' | 'voting_slots' | 'voting_activity' | 'confirmed' | 'expired';
+
+export interface Event {
+  id: string;
+  roomId: string;
+  title: string;
+  description?: string;
+  date: string;
+  startSlot: number;
+  endSlot: number;
+  members: string[]; // Member IDs
+  location?: string;
+  category?: 'social' | 'study' | 'food' | 'active';
+}
+
+export interface ActivitySuggestion {
+  id: string;
+  title: string;
+  description: string;
+  duration: number; // in slots (30m each)
+  category: 'social' | 'study' | 'food' | 'active';
+  votes?: number;
+}
 
 export interface Member {
   id: string;
@@ -27,21 +52,32 @@ export interface Member {
 
 export type MemberStatus = 'uploaded' | 'pending';
 
+export type Preference = 0 | 1 | 2;
+
 export interface TimeSlot {
-  dayIndex: number;
-  hourIndex: number;
+  date: string; // ISO 8601 (YYYY-MM-DD)
+  slotIndex: number; // 0-47 (30m increments)
   freeCount: number;
+  preferredCount: number;
   members: string[]; // Free members
+  preferredMembers: string[]; // Preferred members
   busyMembers: string[]; // Busy members
 }
 
 export interface MyBlock {
   id: string;
   title: string;
-  dayIndex: number;
-  startHour: number;
-  endHour: number;
+  date: string; // ISO 8601 (YYYY-MM-DD)
+  startSlot: number;
+  endSlot: number;
+  preference: Preference;
   color?: string;
+}
+
+export interface GlobalBlock extends MyBlock {
+  sourceType: 'personal' | 'room';
+  roomId?: string;
+  roomName?: string;
 }
 
 // UI Helpers

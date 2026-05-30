@@ -1,6 +1,6 @@
 import React, { useEffect } from 'react';
 import { Tabs } from 'expo-router';
-import { View, StyleSheet, Platform, TouchableOpacity, Text } from 'react-native';
+import { View, Platform, TouchableOpacity, Text } from 'react-native';
 import { 
   House, 
   CalendarBlank, 
@@ -8,12 +8,50 @@ import {
   ListChecks, 
   UserCircle 
 } from 'phosphor-react-native';
-import { colors, fonts, spacing } from '@/constants/theme';
+import { colors } from '@/constants/theme';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { 
+import Animated, { 
   useSharedValue, 
-  withSpring
+  withSpring,
+  useAnimatedStyle,
+  withRepeat,
+  withSequence,
+  withTiming,
+  Easing
 } from 'react-native-reanimated';
+
+import { styles } from './_layout.styles';
+
+const CreatePill = ({ onPress }: { onPress: () => void }) => {
+  const scale = useSharedValue(1);
+
+  useEffect(() => {
+    scale.value = withRepeat(
+      withSequence(
+        withTiming(1.08, { duration: 1500, easing: Easing.inOut(Easing.sin) }),
+        withTiming(1, { duration: 1500, easing: Easing.inOut(Easing.sin) })
+      ),
+      -1,
+      true
+    );
+  }, []);
+
+  const animatedStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: scale.value }],
+  }));
+
+  return (
+    <TouchableOpacity
+      onPress={onPress}
+      style={styles.createButtonTab}
+      activeOpacity={0.8}
+    >
+      <Animated.View style={[styles.createButton, animatedStyle]}>
+        <Plus weight="bold" size={24} color={colors.white} />
+      </Animated.View>
+    </TouchableOpacity>
+  );
+};
 
 // Custom Tab Bar Component for Sliding Pill Animation
 function CustomTabBar({ state, descriptors, navigation, insets }: any) {
@@ -53,16 +91,7 @@ function CustomTabBar({ state, descriptors, navigation, insets }: any) {
         // Center button is handled differently
         if (route.name === 'create') {
           return (
-            <TouchableOpacity
-              key={route.key}
-              onPress={onPress}
-              style={styles.createButtonTab}
-              activeOpacity={0.8}
-            >
-              <View style={styles.createButton}>
-                <Plus weight="bold" size={24} color={colors.white} />
-              </View>
-            </TouchableOpacity>
+            <CreatePill key={route.key} onPress={onPress} />
           );
         }
 
@@ -122,80 +151,3 @@ export default function TabLayout() {
     </Tabs>
   );
 }
-
-const styles = StyleSheet.create({
-  tabBarContainer: {
-    flexDirection: 'row',
-    backgroundColor: colors.white,
-    position: 'absolute',
-    bottom: 0,
-    left: 0,
-    right: 0,
-    paddingTop: 8,
-    elevation: 24,
-    shadowColor: colors.black,
-    shadowOffset: { width: 0, height: -4 },
-    shadowOpacity: 0.06,
-    shadowRadius: 16,
-  },
-  tabItem: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  iconWrapper: {
-    width: 42,
-    height: 30,
-    justifyContent: 'center',
-    alignItems: 'center',
-    borderRadius: 15,
-  },
-  activePill: {
-    backgroundColor: colors.peachBase,
-  },
-  tabLabel: {
-    fontFamily: fonts.bodySemibold,
-    fontSize: 10,
-    marginTop: 2,
-    letterSpacing: 0.2,
-  },
-  createButtonTab: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'flex-start',
-  },
-  createButton: {
-    top: -20,
-    width: 52,
-    height: 52,
-    backgroundColor: colors.indigoPunch,
-    borderRadius: 26,
-    justifyContent: 'center',
-    alignItems: 'center',
-    elevation: 10,
-    shadowColor: colors.indigoPunch,
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.4,
-    shadowRadius: 12,
-    borderWidth: 3,
-    borderColor: colors.white,
-  },
-  badge: {
-    position: 'absolute',
-    top: 0,
-    right: '20%',
-    backgroundColor: colors.peachPunch,
-    width: 16,
-    height: 16,
-    borderRadius: 8,
-    justifyContent: 'center',
-    alignItems: 'center',
-    borderWidth: 1.5,
-    borderColor: colors.white,
-  },
-  badgeText: {
-    color: colors.white,
-    fontSize: 9,
-    fontFamily: fonts.bodySemibold,
-  },
-});

@@ -1,15 +1,24 @@
 import React from 'react';
 import { 
-  TouchableOpacity, 
+  Pressable, 
   Text, 
-  StyleSheet, 
   ActivityIndicator,
   ViewStyle,
   TextStyle,
-  Platform,
   View
 } from 'react-native';
-import { colors, fonts, spacing, radius } from '@/constants/theme';
+import { colors } from '@/constants/theme';
+import { springConfigs } from '@/constants/animation';
+import Animated, { 
+  useSharedValue, 
+  useAnimatedStyle, 
+  withSpring,
+  withTiming,
+  withRepeat,
+  withSequence,
+  Easing,
+} from 'react-native-reanimated';
+import { styles } from './Button.styles';
 
 export type ButtonVariant = 'primary' | 'secondary' | 'indigo' | 'ghost';
 
@@ -19,6 +28,7 @@ interface ButtonProps {
   variant?: ButtonVariant;
   loading?: boolean;
   disabled?: boolean;
+  pulse?: boolean;
   style?: ViewStyle;
   textStyle?: TextStyle;
   icon?: React.ReactNode;
@@ -27,12 +37,15 @@ interface ButtonProps {
   accessibilityHint?: string;
 }
 
+const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
+
 export const Button = React.memo(({
   onPress,
   title,
   variant = 'primary',
   loading = false,
   disabled = false,
+  pulse = false,
   style,
   textStyle,
   icon,
@@ -44,6 +57,44 @@ export const Button = React.memo(({
   const isSecondary = variant === 'secondary';
   const isIndigo = variant === 'indigo';
   const isGhost = variant === 'ghost';
+
+  const scaleX = useSharedValue(1);
+  const scaleY = useSharedValue(1);
+  const pulseScale = useSharedValue(1);
+
+  React.useEffect(() => {
+    if (pulse && !disabled && !loading) {
+      pulseScale.value = withRepeat(
+        withSequence(
+          withTiming(1.03, { duration: 600, easing: Easing.inOut(Easing.quad) }),
+          withTiming(1, { duration: 600, easing: Easing.inOut(Easing.quad) })
+        ),
+        -1,
+        true
+      );
+    } else {
+      pulseScale.value = withTiming(1, { duration: 300 });
+    }
+  }, [pulse, disabled, loading]);
+
+  const animatedStyle = useAnimatedStyle(() => ({
+    transform: [
+      { scaleX: scaleX.value * pulseScale.value },
+      { scaleY: scaleY.value * pulseScale.value }
+    ],
+  }));
+
+  const handlePressIn = () => {
+    if (!disabled && !loading) {
+      scaleX.value = withTiming(1.04, { duration: 120 });
+      scaleY.value = withTiming(0.96, { duration: 120 });
+    }
+  };
+
+  const handlePressOut = () => {
+    scaleX.value = withSpring(1, springConfigs.bouncy);
+    scaleY.value = withSpring(1, springConfigs.bouncy);
+  };
 
   const buttonStyles = [
     styles.base,
@@ -66,11 +117,12 @@ export const Button = React.memo(({
   ] as TextStyle[];
 
   return (
-    <TouchableOpacity
+    <AnimatedPressable
       onPress={onPress}
+      onPressIn={handlePressIn}
+      onPressOut={handlePressOut}
       disabled={disabled || loading}
-      activeOpacity={0.85}
-      style={buttonStyles}
+      style={[buttonStyles, animatedStyle]}
       accessibilityRole="button"
       accessibilityState={{ disabled: disabled || loading, busy: loading }}
       accessibilityLabel={accessibilityLabel || title}
@@ -80,65 +132,18 @@ export const Button = React.memo(({
         <ActivityIndicator color={isSecondary || isGhost ? colors.peachPunch : colors.white} />
       ) : (
         <>
-          {icon && <View style={styles.iconContainer}>{icon}</View>}
+          {icon && (
+            <View style={[
+              styles.iconContainer, 
+              !title && { marginRight: 0 }
+            ]}>
+              {icon}
+            </View>
+          )}
           {title ? <Text style={titleStyles}>{title}</Text> : null}
           {children}
         </>
       )}
-    </TouchableOpacity>
+    </AnimatedPressable>
   );
-});
-
-const styles = StyleSheet.create({
-  base: {
-    borderRadius: radius.md,
-    paddingVertical: 14,
-    paddingHorizontal: 24,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  primary: {
-    backgroundColor: colors.peachPunch,
-  },
-  secondary: {
-    backgroundColor: 'transparent',
-    borderWidth: 1,
-    borderColor: colors.peachPunch,
-  },
-  indigo: {
-    backgroundColor: colors.indigoPunch,
-  },
-  ghost: {
-    backgroundColor: 'transparent',
-    paddingVertical: 8,
-    paddingHorizontal: 12,
-  },
-  disabled: {
-    backgroundColor: colors.textTertiary,
-    borderColor: colors.textTertiary,
-  },
-  text: {
-    fontFamily: fonts.bodySemibold,
-    fontSize: 15,
-    textAlign: 'center',
-  },
-  textPrimary: {
-    color: colors.white,
-  },
-  textSecondary: {
-    color: colors.peachPunch,
-  },
-  textIndigo: {
-    color: colors.white,
-  },
-  textGhost: {
-    color: colors.textSecondary,
-  },
-  textDisabled: {
-    color: colors.white,
-  },
-  iconContainer: {
-    marginRight: spacing[2],
-  },
 });

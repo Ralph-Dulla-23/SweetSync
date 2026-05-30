@@ -1,72 +1,79 @@
 import { useState, useCallback, useEffect } from 'react';
 import { Room, Member } from '@/types';
-
-// Mock data for initial development
-const MOCK_ROOMS: Record<string, Room> = {
-  '1': {
-    id: '1',
-    name: 'Friday Gang',
-    description: 'Coordinate with the squad',
-    status: 'voting',
-    hostId: 'mock-user-123',
-    members: [
-      { id: '1', name: 'Raphael', status: 'uploaded', isHost: true },
-      { id: '2', name: 'Jamie', status: 'uploaded' },
-      { id: '3', name: 'Marco', status: 'uploaded' },
-      { id: '4', name: 'Trisha', status: 'uploaded' },
-      { id: '5', name: 'Ana', status: 'uploaded' },
-    ],
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
-  },
-  '2': {
-    id: '2',
-    name: 'Study Squad',
-    status: 'waiting',
-    hostId: 'mock-user-123',
-    members: [
-      { id: '1', name: 'Raphael', status: 'uploaded', isHost: true },
-      { id: '6', name: 'Kevin', status: 'pending' },
-      { id: '7', name: 'Sarah', status: 'pending' },
-    ],
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
-  }
-};
+import { simulator } from '@/lib/simulator';
+import { useSweetToast } from './useSweetToast';
 
 export function useRoom(roomId: string) {
   const [loading, setLoading] = useState(false);
   const [room, setRoom] = useState<Room | null>(null);
+  const toast = useSweetToast();
 
-  const fetchRoomDetails = useCallback(async () => {
-    setLoading(true);
-    // Simulate network delay
-    setTimeout(() => {
-      setRoom(MOCK_ROOMS[roomId] || null);
-      setLoading(false);
-    }, 500);
+  const fetchRoomDetails = useCallback(() => {
+    const data = simulator.getRoom(roomId);
+    setRoom(data || null);
   }, [roomId]);
 
   useEffect(() => {
     fetchRoomDetails();
+    // Subscribe to simulator changes
+    const unsubscribe = simulator.subscribe(() => {
+      fetchRoomDetails();
+    });
+    return () => {
+      unsubscribe();
+    };
   }, [fetchRoomDetails]);
 
   const updateMemberStatus = useCallback(async (userId: string, status: Member['status']) => {
-    setRoom(prev => {
-      if (!prev) return null;
-      return {
-        ...prev,
-        members: prev.members.map(m => m.id === userId ? { ...m, status } : m)
-      };
-    });
-    // Placeholder for Supabase update
-    console.log(`Updating member ${userId} status to ${status}...`);
-  }, []);
+    simulator.updateMemberStatus(roomId, userId, status);
+  }, [roomId]);
 
   const nudgeMember = useCallback(async (userId: string) => {
-    // Placeholder for notification trigger
-    console.log(`Nudging member ${userId}...`);
+    try {
+      console.log(`Nudging member ${userId}...`);
+      // Simulated behavior: nudged member uploads after 2 seconds
+      setTimeout(() => {
+        simulator.updateMemberStatus(roomId, userId, 'uploaded');
+      }, 2000);
+      
+      toast.show({
+        type: 'success',
+        text1: 'Squad nudged! 🍑',
+        text2: 'Waiting for them to sync their calendar.'
+      });
+    } catch (error) {
+      toast.show({
+        type: 'error',
+        text1: 'Sync failed',
+        text2: 'Couldn\'t reach the squad. Try again?'
+      });
+    }
+  }, [roomId, toast]);
+
+  const createRoom = useCallback((name: string, description?: string, expectedCount: number = 2) => {
+    return simulator.createRoom(name, description, expectedCount);
   }, []);
+
+  const updateStatus = useCallback((status: Room['sessionStatus']) => {
+    simulator.updateRoomStatus(roomId, status);
+  }, [roomId]);
+
+  const startSimulation = useCallback(() => {
+    try {
+      simulator.startSimulation(roomId);
+      toast.show({
+        type: 'info',
+        text1: 'Prototype Mode Active 🪄',
+        text2: 'Simulating the squad joining & syncing...'
+      });
+    } catch (error) {
+      toast.show({
+        type: 'error',
+        text1: 'Simulation error',
+        text2: 'Could not start prototype sequence.'
+      });
+    }
+  }, [roomId, toast]);
 
   return {
     room,
@@ -74,5 +81,34 @@ export function useRoom(roomId: string) {
     refresh: fetchRoomDetails,
     updateMemberStatus,
     nudgeMember,
+    createRoom,
+    updateStatus,
+    startSimulation,
+  };
+}
+
+export function useRooms() {
+  const [loading, setLoading] = useState(false);
+  const [rooms, setRooms] = useState<Room[]>([]);
+
+  const fetchRooms = useCallback(() => {
+    const data = simulator.getRooms();
+    setRooms(data);
+  }, []);
+
+  useEffect(() => {
+    fetchRooms();
+    const unsubscribe = simulator.subscribe(() => {
+      fetchRooms();
+    });
+    return () => {
+      unsubscribe();
+    };
+  }, [fetchRooms]);
+
+  return {
+    rooms,
+    loading,
+    refresh: fetchRooms,
   };
 }

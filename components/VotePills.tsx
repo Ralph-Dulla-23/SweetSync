@@ -1,6 +1,25 @@
 import React from 'react';
-import { View, StyleSheet, TouchableOpacity, Text } from 'react-native';
-import { colors, fonts, radius, spacing } from '@/constants/theme';
+import { View, TouchableOpacity, Text } from 'react-native';
+import { colors } from '@/constants/theme';
+import { springConfigs } from '@/constants/animation';
+
+import Animated, { 
+  useSharedValue, 
+  useAnimatedStyle, 
+  withSequence, 
+  withTiming, 
+  withSpring,
+  Easing 
+} from 'react-native-reanimated';
+import { styles } from './VotePills.styles';
+
+// Optional Haptics
+let Haptics: any;
+try {
+  Haptics = require('expo-haptics');
+} catch (e) {
+  Haptics = null;
+}
 
 export type VoteType = 'free' | 'prefer' | 'cant';
 
@@ -32,33 +51,107 @@ const voteStyles: Record<VoteType, { background: string; border: string; text: s
   },
 };
 
-export const VotePill = React.memo(({ type, selected = false, onPress, count }: VotePillProps) => {
-  const { background, border, text, label } = voteStyles[type];
+const AnimatedVotePill = React.memo(({ 
+  background, 
+  border, 
+  text, 
+  label, 
+  selected, 
+  onPress, 
+  count 
+}: any) => {
+  const scale = useSharedValue(1);
+
+  React.useEffect(() => {
+    if (selected) {
+      scale.value = withSequence(
+        withSpring(1.15, springConfigs.bouncy),
+        withSpring(1, springConfigs.bouncy)
+      );
+    }
+  }, [selected]);
+
+  const animatedStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: scale.value }],
+  }));
+
+  const handlePress = () => {
+    if (onPress) {
+      if (Haptics) {
+        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+      }
+      onPress();
+    }
+  };
 
   return (
     <TouchableOpacity
-      onPress={onPress}
+      onPress={handlePress}
       disabled={!onPress}
       activeOpacity={0.7}
-      style={[
-        styles.pill,
-        { 
-          backgroundColor: background, 
-          borderColor: border,
-          borderWidth: selected ? 2 : 1,
-          opacity: selected ? 1 : 0.6
-        }
-      ]}
-      accessibilityRole="button"
-      accessibilityState={{ selected }}
-      accessibilityLabel={`${label} ${count !== undefined ? `(${count} votes)` : ''}`}
+      style={styles.pillWrapper}
     >
-      <Text style={[styles.text, { color: text }]}>
-        {label} {count !== undefined && `(${count})`}
-      </Text>
+      <Animated.View
+        style={[
+          styles.pill,
+          animatedStyle,
+          { 
+            backgroundColor: background, 
+            borderColor: border,
+            borderWidth: selected ? 2 : 1,
+            opacity: selected ? 1 : 0.6
+          }
+        ]}
+        accessibilityRole="button"
+        accessibilityState={{ selected }}
+        accessibilityLabel={`${label} ${count !== undefined ? `(${count} votes)` : ''}`}
+      >
+        <Text style={[styles.text, { color: text }]}>
+          {label} {count !== undefined && `(${count})`}
+        </Text>
+      </Animated.View>
     </TouchableOpacity>
   );
 });
+
+export const VotePill = React.memo(({ type, selected = false, onPress, count }: VotePillProps) => {
+  const { background, border, text, label } = voteStyles[type];
+  
+  if (selected || !!onPress) {
+    return (
+      <AnimatedVotePill 
+        background={background}
+        border={border}
+        text={text}
+        label={label}
+        selected={selected}
+        onPress={onPress}
+        count={count}
+      />
+    );
+  }
+
+  return (
+    <View style={styles.pillWrapper}>
+      <View
+        style={[
+          styles.pill,
+          { 
+            backgroundColor: background, 
+            borderColor: border,
+            borderWidth: 1,
+            opacity: 0.6
+          }
+        ]}
+      >
+        <Text style={[styles.text, { color: text }]}>
+          {label} {count !== undefined && `(${count})`}
+        </Text>
+      </View>
+    </View>
+  );
+});
+
 
 export const VotePills = React.memo(({ 
   onVote, 
@@ -82,22 +175,4 @@ export const VotePills = React.memo(({
       ))}
     </View>
   );
-});
-
-const styles = StyleSheet.create({
-  container: {
-    flexDirection: 'row',
-    gap: spacing[2],
-  },
-  pill: {
-    paddingHorizontal: spacing[3],
-    paddingVertical: spacing[2],
-    borderRadius: radius.full,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  text: {
-    fontFamily: fonts.bodySemibold,
-    fontSize: 13,
-  },
 });

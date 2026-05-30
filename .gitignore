@@ -53,3 +53,9 @@ yarn-error.*
 
 # TypeScript
 *.tsbuildinfo
+
+/Rules
+.Rules
+/conductor/
+# AI Scratch
+.ai-cache/

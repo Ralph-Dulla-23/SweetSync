@@ -1,107 +1,94 @@
-import { useState, useCallback, useMemo } from 'react';
-import { TimeSlot, MyBlock } from '@/types';
+import { useState, useCallback, useMemo, useEffect } from 'react';
+import { TimeSlot, MyBlock, Preference } from '@/types';
+import { getWeekDays } from '@/lib/time';
+import { simulator } from '@/lib/simulator';
 
-// Utility for generating mock data outside of the hook
-export const generateMockHeatMapData = (totalMembers: number, mySchedule: Set<string>): TimeSlot[][] => {
-  const data: TimeSlot[][] = [];
-  const memberPool = ["Alex", "Jordan", "Taylor", "Riley", "Quinn"];
-  
-  for (let d = 0; d < 7; d++) {
-    const dayData: TimeSlot[] = [];
-    for (let h = 0; h < 14; h++) {
-      let freeCount = 0;
-      
-      // Weekend: More free time
-      if (d >= 5) {
-        freeCount = Math.floor(Math.random() * 2) + 3; // 3-4 other members
-      } 
-      // Weekdays: Busy mornings, some free evenings
-      else {
-        if (h < 4) freeCount = Math.floor(Math.random() * 2); 
-        else if (h > 10) freeCount = Math.floor(Math.random() * 2) + 1;
-        else freeCount = Math.floor(Math.random() * 3);
-      }
-
-      const isMeBusy = mySchedule.has(`${d}-${h}`);
-      const isMeFree = !isMeBusy;
-      
-      const othersFree = memberPool.slice(0, freeCount);
-      const othersBusy = memberPool.slice(freeCount);
-      
-      const finalMembers = [...othersFree, ...(isMeFree ? ["Me"] : [])];
-      const finalBusyMembers = [...othersBusy, ...(isMeBusy ? ["Me"] : [])];
-
-      // Magic slot simulation
-      if (d === 5 && h === 8) {
-        const forcedFreeCount = isMeFree ? 5 : 4;
-        dayData.push({
-          dayIndex: d,
-          hourIndex: h,
-          freeCount: forcedFreeCount,
-          members: [...memberPool, ...(isMeFree ? ["Me"] : [])].slice(0, forcedFreeCount),
-          busyMembers: isMeFree ? [] : ["Me"],
-        });
-        continue;
-      }
-
-      dayData.push({
-        dayIndex: d,
-        hourIndex: h,
-        freeCount: finalMembers.length,
-        members: finalMembers,
-        busyMembers: finalBusyMembers,
-      });
-    }
-    data.push(dayData);
-  }
-  return data;
-};
-
-export function useHeatMap(totalMembers: number = 5) {
+export function useHeatMap(roomId: string = '1') {
   const [selectedSlot, setSelectedSlot] = useState<TimeSlot | null>(null);
   const [isScanning, setIsScanning] = useState(false);
   const [scannedImageUri, setScannedImageUri] = useState<string | null>(null);
-  const [draftSchedule, setDraftSchedule] = useState<Set<string> | null>(null);
+  const [draftSchedule, setDraftSchedule] = useState<Map<string, Preference> | null>(null);
+  
+  const weekDays = useMemo(() => getWeekDays(), []);
   
   const [myBlocks, setMyBlocks] = useState<MyBlock[]>([
-    { id: '1', title: 'Math 101', dayIndex: 0, startHour: 0, endHour: 1 },
-    { id: '2', title: 'English', dayIndex: 1, startHour: 2, endHour: 3 },
-    { id: '3', title: 'Physics', dayIndex: 2, startHour: 4, endHour: 5 },
+    { id: '1', title: 'Math 101', date: weekDays[0], startSlot: 18, endSlot: 20, preference: 1 },
+    { id: '2', title: 'English', date: weekDays[1], startSlot: 22, endSlot: 24, preference: 1 },
+    { id: '3', title: 'Physics', date: weekDays[2], startSlot: 26, endSlot: 28, preference: 2 },
   ]);
 
-  // Derived set of busy "day-hour" strings
+  // Derived map of "date-slot" strings to preferences
   const mySchedule = useMemo(() => {
-    const busySet = new Set<string>();
+    const scheduleMap = new Map<string, Preference>();
     myBlocks.forEach(block => {
-      for (let h = block.startHour; h <= block.endHour; h++) {
-        busySet.add(`${block.dayIndex}-${h}`);
+      for (let s = block.startSlot; s <= block.endSlot; s++) {
+        scheduleMap.set(`${block.date}-${s}`, block.preference);
       }
     });
-    return busySet;
+    return scheduleMap;
   }, [myBlocks]);
 
-  // Generate mock data using the utility
-  const mockData = useMemo(() => {
-    return generateMockHeatMapData(totalMembers, mySchedule);
-  }, [totalMembers, mySchedule]);
+  // Sync my local schedule with the simulator
+  useEffect(() => {
+    myBlocks.forEach(block => {
+      for (let s = block.startSlot; s <= block.endSlot; s++) {
+        simulator.updateMySchedule(block.date, s, block.preference);
+      }
+    });
+  }, [myBlocks]);
 
-  // Rest of the logic (OCR simulation, adding/removing blocks)...
-  
+  const [heatmapData, setHeatmapData] = useState<TimeSlot[][]>([]);
+
+  const fetchHeatmapData = useCallback(() => {
+    const data = simulator.getHeatMapData(roomId);
+    setHeatmapData(data);
+  }, [roomId]);
+
+  useEffect(() => {
+    fetchHeatmapData();
+    const unsubscribe = simulator.subscribe(() => {
+      fetchHeatmapData();
+    });
+    return () => {
+      unsubscribe();
+    };
+  }, [fetchHeatmapData]);
+
   const simulateOCR = useCallback((uri: string) => {
     setIsScanning(true);
     setScannedImageUri(uri);
     
     setTimeout(() => {
-      const mockDraft = new Set(["0-0", "0-1", "1-2", "1-3", "2-4", "2-5", "4-6", "4-7"]);
+      const mockDraft = new Map<string, Preference>();
+      // Mock some slots from the first few days
+      [0, 1, 2].forEach(d => {
+        const date = weekDays[d];
+        for (let s = 18; s < 22; s++) {
+          mockDraft.set(`${date}-${s}`, 1);
+        }
+      });
       setDraftSchedule(mockDraft);
       setIsScanning(false);
     }, 2000);
-  }, []);
+  }, [weekDays]);
 
   const confirmDraft = useCallback(() => {
     if (draftSchedule) {
-      // In a real app, we'd map draft cells back to MyBlock entities
       console.log("Confirming draft schedule...");
+      draftSchedule.forEach((pref, key) => {
+        const [date, slotStr] = key.split('-');
+        const slot = parseInt(slotStr);
+        simulator.updateMySchedule(date, slot, pref);
+        
+        // Also update local myBlocks for visual consistency
+        addBlock({
+          title: 'Scanned Slot',
+          date,
+          startSlot: slot,
+          endSlot: slot,
+          preference: pref,
+        });
+      });
       setDraftSchedule(null);
     }
   }, [draftSchedule]);
@@ -111,13 +98,18 @@ export function useHeatMap(totalMembers: number = 5) {
     setScannedImageUri(null);
   }, []);
 
-  const toggleDraftCell = useCallback((dayIndex: number, hourIndex: number) => {
+  const toggleDraftCell = useCallback((date: string, slotIndex: number) => {
     setDraftSchedule(prev => {
       if (!prev) return null;
-      const next = new Set(prev);
-      const key = `${dayIndex}-${hourIndex}`;
-      if (next.has(key)) next.delete(key);
-      else next.add(key);
+      const next = new Map(prev);
+      const key = `${date}-${slotIndex}`;
+      if (next.has(key)) {
+        const current = next.get(key);
+        if (current === 1) next.set(key, 2); // Cycle: Free -> Preferred
+        else next.delete(key); // Cycle: Preferred -> Busy/None
+      } else {
+        next.set(key, 1); // Cycle: Busy/None -> Free
+      }
       return next;
     });
   }, []);
@@ -134,10 +126,15 @@ export function useHeatMap(totalMembers: number = 5) {
     setMyBlocks(prev => [...prev, newBlock]);
   }, []);
 
-  const removeBlockAt = useCallback((dayIndex: number, hourIndex: number) => {
-    setMyBlocks(prev => prev.filter(b => 
-      !(b.dayIndex === dayIndex && hourIndex >= b.startHour && hourIndex <= b.endHour)
-    ));
+  const removeBlockAt = useCallback((date: string, slotIndex: number) => {
+    setMyBlocks(prev => {
+      const filtered = prev.filter(b => 
+        !(b.date === date && slotIndex >= b.startSlot && slotIndex <= b.endSlot)
+      );
+      // Update simulator
+      simulator.updateMySchedule(date, slotIndex, 0);
+      return filtered;
+    });
   }, []);
 
   const clearSelection = useCallback(() => {
@@ -145,17 +142,17 @@ export function useHeatMap(totalMembers: number = 5) {
   }, []);
 
   return {
-    mockData,
-    magicSlots: [{ dayIndex: 5, hourIndex: 8 }, { dayIndex: 5, hourIndex: 9 }],
+    mockData: heatmapData,
+    magicSlots: [{ date: weekDays[5], slotIndex: 16 }, { date: weekDays[5], slotIndex: 17 }],
     selectedSlot,
     myBlocks,
     mySchedule,
     isScanning,
     draftSchedule,
     scannedImageUri,
-    lowConfidenceCells: ["1-2"],
-    emptyDays: [3],
-    potentialMagicSlots: [1, 2],
+    lowConfidenceCells: [`${weekDays[0]}-20`, `${weekDays[1]}-22`, `${weekDays[2]}-28`],
+    emptyDays: [3, 4],
+    potentialMagicSlots: [1, 2, 3],
     simulateOCR,
     confirmDraft,
     toggleDraftCell,

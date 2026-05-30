@@ -12,13 +12,13 @@ interface DashboardHeroProps {
   onCreateRoom?: () => void;
 }
 
-export function DashboardHero({ 
+export const DashboardHero = React.memo(({ 
   userName, 
   roomCount, 
   pendingVotes, 
   nextEvent,
   onCreateRoom 
-}: DashboardHeroProps) {
+}: DashboardHeroProps) => {
   const hasUrgentAction = pendingVotes > 0;
   const isEmptyState = roomCount === 0;
 
@@ -37,7 +37,7 @@ export function DashboardHero({
         <Text style={[styles.message, { color: textColor }]}>
           {isEmptyState 
             ? "Let's find some free time." 
-            : (hasUrgentAction ? "The group is waiting!" : "Ready to find gaps?")
+            : (hasUrgentAction ? "Your squad is stalling! ⏳" : "Let's find some time to play. 🍑")
           }
         </Text>
 
@@ -61,7 +61,8 @@ export function DashboardHero({
       </View>
     </Card>
   );
-}
+});
+
 
 const styles = StyleSheet.create({
   container: {

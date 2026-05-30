@@ -1,7 +1,8 @@
 import React from 'react';
-import { View, StyleSheet, Text, ViewStyle } from 'react-native';
+import { View, Text, ViewStyle } from 'react-native';
 import { Avatar } from './Avatar';
-import { colors, fonts, radius } from '@/constants/theme';
+import { colors } from '@/constants/theme';
+import { styles } from './AvatarStack.styles';
 
 interface AvatarStackProps {
   avatars: { uri?: string; name?: string }[];
@@ -11,7 +12,7 @@ interface AvatarStackProps {
   style?: ViewStyle;
 }
 
-export function AvatarStack({ avatars, size = 32, max = 4, overlap, style }: AvatarStackProps) {
+export const AvatarStack = React.memo(({ avatars, size = 32, max = 4, overlap, style }: AvatarStackProps) => {
   const visibleAvatars = avatars.slice(0, max);
   const remaining = avatars.length - max;
   const actualOverlap = overlap !== undefined ? overlap : size / 3;
@@ -52,22 +53,6 @@ export function AvatarStack({ avatars, size = 32, max = 4, overlap, style }: Ava
       )}
     </View>
   );
-}
-
-const styles = StyleSheet.create({
-  container: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  more: {
-    backgroundColor: colors.indigoBase,
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderWidth: 2,
-    borderColor: colors.surface,
-  },
-  moreText: {
-    fontFamily: fonts.bodySemibold,
-    color: colors.indigoPunch,
-  },
 });
+
+

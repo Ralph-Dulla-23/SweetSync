@@ -1,6 +1,8 @@
-import React from 'react';
-import { View, Image, Text, StyleSheet, ViewStyle } from 'react-native';
+import React, { useMemo } from 'react';
+import { View, Image, Text, ViewStyle } from 'react-native';
 import { colors, radius, fonts } from '@/constants/theme';
+
+import { styles } from './Avatar.styles';
 
 interface AvatarProps {
   uri?: string;
@@ -10,16 +12,18 @@ interface AvatarProps {
   style?: ViewStyle;
 }
 
-export function Avatar({ uri, name, size = 40, color, style }: AvatarProps) {
-  const initials = name
-    ? name
-        .trim()
-        .split(/\s+/)
-        .map((n) => n[0])
-        .join('')
-        .toUpperCase()
-        .slice(0, 2)
-    : '';
+export const Avatar = React.memo(({ uri, name, size = 40, color, style }: AvatarProps) => {
+  const initials = useMemo(() => {
+    return name
+      ? name
+          .trim()
+          .split(/\s+/)
+          .map((n) => n[0])
+          .join('')
+          .toUpperCase()
+          .slice(0, 2)
+      : '';
+  }, [name]);
 
   return (
     <View
@@ -32,6 +36,8 @@ export function Avatar({ uri, name, size = 40, color, style }: AvatarProps) {
         },
         style,
       ]}
+      accessibilityRole="image"
+      accessibilityLabel={name ? `Avatar of ${name}` : 'User avatar'}
     >
       {uri ? (
         <Image
@@ -64,19 +70,6 @@ export function Avatar({ uri, name, size = 40, color, style }: AvatarProps) {
       )}
     </View>
   );
-}
-
-const styles = StyleSheet.create({
-  container: {
-    overflow: 'hidden',
-    backgroundColor: colors.indigoBase,
-  },
-  placeholder: {
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  initials: {
-    fontFamily: fonts.bodySemibold,
-    color: colors.peachDeep,
-  },
 });
+
+
