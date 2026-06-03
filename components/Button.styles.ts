@@ -26,6 +26,12 @@ export const styles = StyleSheet.create({
     paddingVertical: 8,
     paddingHorizontal: 12,
   },
+  mint: {
+    backgroundColor: colors.mintPunch,
+  },
+  peach: {
+    backgroundColor: colors.peachPunch,
+  },
   disabled: {
     backgroundColor: colors.buttonDisabled,
     borderColor: colors.buttonDisabled,
@@ -46,6 +52,12 @@ export const styles = StyleSheet.create({
   },
   textGhost: {
     color: colors.textSecondary,
+  },
+  textMint: {
+    color: colors.white,
+  },
+  textPeach: {
+    color: colors.white,
   },
   textDisabled: {
     color: colors.textTertiary,

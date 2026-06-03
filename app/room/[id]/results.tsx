@@ -3,11 +3,11 @@ import {
   View, 
   Text, 
   StyleSheet, 
-  SafeAreaView,
   ScrollView,
   Share,
-  TouchableOpacity
+  Pressable
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { colors, fonts, spacing, radius } from '@/constants/theme';
 import { Header } from '@/components/Header';
@@ -89,7 +89,7 @@ export default function ResultsScreen() {
         message: `SweetSync: ${confirmedWinner?.title || 'Our event'} is happening! 🍑`,
       });
     } catch (error) {
-      console.log(error);
+      // Silent error
     }
   };
 
@@ -106,7 +106,7 @@ export default function ResultsScreen() {
 
   if (isTie) {
     return (
-      <SafeAreaView style={styles.container}>
+      <SafeAreaView style={styles.container} edges={['top']}>
         <Animated.View 
           style={{ flex: 1 }}
           exiting={FadeOutUp.duration(400)}
@@ -117,7 +117,7 @@ export default function ResultsScreen() {
             backLabel="Vote" 
             userAvatar
           />
-          <ScrollView contentContainerStyle={styles.content}>
+          <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
             <Animated.View entering={FadeInDown.duration(600)}>
               <View style={styles.celebrationHeader}>
                 <View style={[styles.successIcon, { backgroundColor: colors.peachBase }]}>
@@ -138,7 +138,7 @@ export default function ResultsScreen() {
                   key={activity.id} 
                   entering={FadeInUp.delay(200 + index * 100)}
                 >
-                  <TouchableOpacity 
+                  <Pressable 
                     activeOpacity={isHost ? 0.7 : 1}
                     onPress={() => isHost && setSelectedWinner(activity)}
                     style={[
@@ -175,7 +175,7 @@ export default function ResultsScreen() {
                         </View>
                       )}
                     </View>
-                  </TouchableOpacity>
+                  </Pressable>
                 </Animated.View>
               ))}
             </View>
@@ -190,12 +190,12 @@ export default function ResultsScreen() {
                 />
               )}
               
-              <TouchableOpacity 
+              <Pressable 
                 style={styles.backToRoom}
                 onPress={() => router.push(`/(tabs)`)}
               >
                 <Text style={styles.backToRoomText}>Back to Dashboard</Text>
-              </TouchableOpacity>
+              </Pressable>
             </Animated.View>
           </ScrollView>
         </Animated.View>
@@ -206,7 +206,7 @@ export default function ResultsScreen() {
   const finalWinner = confirmedWinner || tiedActivities[0];
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={styles.container} edges={['top']}>
       <Animated.View 
         style={{ flex: 1 }}
         exiting={FadeOutUp.duration(400)}
@@ -215,6 +215,7 @@ export default function ResultsScreen() {
           title="We have a plan!" 
           showBack 
           backLabel="Room" 
+          userAvatar
         />
 
         <ScrollView 
@@ -259,14 +260,13 @@ export default function ResultsScreen() {
           </Animated.View>
 
           <Animated.View entering={FadeIn.delay(1000)} style={styles.actions}>
-            <TouchableOpacity 
-              style={styles.shareContainer}
+            <Pressable 
+              style={({ pressed }) => [styles.shareContainer, pressed && { opacity: 0.8 }]}
               onPress={handleShare}
-              activeOpacity={0.8}
             >
               <Text style={styles.shareText}>Invite the squad</Text>
               <ShareNetwork size={24} color={colors.peachPunch} weight="duotone" />
-            </TouchableOpacity>
+            </Pressable>
 
             <Button 
               title="Add to my calendar" 
@@ -277,15 +277,14 @@ export default function ResultsScreen() {
             />
           </Animated.View>
 
-          <TouchableOpacity 
+          <Pressable 
             style={styles.backToRoom}
             onPress={() => router.push(`/(tabs)`)}
           >
             <Text style={styles.backToRoomText}>Back to Dashboard</Text>
-          </TouchableOpacity>
+          </Pressable>
         </ScrollView>
       </Animated.View>
     </SafeAreaView>
   );
 }
-

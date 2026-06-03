@@ -38,6 +38,7 @@ class SimulatorStore {
   };
 
   private listeners: Set<Listener> = new Set();
+  private activeTimers: Set<NodeJS.Timeout> = new Set();
 
   constructor() {
     this.setupInitialState();
@@ -63,11 +64,20 @@ class SimulatorStore {
     MOCK_FRIENDS.forEach(friend => {
       const schedule = new Map<string, Preference>();
       const weekDays = getWeekDays();
-      weekDays.forEach(date => {
+      weekDays.forEach((date, dayIndex) => {
+        // Create a "Magic Corridor" on Friday (day 4) evening
+        const isFriday = dayIndex === 4;
+        
         for (let s = 0; s < 48; s++) {
-          // Randomly assign preferences
-          if (Math.random() > 0.7) {
-            schedule.set(`${date}-${s}`, Math.random() > 0.5 ? 1 : 2);
+          if (isFriday && s >= 36 && s <= 42) {
+            // Everyone is free Friday 6 PM - 9 PM, most prefer it
+            schedule.set(`${date}-${s}`, Math.random() > 0.2 ? 2 : 1);
+            continue;
+          }
+
+          // Randomly assign preferences for other times
+          if (Math.random() > 0.75) {
+            schedule.set(`${date}-${s}`, Math.random() > 0.4 ? 1 : 2);
           }
         }
       });
@@ -146,18 +156,26 @@ class SimulatorStore {
   }
 
   updateMySchedule(date: string, slotIndex: number, preference: Preference) {
+    this.updateMySchedules([{ date, slotIndex, preference }]);
+  }
+
+  updateMySchedules(updates: { date: string, slotIndex: number, preference: Preference }[]) {
     const myId = 'me';
     let schedule = this.state.schedules.get(myId);
     if (!schedule) {
       schedule = new Map();
       this.state.schedules.set(myId, schedule);
     }
-    const key = `${date}-${slotIndex}`;
-    if (preference === 0) {
-      schedule.delete(key);
-    } else {
-      schedule.set(key, preference);
-    }
+
+    updates.forEach(({ date, slotIndex, preference }) => {
+      const key = `${date}-${slotIndex}`;
+      if (preference === 0) {
+        schedule!.delete(key);
+      } else {
+        schedule!.set(key, preference);
+      }
+    });
+
     this.notify();
   }
 
@@ -215,7 +233,8 @@ class SimulatorStore {
 
     // Simulate friends joining and syncing one by one
     MOCK_FRIENDS.forEach((friend, index) => {
-      setTimeout(() => {
+      const joinTimeout = setTimeout(() => {
+        this.activeTimers.delete(joinTimeout);
         // 1. Join
         const currentRoom = this.state.rooms.get(roomId);
         if (currentRoom && !currentRoom.members.find(m => m.id === friend.id)) {
@@ -223,11 +242,19 @@ class SimulatorStore {
         }
 
         // 2. Sync after a few more seconds
-        setTimeout(() => {
+        const syncTimeout = setTimeout(() => {
+          this.activeTimers.delete(syncTimeout);
           this.updateMemberStatus(roomId, friend.id, 'uploaded');
         }, 2000);
+        this.activeTimers.add(syncTimeout);
       }, (index + 1) * 3000);
+      this.activeTimers.add(joinTimeout);
     });
+  }
+
+  stopSimulation() {
+    this.activeTimers.forEach(timer => clearTimeout(timer));
+    this.activeTimers.clear();
   }
 
   getRecommendedSlots(roomId: string): any[] {

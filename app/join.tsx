@@ -3,13 +3,12 @@ import {
   View, 
   Text, 
   StyleSheet, 
-  SafeAreaView, 
   TextInput, 
   KeyboardAvoidingView, 
   Platform,
-  TouchableOpacity,
   ActivityIndicator
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { colors, fonts, spacing, radius } from '@/constants/theme';
 import { springConfigs } from '@/constants/animation';
@@ -34,15 +33,17 @@ export default function JoinRoomScreen() {
     setLoading(true);
     
     // Simulate finding room
-    setTimeout(() => {
+    const timeoutId = setTimeout(() => {
       setLoading(false);
       // Link to a mock room
       router.replace(`/room/1`);
     }, 1500);
+
+    return () => clearTimeout(timeoutId);
   };
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={styles.container} edges={['top']}>
       <Header 
         title="Join a Squad" 
         showBack 

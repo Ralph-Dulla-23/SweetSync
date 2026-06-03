@@ -22,15 +22,19 @@ export const ProgressBar = React.memo(({
 
   useEffect(() => {
     animatedProgress.value = withSpring(progress, springConfigs.elegant);
-  }, [progress]);
+  }, [progress, animatedProgress]);
 
   const animatedStyle = useAnimatedStyle(() => ({
-    width: `${animatedProgress.value}%`,
+    transform: [
+      { translateX: -50 }, // Move to center for scaling
+      { scaleX: Math.max(0.0001, animatedProgress.value / 100) },
+      { translateX: 50 }  // Move back to left-aligned origin
+    ],
   }));
 
   return (
     <View 
-      style={[styles.container, { height, backgroundColor }]}
+      style={[styles.container, { height, backgroundColor, overflow: 'hidden' }]}
       accessibilityRole="progressbar"
       accessibilityLabel="Sync progress"
       accessibilityValue={{ min: 0, max: 100, now: progress }}
@@ -38,7 +42,7 @@ export const ProgressBar = React.memo(({
       <Animated.View 
         style={[
           styles.fill, 
-          { backgroundColor: color },
+          { backgroundColor: color, width: '100%' }, // Fill the container width
           animatedStyle
         ]} 
       />

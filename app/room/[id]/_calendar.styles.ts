@@ -3,7 +3,10 @@ import { colors, fonts, spacing, radius } from '@/constants/theme';
 import { globalStyles } from '@/styles/global';
 
 export const styles = StyleSheet.create({
-  container: globalStyles.screen,
+  container: {
+    ...globalStyles.screen,
+    overflow: 'visible',
+  },
   tabContainer: {
     ...globalStyles.row,
     paddingHorizontal: spacing[5],
@@ -34,6 +37,7 @@ export const styles = StyleSheet.create({
   },
   scrollContent: {
     paddingBottom: 110,
+    overflow: 'visible',
   },
   mineHeader: {
     paddingHorizontal: spacing[5],
@@ -415,5 +419,35 @@ export const styles = StyleSheet.create({
     fontSize: 12,
     color: colors.textSecondary,
     fontStyle: 'italic',
+  },
+  flex1: {
+    flex: 1,
+  },
+  memberChipPreferred: {
+    backgroundColor: colors.indigoBase,
+  },
+  memberChipTextPreferred: {
+    color: colors.indigoPunch,
+  },
+  sheetAction: {
+    marginTop: spacing[4],
+    height: 52,
+  },
+  tabActive: {
+    opacity: 0.7,
+  },
+  compactHeaderClose: {
+    padding: 4,
+  },
+  previewOverlay: {
+    width: '100%',
+    height: '100%',
+    opacity: 0.35,
+  },
+  previewToggleActive: {
+    backgroundColor: colors.indigoPunch,
+  },
+  previewToggleTextActive: {
+    color: colors.white,
   },
 });

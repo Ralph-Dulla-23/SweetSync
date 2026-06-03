@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, Pressable } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { colors, fonts, spacing, radius } from '@/constants/theme';
 import { springConfigs } from '@/constants/animation';
@@ -29,6 +29,13 @@ import Animated, {
   SlideOutDown
 } from 'react-native-reanimated';
 import { CalendarOnboarding } from '@/components/CalendarOnboarding';
+
+// Hoisted outside component — never re-allocated on re-render
+const MOCK_TASKS = [
+  { id: 't1', title: 'Movie Night', squad: 'Weekend Plans', time: '8:00 PM', type: 'squad' },
+  { id: 't2', title: 'Study Session', squad: 'Personal', time: '10:00 AM', type: 'personal' },
+  { id: 't3', title: 'Gym with Marco', squad: 'Personal', time: '4:00 PM', type: 'personal' },
+];
 
 // --- Interactive Bottom Sheet Sub-component ---
 function InteractiveBottomSheet({ selectedSlot, clearSelection }: any) {
@@ -111,13 +118,13 @@ function InteractiveBottomSheet({ selectedSlot, clearSelection }: any) {
               <Text style={styles.detailTitle}>
                 {formattedDate} at {formattedTime}
               </Text>
-              <TouchableOpacity 
+              <Pressable 
                 onPress={handleDismiss}
                 hitSlop={{ top: 20, bottom: 20, left: 20, right: 20 }}
-                style={{ padding: 4 }}
+                style={({ pressed }) => [{ padding: 4 }, pressed && { opacity: 0.7 }]}
               >
                 <X size={20} color={colors.textSecondary} weight="bold" />
-              </TouchableOpacity>
+              </Pressable>
             </View>
             <Text style={styles.detailSubtitle}>
               {displaySlot.freeCount} members are available ({displaySlot.preferredCount} prefer this)
@@ -156,11 +163,10 @@ export default function CalendarScreen() {
 
   const { isEmpty, mySchedule } = useGlobalAvailability();
 
-  const mockTasks = [
-    { id: 't1', title: 'Movie Night', squad: 'Weekend Plans', time: '8:00 PM', type: 'squad' },
-    { id: 't2', title: 'Study Session', squad: 'Personal', time: '10:00 AM', type: 'personal' },
-    { id: 't3', title: 'Gym with Marco', squad: 'Personal', time: '4:00 PM', type: 'personal' },
-  ];
+  // Ref so the stagger entrance fires once on mount, not on every re-render
+  // triggered by selectedSlot state changes.
+  const hasEnteredRef = React.useRef(false);
+  React.useEffect(() => { hasEnteredRef.current = true; }, []);
 
   if (isEmpty) {
     return (
@@ -184,9 +190,12 @@ export default function CalendarScreen() {
         title="Calendar" 
         rightElement={
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing[3] }}>
-            <TouchableOpacity onPress={() => setShowHelp(true)}>
+            <Pressable 
+              onPress={() => setShowHelp(true)}
+              style={({ pressed }) => [pressed && { opacity: 0.7 }]}
+            >
               <Question size={24} color={colors.textSecondary} />
-            </TouchableOpacity>
+            </Pressable>
             <Text style={styles.month}>May 2026</Text>
           </View>
         }
@@ -240,31 +249,38 @@ export default function CalendarScreen() {
           </View>
           
           <View style={styles.taskList}>
-            {mockTasks.map((task, i) => (
-              <Animated.View 
-                key={task.id}
-                entering={FadeInDown.delay(i * 100)}
-                style={[
-                  styles.taskItem,
-                  task.type === 'squad' ? styles.squadTask : styles.personalTask
-                ]}
-              >
-                <View style={styles.taskLeft}>
-                  <Text style={styles.taskTime}>{task.time}</Text>
-                  <View style={styles.taskDetails}>
-                    <Text style={styles.taskTitle}>{task.title}</Text>
-                    <Text style={styles.taskSquad}>{task.squad}</Text>
+            {MOCK_TASKS.map((task, i) => {
+              // Only animate on first mount; skip on subsequent re-renders
+              const entering = !hasEnteredRef.current
+                ? FadeInDown.delay(i * 100)
+                : undefined;
+              return (
+                <Animated.View 
+                  key={task.id}
+                  entering={entering}
+                  style={[
+                    styles.taskItem,
+                    task.type === 'squad' ? styles.squadTask : styles.personalTask
+                  ]}
+                >
+                  <View style={styles.taskLeft}>
+                    <Text style={styles.taskTime}>{task.time}</Text>
+                    <View style={styles.taskDetails}>
+                      <Text style={styles.taskTitle}>{task.title}</Text>
+                      <Text style={styles.taskSquad}>{task.squad}</Text>
+                    </View>
                   </View>
-                </View>
-                <View style={[
-                  styles.taskStatus,
-                  { backgroundColor: task.type === 'squad' ? colors.mintPunch : colors.peachPunch }
-                ]} />
-              </Animated.View>
-            ))}
+                  <View style={[
+                    styles.taskStatus,
+                    { backgroundColor: task.type === 'squad' ? colors.mintPunch : colors.peachPunch }
+                  ]} />
+                </Animated.View>
+              );
+            })}
           </View>
         </View>
       </ScrollView>
+
 
       {/* Selected Slot Detail - Interactive Bottom Sheet */}
       <InteractiveBottomSheet 

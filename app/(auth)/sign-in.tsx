@@ -3,7 +3,7 @@ import {
   View, 
   Text, 
   StyleSheet, 
-  TouchableOpacity, 
+  Pressable, 
   TextInput, 
   KeyboardAvoidingView, 
   Platform,
@@ -197,12 +197,12 @@ export default function SignIn() {
           contentContainerStyle={styles.scrollContent}
         >
           <View>
-            <TouchableOpacity 
+            <Pressable 
               onPress={() => step === 'password' ? setStep('email') : router.back()}
-              style={styles.backButton}
+              style={({ pressed }) => [styles.backButton, pressed && { opacity: 0.7 }]}
             >
               <CaretLeft size={20} weight="bold" color={step === 'password' ? colors.indigoPunch : colors.peachPunch} />
-            </TouchableOpacity>
+            </Pressable>
           </View>
 
           <Animated.View layout={Layout.springify().damping(springConfigs.elegant.damping).stiffness(springConfigs.elegant.stiffness)}>
@@ -287,27 +287,30 @@ export default function SignIn() {
                   </Button>
 
                   {!isSignUp && (
-                    <TouchableOpacity 
+                    <Pressable 
                       onPress={handleMagicLink}
-                      style={styles.magicLinkContainer}
+                      style={({ pressed }) => [styles.magicLinkContainer, pressed && { opacity: 0.7 }]}
                       disabled={loading}
                     >
                       <Text style={styles.magicLinkText}>
                         Forgot password? <Text style={styles.magicLinkAction}>Send Magic Link</Text>
                       </Text>
-                    </TouchableOpacity>
+                    </Pressable>
                   )}
                 </View>
               )}
 
               <View style={styles.toggleContainer}>
-                <TouchableOpacity 
+                <Pressable 
                   onPress={() => {
                     setIsSignUp(!isSignUp);
                     setStep('email');
                     setError(null);
                   }}
-                  style={{ marginBottom: spacing[4], alignItems: 'center' }}
+                  style={({ pressed }) => [
+                    { marginBottom: spacing[4], alignItems: 'center' },
+                    pressed && { opacity: 0.7 }
+                  ]}
                 >
                   <Text style={styles.toggleText}>
                     {isSignUp ? 'Already have an account? ' : "Don't have an account? "}
@@ -315,7 +318,7 @@ export default function SignIn() {
                       {isSignUp ? 'Sign In' : 'Sign Up'}
                     </Text>
                   </Text>
-                </TouchableOpacity>
+                </Pressable>
 
                 <Button
                   title="Continue with Demo Account"
@@ -332,5 +335,3 @@ export default function SignIn() {
     </SafeAreaView>
   );
 }
-
-

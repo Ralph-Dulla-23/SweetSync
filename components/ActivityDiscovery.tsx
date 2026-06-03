@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, StyleSheet, ScrollView } from 'react-native';
+import { View, Text, StyleSheet, FlatList } from 'react-native';
 import { colors, fonts, spacing, radius } from '@/constants/theme';
 import { ActivitySuggestion } from '@/types';
 import { Sparkle, ChatCircleText, BookOpen, Pizza, Balloon } from 'phosphor-react-native';
@@ -17,7 +17,29 @@ const CategoryIcon = ({ category, size, color }: { category: ActivitySuggestion[
   }
 };
 
-export const ActivityDiscovery: React.FC<ActivityDiscoveryProps> = ({ suggestions }) => {
+const SuggestionItem = React.memo(({ item }: { item: ActivitySuggestion }) => (
+  <View style={styles.suggestionCard}>
+    <View style={[styles.iconContainer, { backgroundColor: getCategoryBg(item.category) }]}>
+      <CategoryIcon category={item.category} size={20} color={getCategoryColor(item.category)} />
+    </View>
+    <View style={styles.cardContent}>
+      <Text style={styles.itemTitle}>{item.title}</Text>
+      <Text style={styles.itemDesc} numberOfLines={2}>{item.description}</Text>
+      <View style={styles.tagRow}>
+        <View style={styles.tag}>
+          <Text style={styles.tagText}>{Math.round(item.duration / 2)}h session</Text>
+        </View>
+        {item.votes !== undefined && (
+          <View style={[styles.tag, { backgroundColor: colors.peachBase }]}>
+            <Text style={[styles.tagText, { color: colors.peachPunch }]}>{item.votes} interested</Text>
+          </View>
+        )}
+      </View>
+    </View>
+  </View>
+));
+
+export const ActivityDiscovery = React.memo(({ suggestions }: ActivityDiscoveryProps) => {
   if (!suggestions || suggestions.length === 0) return null;
 
   return (
@@ -28,36 +50,19 @@ export const ActivityDiscovery: React.FC<ActivityDiscoveryProps> = ({ suggestion
       </View>
       <Text style={styles.subtitle}>AI-picked based on your squad's free time</Text>
 
-      <ScrollView 
-        horizontal 
+      <FlatList
+        data={suggestions}
+        keyExtractor={(item) => item.id}
+        renderItem={({ item }) => <SuggestionItem item={item} />}
+        horizontal
         showsHorizontalScrollIndicator={false}
         contentContainerStyle={styles.scrollContent}
-      >
-        {suggestions.map((item) => (
-          <View key={item.id} style={styles.suggestionCard}>
-            <View style={[styles.iconContainer, { backgroundColor: getCategoryBg(item.category) }]}>
-              <CategoryIcon category={item.category} size={20} color={getCategoryColor(item.category)} />
-            </View>
-            <View style={styles.cardContent}>
-              <Text style={styles.itemTitle}>{item.title}</Text>
-              <Text style={styles.itemDesc} numberOfLines={2}>{item.description}</Text>
-              <View style={styles.tagRow}>
-                <View style={styles.tag}>
-                  <Text style={styles.tagText}>{Math.round(item.duration / 2)}h session</Text>
-                </View>
-                {item.votes !== undefined && (
-                  <View style={[styles.tag, { backgroundColor: colors.peachBase }]}>
-                    <Text style={[styles.tagText, { color: colors.peachPunch }]}>{item.votes} interested</Text>
-                  </View>
-                )}
-              </View>
-            </View>
-          </View>
-        ))}
-      </ScrollView>
+        snapToInterval={210 + spacing[3]} // card width + gap
+        decelerationRate="fast"
+      />
     </View>
   );
-};
+});
 
 const getCategoryColor = (cat: ActivitySuggestion['category']) => {
   switch (cat) {

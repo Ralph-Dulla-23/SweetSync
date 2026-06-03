@@ -5,7 +5,7 @@ import {
   StyleSheet, 
   SafeAreaView, 
   ScrollView, 
-  TouchableOpacity,
+  Pressable,
   Dimensions,
   Share
 } from 'react-native';
@@ -133,7 +133,7 @@ export default function ConfirmedEventScreen() {
         message: `It's on! 🍑\n\n${mockEvent.title}\n📅 ${mockEvent.date} at ${mockEvent.time}\n📍 ${mockEvent.location}\n\nSynced via SweetSync`,
       });
     } catch (error) {
-      console.log(error);
+      // Silent error
     }
   };
 
@@ -143,9 +143,12 @@ export default function ConfirmedEventScreen() {
         title="Event Details" 
         showBack 
         rightElement={
-          <TouchableOpacity onPress={() => {}}>
+          <Pressable 
+            onPress={() => {}}
+            style={({ pressed }) => [pressed && { opacity: 0.7 }]}
+          >
             <DotsThreeVertical size={24} color={colors.textPrimary} />
-          </TouchableOpacity>
+          </Pressable>
         }
       />
 
@@ -164,7 +167,7 @@ export default function ConfirmedEventScreen() {
       >
         <Animated.View 
           entering={FadeInDown.duration(800).springify().damping(springConfigs.bouncy.damping).stiffness(springConfigs.bouncy.stiffness)}
-          exiting={FadeOutDown.springify().damping(springConfigs.bouncy.damping).stiffness(springConfigs.bouncy.stiffness)}
+          exiting={FadeOutDown.springify().damping(springConfigs.elegant.damping).stiffness(springConfigs.elegant.stiffness)}
           style={ticketAnimatedStyle}
         >
           <View style={styles.ticketCard}>
@@ -221,9 +224,9 @@ export default function ConfirmedEventScreen() {
             </View>
 
             <View style={styles.qrSection}>
-              <TouchableOpacity activeOpacity={0.9}>
+              <Pressable style={({ pressed }) => [pressed && { opacity: 0.9 }]}>
                 <QrCode size={140} color={colors.textPrimary} weight="thin" />
-              </TouchableOpacity>
+              </Pressable>
               <Text style={styles.qrNote}>Event ID: {id}</Text>
             </View>
           </View>
@@ -244,14 +247,13 @@ export default function ConfirmedEventScreen() {
             onPress={handleShare}
             style={styles.actionButton}
           />
-          <TouchableOpacity style={styles.cancelLink}>
+          <Pressable 
+            style={({ pressed }) => [styles.cancelLink, pressed && { opacity: 0.7 }]}
+          >
             <Text style={styles.cancelLinkText}>Cancel Event</Text>
-          </TouchableOpacity>
+          </Pressable>
         </Animated.View>
       </ScrollView>
     </SafeAreaView>
   );
 }
-
-
-

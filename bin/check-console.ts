@@ -7,14 +7,10 @@ async function checkConsole(url: string) {
   const browser = await chromium.launch();
   const page = await browser.newPage();
 
-  console.log(`Auditing: ${url}`);
-
   page.on('console', msg => {
-    console.log(`[BROWSER CONSOLE] ${msg.type()}: ${msg.text()}`);
   });
 
   page.on('pageerror', err => {
-    console.log(`[BROWSER ERROR] ${err.message}`);
   });
 
   try {

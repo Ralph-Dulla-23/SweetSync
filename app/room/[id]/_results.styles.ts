@@ -45,7 +45,6 @@ export const styles = StyleSheet.create({
     ...globalStyles.row,
     justifyContent: 'center',
     gap: spacing[2],
-    marginBottom: spacing[4],
   },
   winnerLabel: {
     fontFamily: fonts.bodySemibold,

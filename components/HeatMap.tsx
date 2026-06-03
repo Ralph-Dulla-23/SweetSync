@@ -4,8 +4,8 @@ import {
   Text, 
   Pressable, 
 } from 'react-native';
-import { colors, fonts } from '@/constants/theme';
-import { getHeatShade, getHeatShadeIndex } from '@/lib/heatmap';
+import { colors } from '@/constants/theme';
+import { getHeatShadeIndex } from '@/lib/heatmap';
 import { Sparkle, Users, Warning } from 'phosphor-react-native';
 import { TimeSlot, MyBlock, Preference } from '@/types';
 import { springConfigs } from '@/constants/animation';
@@ -17,14 +17,22 @@ import Animated, {
   withTiming, 
   Easing,
   interpolateColor,
-  FadeInUp,
+  FadeIn,
   SharedValue,
-  withDelay,
-  runOnJS,
   withSpring
 } from 'react-native-reanimated';
 import { styles } from './HeatMap.styles';
 import { slotIndexToTime } from '@/lib/time';
+
+// Static heat color lookup — avoids per-cell interpolateColor worklets
+const HEAT_COLORS = [
+  colors.pageBg,
+  colors.indigoBase,
+  colors.indigoSoft,
+  colors.indigoMid,
+  colors.indigoPunch,
+  colors.indigoNeon,
+] as const;
 
 interface HeatCellProps {
   slot: TimeSlot;
@@ -32,102 +40,61 @@ interface HeatCellProps {
   isMagic: boolean;
   isSelected: boolean;
   isUncertain: boolean;
+  isPreferred: boolean;
   myPreference: Preference;
   isEditMode: boolean;
   blockTitle: string | null;
+  backgroundColor: string; 
   pulse: SharedValue<number>;
   onPress: (slot: TimeSlot) => void;
   onToggle: (date: string, slotIndex: number) => void;
 }
 
-const HeatCell = React.memo(({
+interface AnimatedRingCellProps {
+  slot: TimeSlot;
+  isMagic: boolean;
+  isSelected: boolean;
+  isUncertain: boolean;
+  isPreferred: boolean;
+  isEditMode: boolean;
+  isMeBusy: boolean;
+  blockTitle: string | null;
+  backgroundColor: string;
+  pulse: SharedValue<number>;
+  onPress: (slot: TimeSlot) => void;
+  onToggle: (date: string, slotIndex: number) => void;
+}
+
+const AnimatedRingCell = React.memo(({
   slot,
-  totalMembers,
   isMagic,
   isSelected,
   isUncertain,
-  myPreference,
+  isPreferred,
   isEditMode,
+  isMeBusy,
   blockTitle,
+  backgroundColor,
   pulse,
   onPress,
   onToggle,
-}: HeatCellProps) => {
-  const isMeBusy = myPreference === 0;
-  
-  // Task G: Shade Index for background color transitions
-  const targetIndex = useMemo(() => {
-    if (isEditMode) {
-      if (isMeBusy) return 0; // pageBg
-      return myPreference === 2 ? 4 : 3; // indigoNeon (4) or indigoPunch (3)
-    }
-    return getHeatShadeIndex(slot.freeCount, totalMembers);
-  }, [isEditMode, isMeBusy, myPreference, slot.freeCount, totalMembers]);
-
-  const colorIndex = useSharedValue(targetIndex);
-
-  useEffect(() => {
-    colorIndex.value = withTiming(targetIndex, {
-      duration: 220,
-      easing: Easing.out(Easing.cubic),
-    });
-  }, [targetIndex]);
-
-  const animatedBackground = useAnimatedStyle(() => {
-    return {
-      backgroundColor: interpolateColor(
-        colorIndex.value,
-        [0, 1, 2, 3, 4],
-        [
-          colors.pageBg,
-          colors.indigoBase,
-          colors.indigoSoft,
-          colors.indigoMid,
-          colors.indigoPunch,
-        ]
-      ),
-    };
-  });
-
-  // Task H: Tap ring expansion
+}: AnimatedRingCellProps) => {
   const ringScale = useSharedValue(1);
-  
-  const handlePress = () => {
-    if (isEditMode) {
-      onToggle(slot.date, slot.slotIndex);
-      return;
-    }
+  const selectionScale = useSharedValue(1);
 
+  const handlePress = React.useCallback(() => {
+    if (isEditMode) { onToggle(slot.date, slot.slotIndex); return; }
     if (isMagic) {
       ringScale.value = withSequence(
         withSpring(1.2, springConfigs.bouncy),
         withTiming(1, { duration: 100 })
       );
-      // Open details after ring responds
-      setTimeout(() => {
-        onPress(slot);
-      }, 150);
+      setTimeout(() => onPress(slot), 150);
     } else {
       onPress(slot);
     }
-  };
+  }, [isEditMode, isMagic, slot, onPress, onToggle, ringScale]);
 
-  const ringAnimatedStyle = useAnimatedStyle(() => {
-    if (!isMagic && !isUncertain) return {};
-    const borderColor = isUncertain ? colors.peachPunch : colors.peachPunch;
-    return {
-      borderColor: interpolateColor(
-        pulse.value,
-        [0, 1],
-        [borderColor, isUncertain ? colors.white : colors.peachSoft]
-      ),
-      borderWidth: (isMagic ? 1.5 : 2) + pulse.value * 1,
-      transform: [{ scale: ringScale.value }],
-    };
-  });
-
-  // Selection scale animation
-  const selectionScale = useSharedValue(1);
   useEffect(() => {
     if (isSelected) {
       selectionScale.value = withSequence(
@@ -135,27 +102,38 @@ const HeatCell = React.memo(({
         withTiming(1, { duration: 150, easing: Easing.in(Easing.quad) })
       );
     }
-  }, [isSelected]);
+  }, [isSelected, selectionScale]);
 
-  const selectedAnimatedStyle = useAnimatedStyle(() => ({
-    transform: [{ scale: selectionScale.value }],
-  }));
+  const ringAnimatedStyle = useAnimatedStyle(() => {
+    const startColor = isMagic ? colors.peachPunch : isPreferred ? colors.indigoNeon : 'transparent';
+    const endColor = isUncertain ? colors.white : isPreferred ? colors.indigoPunch : colors.peachSoft;
+    const baseScale = isPreferred ? (1 + pulse.value * 0.03) : (1 + pulse.value * 0.05);
+    
+    return {
+      borderColor: interpolateColor(
+        pulse.value,
+        [0, 1],
+        [startColor, endColor]
+      ),
+      transform: [
+        { scale: ringScale.value * selectionScale.value * baseScale }
+      ],
+      opacity: isPreferred ? 0.9 + pulse.value * 0.1 : 1,
+    };
+  });
 
   return (
-    <Pressable 
-      onPress={handlePress}
-      style={styles.cellWrapper}
-    >
+    <Pressable onPress={handlePress} style={[styles.cellWrapper, { zIndex: isSelected ? 3 : (isMagic || isPreferred || isUncertain) ? 2 : 1 }]}>
       <Animated.View
         style={[
-          styles.cell, 
-          animatedBackground,
+          styles.cell,
+          { backgroundColor },
           isMagic && styles.magicSlotCell,
           isSelected && styles.selectedCell,
+          isPreferred && styles.preferredGlow,
           isUncertain && { borderWidth: 2, borderStyle: 'solid' },
           isEditMode && !isMeBusy && styles.myBusyCell,
           ringAnimatedStyle,
-          selectedAnimatedStyle,
         ]}
       >
         {isMagic && (slot.slotIndex % 2 === 0) && (
@@ -182,15 +160,106 @@ const HeatCell = React.memo(({
   );
 });
 
+interface StaticCellProps {
+  slot: TimeSlot;
+  isEditMode: boolean;
+  isMeBusy: boolean;
+  blockTitle: string | null;
+  backgroundColor: string;
+  onPress: (slot: TimeSlot) => void;
+  onToggle: (date: string, slotIndex: number) => void;
+}
+
+const StaticCell = React.memo(({
+  slot,
+  isEditMode,
+  isMeBusy,
+  blockTitle,
+  backgroundColor,
+  onPress,
+  onToggle,
+}: StaticCellProps) => {
+  const handlePress = () => {
+    if (isEditMode) { onToggle(slot.date, slot.slotIndex); return; }
+    onPress(slot);
+  };
+
+  return (
+    <Pressable onPress={handlePress} style={styles.cellWrapper}>
+      <View
+        style={[
+          styles.cell,
+          { backgroundColor },
+          isEditMode && !isMeBusy && styles.myBusyCell,
+        ]}
+      >
+        {isEditMode && !isMeBusy && blockTitle && (
+          <Text style={styles.cellTitle} numberOfLines={1}>{blockTitle}</Text>
+        )}
+      </View>
+    </Pressable>
+  );
+});
+
+const HeatCell = React.memo(({
+  slot,
+  totalMembers,
+  isMagic,
+  isSelected,
+  isUncertain,
+  isPreferred,
+  myPreference,
+  isEditMode,
+  blockTitle,
+  backgroundColor,
+  pulse,
+  onPress,
+  onToggle,
+}: HeatCellProps) => {
+  const isMeBusy = myPreference === 0;
+  const needsAnimation = isMagic || isUncertain || isSelected || isPreferred;
+
+  if (needsAnimation) {
+    return (
+      <AnimatedRingCell
+        slot={slot}
+        isMagic={isMagic}
+        isSelected={isSelected}
+        isUncertain={isUncertain}
+        isPreferred={isPreferred}
+        isEditMode={isEditMode}
+        isMeBusy={isMeBusy}
+        blockTitle={blockTitle}
+        backgroundColor={backgroundColor}
+        pulse={pulse}
+        onPress={onPress}
+        onToggle={onToggle}
+      />
+    );
+  }
+
+  return (
+    <StaticCell
+      slot={slot}
+      isEditMode={isEditMode}
+      isMeBusy={isMeBusy}
+      blockTitle={blockTitle}
+      backgroundColor={backgroundColor}
+      onPress={onPress}
+      onToggle={onToggle}
+    />
+  );
+});
+
 interface DayColumnProps {
   dayIndex: number;
   slots: TimeSlot[];
   totalMembers: number;
-  magicSlotsSet: Set<string>; // Optimized O(1) lookup
-  uncertainSlotsSet: Set<string>; // Optimized O(1) lookup
-  selectedSlot: TimeSlot | null;
+  magicSlotsSet: Set<string>; 
+  uncertainSlotsSet: Set<string>; 
+  selectedSlotKey: string | null;
   mySchedule: Map<string, Preference>;
-  myBlocksMap: Map<string, string>; // Optimized O(1) lookup
+  myBlocksMap: Map<string, string>; 
   isEditMode: boolean;
   pulse: SharedValue<number>;
   onCellPress: (slot: TimeSlot) => void;
@@ -203,7 +272,7 @@ const DayColumn = React.memo(({
   totalMembers,
   magicSlotsSet,
   uncertainSlotsSet,
-  selectedSlot,
+  selectedSlotKey,
   mySchedule,
   myBlocksMap,
   isEditMode,
@@ -211,16 +280,40 @@ const DayColumn = React.memo(({
   onCellPress,
   onToggleCell,
 }: DayColumnProps) => {
-  // Memoize the mapping logic to prevent recalculation unless data changes
+  const isColumnActive = useMemo(() => {
+    return slots.some(slot => {
+      const key = `${slot.date}-${slot.slotIndex}`;
+      return magicSlotsSet.has(key) || selectedSlotKey === key;
+    });
+  }, [slots, magicSlotsSet, selectedSlotKey]);
+
+  const columnZIndex = useMemo(() => {
+    const columnDate = slots[0]?.date || '___';
+    const isSelectedCol = selectedSlotKey?.startsWith(columnDate);
+    if (isSelectedCol) return 20;
+    if (isColumnActive) return 10;
+    return 1;
+  }, [isColumnActive, selectedSlotKey, slots]);
+
   const renderedCells = useMemo(() => {
     return slots.map((slot) => {
       const slotKey = `${slot.date}-${slot.slotIndex}`;
       const isMagic = !isEditMode && magicSlotsSet.has(slotKey);
       const isUncertain = uncertainSlotsSet.has(slotKey);
-      const isSelected = !isEditMode && selectedSlot?.date === slot.date && selectedSlot?.slotIndex === slot.slotIndex;
+      const isSelected = !isEditMode && selectedSlotKey === slotKey;
       const myPreference = mySchedule.get(slotKey) ?? 0;
       const blockTitle = myBlocksMap.get(slotKey) || null;
-      
+
+      let colorIndex: number;
+      if (isEditMode) {
+        const isMeBusy = myPreference === 0;
+        colorIndex = isMeBusy ? 0 : myPreference === 2 ? 5 : 4;
+      } else {
+        colorIndex = getHeatShadeIndex(slot.freeCount, slot.preferredCount, totalMembers);
+      }
+      const backgroundColor = HEAT_COLORS[Math.min(colorIndex, HEAT_COLORS.length - 1)];
+      const isPreferred = colorIndex === 5;
+
       return (
         <HeatCell 
           key={slotKey}
@@ -229,9 +322,11 @@ const DayColumn = React.memo(({
           isMagic={isMagic}
           isSelected={isSelected}
           isUncertain={isUncertain}
+          isPreferred={isPreferred}
           myPreference={myPreference}
           isEditMode={isEditMode}
           blockTitle={blockTitle}
+          backgroundColor={backgroundColor}
           pulse={pulse}
           onPress={onCellPress}
           onToggle={onToggleCell}
@@ -243,7 +338,7 @@ const DayColumn = React.memo(({
     totalMembers, 
     magicSlotsSet, 
     uncertainSlotsSet, 
-    selectedSlot, 
+    selectedSlotKey, 
     mySchedule, 
     myBlocksMap, 
     isEditMode, 
@@ -253,13 +348,28 @@ const DayColumn = React.memo(({
   ]);
 
   return (
-    <Animated.View 
-      entering={FadeInUp.delay(dayIndex * 50).duration(400)}
-      style={styles.column}
-    >
+    <View style={[styles.column, { zIndex: columnZIndex }]}>
       {renderedCells}
-    </Animated.View>
+    </View>
   );
+}, (prev, next) => {
+  const columnDate = prev.slots[0]?.date || '___';
+  const prevWasSelected = prev.selectedSlotKey?.startsWith(columnDate);
+  const nextIsSelected = next.selectedSlotKey?.startsWith(columnDate);
+  
+  if (prev.slots !== next.slots) return false;
+  if (prev.totalMembers !== next.totalMembers) return false;
+  if (prev.isEditMode !== next.isEditMode) return false;
+  if (prev.mySchedule !== next.mySchedule) return false;
+  if (prev.myBlocksMap !== next.myBlocksMap) return false;
+  if (prev.magicSlotsSet !== next.magicSlotsSet) return false;
+  if (prev.uncertainSlotsSet !== next.uncertainSlotsSet) return false;
+  
+  if (prev.selectedSlotKey !== next.selectedSlotKey) {
+    if (prevWasSelected || nextIsSelected) return false;
+  }
+  
+  return true;
 });
 
 
@@ -281,6 +391,10 @@ interface HeatMapProps {
 
 const DAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
 
+const EMPTY_SCHEDULE = new Map<string, Preference>();
+const EMPTY_BLOCKS: MyBlock[] = [];
+const EMPTY_CONFIDENCE: string[] = [];
+
 export const HeatMap: React.FC<HeatMapProps> = ({
   data,
   totalMembers,
@@ -289,22 +403,25 @@ export const HeatMap: React.FC<HeatMapProps> = ({
   selectedSlot = null,
   isEditMode = false,
   onToggleCell = () => {},
-  mySchedule = new Map(),
-  myBlocks = [],
-  startSlot = 14, // 7 AM
-  endSlot = 48,   // 12 AM
-  lowConfidenceCells = [],
+  mySchedule = EMPTY_SCHEDULE,
+  myBlocks = EMPTY_BLOCKS,
+  startSlot = 14, 
+  endSlot = 48,   
+  lowConfidenceCells = EMPTY_CONFIDENCE,
   backgroundOpacity = 1,
 }) => {
   const pulse = useSharedValue(0);
 
   useEffect(() => {
-    pulse.value = withRepeat(
-      withTiming(1, { duration: 1500, easing: Easing.inOut(Easing.sin) }),
-      -1,
-      true
-    );
-  }, []);
+    const timerId = setTimeout(() => {
+      pulse.value = withRepeat(
+        withTiming(1, { duration: 1500, easing: Easing.inOut(Easing.sin) }),
+        -1,
+        true
+      );
+    }, 500);
+    return () => clearTimeout(timerId);
+  }, [pulse]);
 
   const timeLabels = useMemo(() => {
     const labels = [];
@@ -318,11 +435,9 @@ export const HeatMap: React.FC<HeatMapProps> = ({
     return data.map(column => column.slice(startSlot, endSlot));
   }, [data, startSlot, endSlot]);
 
-  // Pre-calculate block map for O(1) lookup inside the loop
   const myBlocksMap = useMemo(() => {
     const map = new Map<string, string>();
     myBlocks.forEach(b => {
-      // Map all slots of the block
       for (let s = b.startSlot; s <= b.endSlot; s++) {
         map.set(`${b.date}-${s}`, b.title);
       }
@@ -338,9 +453,12 @@ export const HeatMap: React.FC<HeatMapProps> = ({
     return new Set(lowConfidenceCells);
   }, [lowConfidenceCells]);
 
+  const selectedSlotKey = useMemo(() => {
+    return selectedSlot ? `${selectedSlot.date}-${selectedSlot.slotIndex}` : null;
+  }, [selectedSlot]);
+
   return (
     <View style={[styles.gridContainer, { opacity: backgroundOpacity }]}>
-      {/* Day Headers */}
       <View style={styles.dayHeaderRow}>
         <View style={styles.timeLabelSpacer} />
         {DAYS.map((day) => (
@@ -350,9 +468,7 @@ export const HeatMap: React.FC<HeatMapProps> = ({
         ))}
       </View>
 
-      {/* Grid Content */}
       <View style={styles.gridBody}>
-        {/* Time Labels Column */}
         <View style={styles.timeColumn}>
           {timeLabels.map((time) => (
             <View key={time} style={styles.timeLabelCell}>
@@ -361,17 +477,16 @@ export const HeatMap: React.FC<HeatMapProps> = ({
           ))}
         </View>
 
-        {/* Heat Map Cells (Columns) */}
-        <View style={styles.cellsArea}>
+        <Animated.View entering={FadeIn.duration(300)} style={styles.cellsArea}>
           {visibleData.map((columnSlots, dayIndex) => (
             <DayColumn 
-              key={`col-${dayIndex}`}
+              key={columnSlots[0]?.date || `col-${dayIndex}`}
               dayIndex={dayIndex}
               slots={columnSlots}
               totalMembers={totalMembers}
               magicSlotsSet={magicSlotsSet}
               uncertainSlotsSet={uncertainSlotsSet}
-              selectedSlot={selectedSlot}
+              selectedSlotKey={selectedSlotKey}
               mySchedule={mySchedule}
               myBlocksMap={myBlocksMap}
               isEditMode={isEditMode}
@@ -380,7 +495,7 @@ export const HeatMap: React.FC<HeatMapProps> = ({
               onToggleCell={onToggleCell}
             />
           ))}
-        </View>
+        </Animated.View>
       </View>
     </View>
   );

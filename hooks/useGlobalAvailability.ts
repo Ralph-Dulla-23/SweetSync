@@ -9,7 +9,7 @@ export function useGlobalAvailability() {
     { 
       id: 'p1', 
       title: 'Gym', 
-      date: weekDays[0], 
+      date: weekDays[0] || new Date().toISOString().split('T')[0], 
       startSlot: 14, 
       endSlot: 16, 
       preference: 1, 
@@ -21,7 +21,7 @@ export function useGlobalAvailability() {
     { 
       id: 'r1', 
       title: 'Study Session', 
-      date: weekDays[1], 
+      date: weekDays[1] || new Date().toISOString().split('T')[0], 
       startSlot: 20, 
       endSlot: 24, 
       preference: 1, 
@@ -32,7 +32,7 @@ export function useGlobalAvailability() {
     { 
       id: 'r2', 
       title: 'Project Alpha Kickoff', 
-      date: weekDays[2], 
+      date: weekDays[2] || new Date().toISOString().split('T')[0], 
       startSlot: 28, 
       endSlot: 32, 
       preference: 2, 

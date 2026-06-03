@@ -21,16 +21,17 @@ export const styles = StyleSheet.create({
   },
   backButton: {
     ...globalStyles.row,
-    marginBottom: spacing[2],
-    marginLeft: -4,
-    paddingVertical: 8,
+    marginBottom: spacing[1],
+    marginLeft: -2,
+    paddingVertical: 4,
     paddingRight: 16,
   },
   backLabel: {
     fontFamily: fonts.bodySemibold,
     fontSize: 14,
     color: colors.peachPunch,
-    marginLeft: 4,
+    marginLeft: 2,
+    lineHeight: 18,
   },
   subtitle: {
     fontFamily: fonts.body,

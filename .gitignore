@@ -54,8 +54,22 @@ yarn-error.*
 # TypeScript
 *.tsbuildinfo
 
-/Rules
-.Rules
-/conductor/
 # AI Scratch
 .ai-cache/
+.aicop/
+*-report.json
+*-errors.json
+
+# AI Documentation & Meta-files
+# (Unignored to allow tracking project status and roadmaps)
+!ANIMATION_COHERENCE.md
+!ANIMATION_REFACTOR.md
+!MASTER_ANIMATIONS.md
+!PROJECT_OVERVIEW.md
+!PROJECT_STATUS.md
+!IMPLEMENTATION.md
+
+# Tool-specific files
+.impeccable-live/
+.impeccable-live.json
+.superpowers/

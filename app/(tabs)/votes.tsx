@@ -4,7 +4,7 @@ import {
   Text, 
   StyleSheet, 
   ScrollView, 
-  TouchableOpacity,
+  Pressable,
   TextInput
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -114,10 +114,9 @@ const TaskCard = ({ vote, onClear }: { vote: PendingVote; onClear: (id: string) 
       styles.voteCard,
       { borderColor: vote.type === 'time' ? colors.indigoSoft : colors.peachSoft }
     ]}>
-      <TouchableOpacity 
-        style={styles.cardMainAction}
+      <Pressable 
+        style={({ pressed }) => [styles.cardMainAction, pressed && { opacity: 0.7 }]}
         onPress={handleCardPress}
-        activeOpacity={0.7}
       >
         <View style={styles.cardLeft}>
           <View style={[
@@ -144,7 +143,7 @@ const TaskCard = ({ vote, onClear }: { vote: PendingVote; onClear: (id: string) 
         <View style={styles.fullViewButton}>
           <CaretRight size={20} color={colors.textTertiary} weight="bold" />
         </View>
-      </TouchableOpacity>
+      </Pressable>
 
       <View style={styles.quickVoteContainer}>
         <View style={styles.quickVoteHeader}>
@@ -169,14 +168,14 @@ const TaskCard = ({ vote, onClear }: { vote: PendingVote; onClear: (id: string) 
               placeholderTextColor={colors.textTertiary}
               onSubmitEditing={() => handleVote('free')}
             />
-            <TouchableOpacity 
-              style={styles.inlineSubmit}
+            <Pressable 
+              style={({ pressed }) => [styles.inlineSubmit, pressed && { opacity: 0.7 }]}
               onPress={() => handleVote('free')}
               accessibilityLabel="Submit activity"
               accessibilityRole="button"
             >
               <CaretRight size={20} color={colors.white} weight="bold" />
-            </TouchableOpacity>
+            </Pressable>
           </View>
         )}
       </View>

@@ -3,10 +3,9 @@ import {
   View, 
   Text, 
   StyleSheet, 
-  ScrollView, 
-  SafeAreaView,
-  TouchableOpacity
+  ScrollView 
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { colors, fonts, spacing, radius } from '@/constants/theme';
 import { Header } from '@/components/Header';
@@ -30,6 +29,7 @@ import { useTimeVoting, VoteType } from '@/hooks/useTimeVoting';
 import { getWeekDays, slotIndexToTime } from '@/lib/time';
 import { format, parseISO } from 'date-fns';
 import { CoordinationSkeleton } from '@/components/CoordinationSkeleton';
+import { simulator } from '@/lib/simulator';
 
 // Optional Haptics
 let Haptics: any;
@@ -48,8 +48,6 @@ interface TimeSlotOption {
   totalCount: number;
   myVote?: VoteType;
 }
-
-import { simulator } from '@/lib/simulator';
 
 export default function VoteSlotsScreen() {
   const { id } = useLocalSearchParams();
@@ -106,8 +104,8 @@ export default function VoteSlotsScreen() {
 
   if (mockSlotOptions.length === 0) {
     return (
-      <SafeAreaView style={styles.container}>
-        <Header title="Pick a Time" showBack />
+      <SafeAreaView style={styles.container} edges={['top']}>
+        <Header title="Pick a Time" showBack userAvatar />
         <EmptyState 
           icon={<CalendarStar size={64} color={colors.peachSoft} weight="duotone" />}
           title="No gaps found yet"
@@ -125,7 +123,7 @@ export default function VoteSlotsScreen() {
   }
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={styles.container} edges={['top']}>
       <Animated.View 
         style={{ flex: 1 }}
         exiting={FadeOutDown.duration(400)}
@@ -134,7 +132,8 @@ export default function VoteSlotsScreen() {
           title="When should we meet?" 
           subtitle="Step 1 of 2" 
           showBack 
-          backLabel="Room" 
+          backLabel="Room"
+          userAvatar
         />
 
         <ScrollView 

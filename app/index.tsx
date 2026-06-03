@@ -1,14 +1,35 @@
 import React from 'react';
 import { Redirect, useRouter } from 'expo-router';
 import { useAuth } from '@/hooks/useAuth';
-import { View, Text, TouchableOpacity, ScrollView } from 'react-native';
+import { View, Text, Pressable, ScrollView } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { colors } from '@/constants/theme';
+import { colors, spacing } from '@/constants/theme';
 import { springConfigs } from '@/constants/animation';
 import { Sparkle, Scan, CalendarBlank, ListChecks } from 'phosphor-react-native';
 import Animated, { FadeIn, FadeInDown, FadeInUp, FadeOut } from 'react-native-reanimated';
 import { Button } from '@/components/Button';
 import { styles } from './_index.styles';
+
+const FEATURES = [
+  {
+    icon: Scan,
+    color: colors.peachPunch,
+    title: 'Upload & Sync',
+    desc: 'AI extracts busy blocks from your schedule screenshots.',
+  },
+  {
+    icon: CalendarBlank,
+    color: colors.indigoPunch,
+    title: 'Find the Gaps',
+    desc: 'See a collective heat map of when everyone is free.',
+  },
+  {
+    icon: ListChecks,
+    color: colors.mintPunch,
+    title: 'Decide Together',
+    desc: 'Vote on slots and activities to confirm plans in seconds.',
+  },
+];
 
 export default function Index() {
   const { session, loading: authLoading } = useAuth();
@@ -37,27 +58,6 @@ export default function Index() {
     return <Redirect href="/(tabs)" />;
   }
 
-  const features = [
-    {
-      icon: Scan,
-      color: colors.peachPunch,
-      title: 'Upload & Sync',
-      desc: 'AI extracts busy blocks from your schedule screenshots.',
-    },
-    {
-      icon: CalendarBlank,
-      color: colors.indigoPunch,
-      title: 'Find the Gaps',
-      desc: 'See a collective heat map of when everyone is free.',
-    },
-    {
-      icon: ListChecks,
-      color: colors.mintPunch,
-      title: 'Decide Together',
-      desc: 'Vote on slots and activities to confirm plans in seconds.',
-    },
-  ];
-
   return (
     <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
       <ScrollView 
@@ -76,9 +76,9 @@ export default function Index() {
 
         {/* Feature List - The "How it Works" */}
         <View style={styles.featureList}>
-          {features.map((item, index) => (
+          {FEATURES.map((item, index) => (
             <Animated.View 
-              key={index} 
+              key={item.title} 
               entering={FadeInUp.delay(400 + index * 100).duration(600)}
               style={styles.featureItem}
             >
@@ -104,15 +104,14 @@ export default function Index() {
             style={styles.button}
           />
           
-          <TouchableOpacity 
+          <Pressable 
             onPress={() => router.push({ pathname: '/(auth)/sign-in', params: { mode: 'signin' } })}
-            activeOpacity={0.7}
-            style={styles.signInLink}
+            style={({ pressed }) => [styles.signInLink, pressed && { opacity: 0.7 }]}
           >
             <Text style={styles.signInText}>
               Already have an account? <Text style={styles.signInTextBold}>Sign In</Text>
             </Text>
-          </TouchableOpacity>
+          </Pressable>
         </Animated.View>
       </ScrollView>
     </SafeAreaView>

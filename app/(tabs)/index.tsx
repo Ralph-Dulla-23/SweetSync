@@ -3,7 +3,7 @@ import {
   View, 
   Text, 
   ScrollView, 
-  TouchableOpacity,
+  Pressable,
   TextInput,
   Platform,
   FlatList
@@ -116,20 +116,40 @@ const ConfirmedTicket = React.memo(({ plan, index }: { plan: ConfirmedPlan, inde
   );
 });
 
-const RoomListItem = React.memo(({ room, index, onPress }: { room: LocalRoom; index: number; onPress: (id: string) => void }) => {
-  const { hasStaleVotes } = useTimeVoting(room.id);
+const getStatusDisplay = (status: RoomStatus): { label: string; variant: StatusVariant } => {
+  switch (status) {
+    case 'collecting': return { label: 'Waiting', variant: 'neutral' };
+    case 'processing': return { label: 'Syncing...', variant: 'indigo' };
+    case 'voting_slots': return { label: 'Voting open', variant: 'peach' };
+    case 'voting_activity': return { label: 'Pick activity', variant: 'peach' };
+    case 'confirmed': return { label: 'Confirmed', variant: 'mint' };
+    case 'expired': return { label: 'Expired', variant: 'neutral' };
+    default: return { label: 'Unknown', variant: 'neutral' };
+  }
+};
 
-  const getStatusDisplay = (status: RoomStatus): { label: string; variant: StatusVariant } => {
-    switch (status) {
-      case 'collecting': return { label: 'Waiting', variant: 'neutral' };
-      case 'processing': return { label: 'Syncing...', variant: 'indigo' };
-      case 'voting_slots': return { label: 'Voting open', variant: 'peach' };
-      case 'voting_activity': return { label: 'Pick activity', variant: 'peach' };
-      case 'confirmed': return { label: 'Confirmed', variant: 'mint' };
-      case 'expired': return { label: 'Expired', variant: 'neutral' };
-      default: return { label: 'Unknown', variant: 'neutral' };
-    }
-  };
+const getRoomDetail = (room: Room) => {
+  if (room.sessionStatus === 'collecting') {
+    const uploadedCount = room.members.filter(m => m.status === 'uploaded').length;
+    return `${uploadedCount} of ${room.members.length} uploaded`;
+  }
+  if (room.sessionStatus === 'voting_slots') {
+    return "Voting in progress";
+  }
+  if (room.sessionStatus === 'confirmed') {
+    return "Plan confirmed!";
+  }
+  return "";
+};
+
+interface RoomListItemProps {
+  room: LocalRoom;
+  index: number;
+  onPress: (id: string) => void;
+}
+
+const RoomListItem = React.memo(({ room, index, onPress }: RoomListItemProps) => {
+  const { hasStaleVotes } = useTimeVoting(room.id);
 
   const status = getStatusDisplay(room.sessionStatus);
 
@@ -137,20 +157,20 @@ const RoomListItem = React.memo(({ room, index, onPress }: { room: LocalRoom; in
     <Animated.View 
       entering={FadeInDown.duration(600).delay(200 + index * 50).easing(Easing.out(Easing.exp))}
     >
-      <TouchableOpacity 
-        activeOpacity={0.8}
+      <Pressable 
         onPress={() => onPress(room.id)}
+        style={({ pressed }) => [pressed && { opacity: 0.8 }]}
         accessibilityRole="button"
         accessibilityLabel={`Enter ${room.name} room. Status: ${status.label}. ${room.detail}${hasStaleVotes ? '. Warning: stale votes detected.' : ''}`}
       >
-        <Card variant="peach" style={[styles.roomCard, hasStaleVotes && { borderColor: colors.peachPunch, borderWidth: 1.5 } as any]}>
+        <Card variant="peach" style={[styles.roomCard, hasStaleVotes && styles.roomCardStale]}>
           <View style={styles.cardTop}>
-            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+            <View style={styles.roomNameRow}>
               <Text style={styles.roomName}>{room.name}</Text>
               {hasStaleVotes && (
-                <View style={{ backgroundColor: colors.peachPunch, paddingHorizontal: 6, paddingVertical: 2, borderRadius: radius.sm, flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+                <View style={styles.updateBadge}>
                   <WarningCircle size={12} color={colors.white} weight="fill" />
-                  <Text style={{ color: colors.white, fontSize: 10, fontFamily: fonts.bodySemibold }}>UPDATE NEEDED</Text>
+                  <Text style={styles.updateBadgeText}>UPDATE NEEDED</Text>
                 </View>
               )}
             </View>
@@ -168,7 +188,7 @@ const RoomListItem = React.memo(({ room, index, onPress }: { room: LocalRoom; in
             </Text>
           </View>
         </Card>
-      </TouchableOpacity>
+      </Pressable>
     </Animated.View>
   );
 });
@@ -205,19 +225,30 @@ export default function Home() {
     }, 1500);
   };
 
-  const getRoomDetail = (room: Room) => {
-    if (room.sessionStatus === 'collecting') {
-      const uploadedCount = room.members.filter(m => m.status === 'uploaded').length;
-      return `${uploadedCount} of ${room.members.length} uploaded`;
-    }
-    if (room.sessionStatus === 'voting_slots') {
-      return "Voting in progress";
-    }
-    if (room.sessionStatus === 'confirmed') {
-      return "Plan confirmed!";
-    }
-    return "";
-  };
+  const renderTicket = React.useCallback(({ item, index }: { item: ConfirmedPlan, index: number }) => (
+    <ConfirmedTicket plan={item} index={index} />
+  ), []);
+
+  const renderRoomItem = React.useCallback(({ item: room, index }: { item: Room, index: number }) => {
+    const displayRoom: LocalRoom = {
+      id: room.id,
+      name: room.name,
+      sessionStatus: room.sessionStatus,
+      detail: getRoomDetail(room),
+      detailColor: room.sessionStatus === 'collecting' ? colors.textTertiary : colors.peachPunch,
+      members: room.members.map(m => ({ name: m.name, initial: m.name[0] }))
+    };
+    
+    return (
+      <View style={[styles.listItem, { marginBottom: index === rooms.length - 1 ? 0 : spacing[4] }]}>
+        <RoomListItem 
+          room={displayRoom} 
+          index={index} 
+          onPress={handleRoomPress} 
+        />
+      </View>
+    );
+  }, [rooms.length, handleRoomPress]);
 
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
@@ -234,7 +265,7 @@ export default function Home() {
         </Animated.View>
       ) : (
         <FlatList 
-          style={{ flex: 1 }}
+          style={styles.flex1}
           contentContainerStyle={styles.list}
           showsVerticalScrollIndicator={false}
           data={rooms}
@@ -286,15 +317,14 @@ export default function Home() {
                   >
                     <Text style={styles.sectionTitle}>Upcoming Plans</Text>
                   </Animated.View>
-                  <ScrollView 
+                  <FlatList 
                     horizontal 
                     showsHorizontalScrollIndicator={false}
                     contentContainerStyle={styles.horizontalScroll}
-                  >
-                    {mockConfirmedPlans.map((plan, index) => (
-                      <ConfirmedTicket key={plan.id} plan={plan} index={index} />
-                    ))}
-                  </ScrollView>
+                    data={mockConfirmedPlans}
+                    keyExtractor={(item) => item.id}
+                    renderItem={renderTicket}
+                  />
                 </>
               )}
 
@@ -308,20 +338,7 @@ export default function Home() {
               )}
             </>
           }
-          renderItem={({ item: room, index }) => (
-            <View style={{ paddingHorizontal: spacing[5], marginBottom: index === rooms.length - 1 ? 0 : spacing[4] }}>
-              <RoomListItem 
-                room={{
-                  ...room,
-                  detail: getRoomDetail(room),
-                  detailColor: room.sessionStatus === 'collecting' ? colors.textTertiary : colors.peachPunch,
-                  members: room.members.map(m => ({ name: m.name, initial: m.name[0] }))
-                } as any} 
-                index={index} 
-                onPress={handleRoomPress} 
-              />
-            </View>
-          )}
+          renderItem={renderRoomItem}
         />
       )}
     </SafeAreaView>

@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, Dimensions } from 'react-native';
+import { View, Text, StyleSheet, useWindowDimensions, Dimensions } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { colors, fonts, spacing } from '@/constants/theme';
 import { springConfigs } from '@/constants/animation';
@@ -31,9 +31,8 @@ try {
   Haptics = null;
 }
 
-const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
-
 const Particle = ({ index }: { index: number }) => {
+  const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = useWindowDimensions();
   const x = useSharedValue(Math.random() * SCREEN_WIDTH);
   const y = useSharedValue(Math.random() * SCREEN_HEIGHT);
   const scale = useSharedValue(Math.random() * 0.5 + 0.5);
@@ -43,19 +42,27 @@ const Particle = ({ index }: { index: number }) => {
     x.value = withRepeat(withTiming(x.value + (Math.random() - 0.5) * 100, { duration: 3000 + Math.random() * 2000 }), -1, true);
     y.value = withRepeat(withTiming(y.value + (Math.random() - 0.5) * 100, { duration: 3000 + Math.random() * 2000 }), -1, true);
     opacity.value = withRepeat(withTiming(0.1, { duration: 2000 + Math.random() * 1000 }), -1, true);
-  }, []);
+  }, [x, y, opacity]);
 
   const animatedStyle = useAnimatedStyle(() => ({
     transform: [{ translateX: x.value }, { translateY: y.value }, { scale: scale.value }],
     opacity: opacity.value,
-    position: 'absolute',
-    width: 6,
-    height: 6,
-    borderRadius: 3,
-    backgroundColor: index % 2 === 0 ? colors.indigoSoft : colors.peachSoft,
   }));
 
-  return <Animated.View style={animatedStyle} />;
+  return (
+    <Animated.View 
+      style={[
+        {
+          position: 'absolute',
+          width: 6,
+          height: 6,
+          borderRadius: 3,
+          backgroundColor: index % 2 === 0 ? colors.indigoSoft : colors.peachSoft,
+        },
+        animatedStyle
+      ]} 
+    />
+  );
 };
 
 const PulseRing = () => {
@@ -65,7 +72,7 @@ const PulseRing = () => {
   useEffect(() => {
     scale.value = withRepeat(withTiming(2.2, { duration: 2000, easing: Easing.out(Easing.quad) }), -1, false);
     opacity.value = withRepeat(withTiming(0, { duration: 2000, easing: Easing.out(Easing.quad) }), -1, false);
-  }, []);
+  }, [scale, opacity]);
 
   const animatedStyle = useAnimatedStyle(() => ({
     transform: [{ scale: scale.value }],
@@ -94,7 +101,7 @@ const StatusRow = ({ label, status, index }: { label: string; status: 'done' | '
         withTiming(1, { duration: 300, easing: Easing.out(Easing.back(1.5)) })
       );
     }
-  }, [status]);
+  }, [status, rotation, scale]);
 
   const animatedIconStyle = useAnimatedStyle(() => ({
     transform: [{ rotate: `${rotation.value}deg` }, { scale: scale.value }],
@@ -185,10 +192,10 @@ export default function AIProcessingScreen() {
       timers.forEach(t => clearTimeout(t));
       clearTimeout(finalTimeout);
     };
-  }, [id]);
+  }, [id, progress, router]);
 
   const progressBarStyle = useAnimatedStyle(() => ({
-    width: `${progress.value * 100}%`,
+    transform: [{ scaleX: progress.value }],
   }));
 
   return (

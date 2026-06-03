@@ -4,7 +4,7 @@ import {
   Text, 
   StyleSheet, 
   Dimensions, 
-  TouchableOpacity, 
+  Pressable, 
   FlatList, 
   NativeSyntheticEvent, 
   NativeScrollEvent
@@ -153,12 +153,12 @@ export default function Onboarding() {
         exiting={FadeOutDown.duration(400)}
       >
         <View style={styles.header}>
-          <TouchableOpacity 
+          <Pressable 
             onPress={() => router.push('/(auth)/sign-in')}
-            activeOpacity={0.7}
+            style={({ pressed }) => [pressed && { opacity: 0.7 }]}
           >
             <Text style={styles.skipText}>Skip</Text>
-          </TouchableOpacity>
+          </Pressable>
         </View>
 
         <FlatList
@@ -192,13 +192,13 @@ export default function Onboarding() {
             ))}
           </View>
 
-          <TouchableOpacity 
+          <Pressable 
             onPress={handleNext}
-            activeOpacity={0.8}
-            style={[
+            style={({ pressed }) => [
               styles.nextButton,
               { backgroundColor: steps[activeIndex].iconColor },
-              activeIndex === steps.length - 1 && styles.nextButtonExpanded
+              activeIndex === steps.length - 1 && styles.nextButtonExpanded,
+              pressed && { opacity: 0.8 }
             ]}
           >
             {activeIndex === steps.length - 1 ? (
@@ -211,7 +211,7 @@ export default function Onboarding() {
             ) : (
               <CaretRight size={24} weight="bold" color={colors.white} />
             )}
-          </TouchableOpacity>
+          </Pressable>
         </View>
       </Animated.View>
     </SafeAreaView>

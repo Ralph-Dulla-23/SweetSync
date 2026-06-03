@@ -46,11 +46,9 @@ export const globalStyles = StyleSheet.create({
   
   shadowSm: {
     boxShadow: `0px 2px 4px ${colors.black}0D`, // ~0.05 opacity
-    elevation: 2,
   },
   
   shadowMd: {
     boxShadow: `0px 4px 8px ${colors.black}1A`, // ~0.1 opacity
-    elevation: 4,
   }
 });

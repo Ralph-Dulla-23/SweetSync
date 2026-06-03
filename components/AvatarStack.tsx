@@ -5,7 +5,7 @@ import { colors } from '@/constants/theme';
 import { styles } from './AvatarStack.styles';
 
 interface AvatarStackProps {
-  avatars: { uri?: string; name?: string }[];
+  avatars: { id?: string; uri?: string; name?: string }[];
   size?: number;
   max?: number;
   overlap?: number;
@@ -21,7 +21,7 @@ export const AvatarStack = React.memo(({ avatars, size = 32, max = 4, overlap, s
     <View style={[styles.container, style]}>
       {visibleAvatars.map((avatar, index) => (
         <Avatar
-          key={index}
+          key={avatar.id || avatar.name || `avatar-${index}`}
           uri={avatar.uri}
           name={avatar.name}
           size={size}

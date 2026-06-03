@@ -4,7 +4,7 @@ import {
   Text, 
   StyleSheet, 
   Modal, 
-  TouchableOpacity, 
+  Pressable, 
   Dimensions,
   SafeAreaView,
   Platform
@@ -145,9 +145,12 @@ export const CalendarOnboarding = ({
         >
           {/* Header Actions */}
           <View style={styles.topActions}>
-            <TouchableOpacity onPress={handleComplete}>
+            <Pressable 
+              onPress={handleComplete}
+              style={({ pressed }) => [pressed && { opacity: 0.7 }]}
+            >
               <Text style={styles.skipLink}>Skip</Text>
-            </TouchableOpacity>
+            </Pressable>
           </View>
 
           <View style={styles.contentWrapper}>
@@ -183,7 +186,7 @@ export const CalendarOnboarding = ({
               ))}
             </View>
 
-            <TouchableOpacity 
+            <Pressable 
               style={styles.nextButton}
               activeOpacity={0.8}
               onPress={() => {
@@ -202,7 +205,7 @@ export const CalendarOnboarding = ({
               ) : (
                 <CaretRight size={20} color={colors.white} weight="bold" />
               )}
-            </TouchableOpacity>
+            </Pressable>
           </View>
         </Animated.View>
       </View>

@@ -81,8 +81,8 @@ export const styles = StyleSheet.create({
   },
   memberRow: {
     ...globalStyles.rowBetween,
-    paddingHorizontal: spacing[5],
-    paddingVertical: spacing[5],
+    paddingHorizontal: spacing[3],
+    paddingVertical: spacing[4],
     borderBottomWidth: 0.5,
     borderBottomColor: colors.borderDefault,
   },
@@ -91,34 +91,38 @@ export const styles = StyleSheet.create({
   },
   memberLeft: {
     ...globalStyles.row,
-    gap: spacing[4],
+    gap: spacing[2],
+    flex: 1,
+    marginRight: spacing[2],
   },
   memberInfo: {
-    gap: 3,
+    gap: 1,
+    flex: 1,
   },
   memberName: {
     fontFamily: fonts.bodySemibold,
-    fontSize: 16,
+    fontSize: 15,
     color: colors.textPrimary,
   },
   statusRow: {
     ...globalStyles.row,
-    gap: spacing[2],
+    gap: 6,
   },
   hostTag: {
     fontFamily: fonts.bodySemibold,
-    fontSize: 10,
+    fontSize: 9,
     color: colors.indigoPunch,
     backgroundColor: colors.indigoBase,
-    paddingHorizontal: 6,
+    paddingHorizontal: 5,
     paddingVertical: 1,
     borderRadius: radius.sm,
     textTransform: "uppercase",
   },
   memberStatus: {
     fontFamily: fonts.body,
-    fontSize: 13,
+    fontSize: 12,
     color: colors.textSecondary,
+    flexShrink: 1,
   },
   pendingText: {
     color: colors.peachPunch,
@@ -132,13 +136,13 @@ export const styles = StyleSheet.create({
   nudgeButton: {
     ...globalStyles.row,
     gap: spacing[1],
-    paddingLeft: spacing[3],
-    paddingRight: spacing[4],
+    paddingHorizontal: spacing[3],
     height: 44, // WCAG Minimum
     borderRadius: radius.full,
     backgroundColor: colors.peachBase,
     borderWidth: 0.5,
     borderColor: colors.peachSoft,
+    flexShrink: 0,
   },
   nudgeLabel: {
     fontFamily: fonts.bodySemibold,
@@ -257,5 +261,51 @@ export const styles = StyleSheet.create({
     fontFamily: fonts.bodySemibold,
     fontSize: 14,
     color: colors.voteCantText,
+  },
+  flex1: {
+    flex: 1,
+  },
+  nudgeAllBannerRoom: {
+    marginTop: 0,
+    marginBottom: spacing[8],
+  },
+  nudgeButtonInactive: {
+    backgroundColor: colors.pageBg,
+    borderColor: colors.borderDefault,
+    opacity: 0.6,
+  },
+  nudgeLabelInactive: {
+    color: colors.textTertiary,
+  },
+  protoBanner: {
+    backgroundColor: colors.indigoBase,
+    borderColor: colors.indigoSoft,
+    marginBottom: spacing[6],
+  },
+  protoIcon: {
+    backgroundColor: colors.white,
+  },
+  protoTitle: {
+    color: colors.indigoPunch,
+  },
+  protoSubtitle: {
+    color: colors.textSecondary,
+  },
+  protoButton: {
+    backgroundColor: colors.indigoPunch,
+  },
+  protoButtonText: {
+    color: colors.white,
+  },
+  confirmedPlansContainer: {
+    marginBottom: spacing[8],
+  },
+  footerNoteProceed: {
+    color: colors.peachPunch,
+    fontFamily: fonts.bodySemibold,
+  },
+  footerNoteConfirmed: {
+    color: colors.mintPunch,
+    fontFamily: fonts.bodySemibold,
   },
 });

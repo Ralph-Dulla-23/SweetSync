@@ -5,6 +5,7 @@ export const styles = StyleSheet.create({
   container: {
     flexDirection: 'row',
     gap: spacing[2],
+    width: '100%',
   },
   pillWrapper: {
     height: 36,

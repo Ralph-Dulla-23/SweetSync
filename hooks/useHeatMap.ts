@@ -12,15 +12,16 @@ export function useHeatMap(roomId: string = '1') {
   const weekDays = useMemo(() => getWeekDays(), []);
   
   const [myBlocks, setMyBlocks] = useState<MyBlock[]>([
-    { id: '1', title: 'Math 101', date: weekDays[0], startSlot: 18, endSlot: 20, preference: 1 },
-    { id: '2', title: 'English', date: weekDays[1], startSlot: 22, endSlot: 24, preference: 1 },
-    { id: '3', title: 'Physics', date: weekDays[2], startSlot: 26, endSlot: 28, preference: 2 },
+    { id: '1', title: 'Math 101', date: weekDays[0] || '', startSlot: 18, endSlot: 20, preference: 1 },
+    { id: '2', title: 'English', date: weekDays[1] || '', startSlot: 22, endSlot: 24, preference: 1 },
+    { id: '3', title: 'Physics', date: weekDays[2] || '', startSlot: 26, endSlot: 28, preference: 2 },
   ]);
 
   // Derived map of "date-slot" strings to preferences
   const mySchedule = useMemo(() => {
     const scheduleMap = new Map<string, Preference>();
     myBlocks.forEach(block => {
+      if (!block.date) return;
       for (let s = block.startSlot; s <= block.endSlot; s++) {
         scheduleMap.set(`${block.date}-${s}`, block.preference);
       }
@@ -28,13 +29,19 @@ export function useHeatMap(roomId: string = '1') {
     return scheduleMap;
   }, [myBlocks]);
 
-  // Sync my local schedule with the simulator
+  // Sync my local schedule with the simulator using batch updates
   useEffect(() => {
+    const updates: { date: string, slotIndex: number, preference: Preference }[] = [];
     myBlocks.forEach(block => {
+      if (!block.date) return;
       for (let s = block.startSlot; s <= block.endSlot; s++) {
-        simulator.updateMySchedule(block.date, s, block.preference);
+        updates.push({ date: block.date, slotIndex: s, preference: block.preference });
       }
     });
+    
+    if (updates.length > 0) {
+      simulator.updateMySchedules(updates);
+    }
   }, [myBlocks]);
 
   const [heatmapData, setHeatmapData] = useState<TimeSlot[][]>([]);
@@ -58,11 +65,12 @@ export function useHeatMap(roomId: string = '1') {
     setIsScanning(true);
     setScannedImageUri(uri);
     
-    setTimeout(() => {
+    const timeoutId = setTimeout(() => {
       const mockDraft = new Map<string, Preference>();
       // Mock some slots from the first few days
       [0, 1, 2].forEach(d => {
         const date = weekDays[d];
+        if (!date) return;
         for (let s = 18; s < 22; s++) {
           mockDraft.set(`${date}-${s}`, 1);
         }
@@ -70,18 +78,29 @@ export function useHeatMap(roomId: string = '1') {
       setDraftSchedule(mockDraft);
       setIsScanning(false);
     }, 2000);
+
+    return () => clearTimeout(timeoutId);
   }, [weekDays]);
 
   const confirmDraft = useCallback(() => {
     if (draftSchedule) {
-      console.log("Confirming draft schedule...");
+      const updates: { date: string, slotIndex: number, preference: Preference }[] = [];
+      const newBlocks: Omit<MyBlock, 'id'>[] = [];
+
       draftSchedule.forEach((pref, key) => {
-        const [date, slotStr] = key.split('-');
-        const slot = parseInt(slotStr);
-        simulator.updateMySchedule(date, slot, pref);
+        const parts = key.split('-');
+        if (parts.length < 2) return;
         
-        // Also update local myBlocks for visual consistency
-        addBlock({
+        const date = parts[0];
+        const slotStr = parts[1];
+        if (!date || !slotStr) return;
+
+        const slot = parseInt(slotStr);
+        if (isNaN(slot)) return;
+
+        updates.push({ date, slotIndex: slot, preference: pref });
+        
+        newBlocks.push({
           title: 'Scanned Slot',
           date,
           startSlot: slot,
@@ -89,6 +108,17 @@ export function useHeatMap(roomId: string = '1') {
           preference: pref,
         });
       });
+
+      if (updates.length > 0) {
+        simulator.updateMySchedules(updates);
+      }
+
+      // Update local blocks in one go
+      setMyBlocks(prev => [
+        ...prev,
+        ...newBlocks.map(b => ({ ...b, id: Math.random().toString(36).substr(2, 9) }))
+      ]);
+
       setDraftSchedule(null);
     }
   }, [draftSchedule]);
@@ -141,18 +171,33 @@ export function useHeatMap(roomId: string = '1') {
     setSelectedSlot(null);
   }, []);
 
+  // Memoize stable return values to prevent HeatMap re-renders
+  const magicSlots = useMemo(() => [
+    { date: weekDays[5] || '', slotIndex: 16 }, 
+    { date: weekDays[5] || '', slotIndex: 17 }
+  ], [weekDays]);
+
+  const lowConfidenceCells = useMemo(() => [
+    `${weekDays[0] || ''}-20`, 
+    `${weekDays[1] || ''}-22`, 
+    `${weekDays[2] || ''}-28`
+  ].filter(c => !c.startsWith('-')), [weekDays]);
+
+  const emptyDays = useMemo(() => [3, 4], []);
+  const potentialMagicSlots = useMemo(() => [1, 2, 3], []);
+
   return {
     mockData: heatmapData,
-    magicSlots: [{ date: weekDays[5], slotIndex: 16 }, { date: weekDays[5], slotIndex: 17 }],
+    magicSlots,
     selectedSlot,
     myBlocks,
     mySchedule,
     isScanning,
     draftSchedule,
     scannedImageUri,
-    lowConfidenceCells: [`${weekDays[0]}-20`, `${weekDays[1]}-22`, `${weekDays[2]}-28`],
-    emptyDays: [3, 4],
-    potentialMagicSlots: [1, 2, 3],
+    lowConfidenceCells,
+    emptyDays,
+    potentialMagicSlots,
     simulateOCR,
     confirmDraft,
     toggleDraftCell,

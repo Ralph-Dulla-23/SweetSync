@@ -6,6 +6,7 @@ export const styles = StyleSheet.create({
   gridContainer: {
     marginTop: spacing[2],
     paddingHorizontal: spacing[5],
+    overflow: 'visible',
   },
   dayHeaderRow: {
     ...globalStyles.row,
@@ -30,6 +31,7 @@ export const styles = StyleSheet.create({
   },
   gridBody: {
     flexDirection: "row",
+    overflow: 'visible',
   },
   timeColumn: {
     width: 44,
@@ -51,13 +53,16 @@ export const styles = StyleSheet.create({
     flex: 1,
     flexDirection: "row",
     gap: 1.5,
+    overflow: 'visible',
   },
   column: {
     flex: 1,
     gap: 1.5,
+    overflow: 'visible',
   },
   cellWrapper: {
     height: 24,
+    overflow: 'visible',
   },
   cell: {
     flex: 1,
@@ -65,8 +70,8 @@ export const styles = StyleSheet.create({
     borderWidth: 0.5,
     borderColor: "rgba(0,0,0,0.03)",
     ...globalStyles.center,
-    overflow: 'hidden',
     paddingHorizontal: 2,
+    overflow: 'visible',
   },
   magicSlotCell: {
     backgroundColor: colors.peachBase,
@@ -79,6 +84,11 @@ export const styles = StyleSheet.create({
     borderWidth: 2,
     zIndex: 2,
     boxShadow: `0px 0px 4px ${colors.indigoPunch}80`,
+  },
+  preferredGlow: {
+    boxShadow: `0px 0px 8px ${colors.indigoNeon}80`,
+    borderWidth: 1,
+    borderColor: colors.white + '40',
   },
   myBusyCell: {
     borderColor: colors.indigoMid,

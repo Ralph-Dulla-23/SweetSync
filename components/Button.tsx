@@ -20,7 +20,7 @@ import Animated, {
 } from 'react-native-reanimated';
 import { styles } from './Button.styles';
 
-export type ButtonVariant = 'primary' | 'secondary' | 'indigo' | 'ghost';
+export type ButtonVariant = 'primary' | 'secondary' | 'indigo' | 'ghost' | 'mint' | 'peach';
 
 interface ButtonProps {
   onPress: () => void;
@@ -57,6 +57,8 @@ export const Button = React.memo(({
   const isSecondary = variant === 'secondary';
   const isIndigo = variant === 'indigo';
   const isGhost = variant === 'ghost';
+  const isMint = variant === 'mint';
+  const isPeach = variant === 'peach';
 
   const scaleX = useSharedValue(1);
   const scaleY = useSharedValue(1);
@@ -102,6 +104,8 @@ export const Button = React.memo(({
     isSecondary && styles.secondary,
     isIndigo && styles.indigo,
     isGhost && styles.ghost,
+    isMint && styles.mint,
+    isPeach && styles.peach,
     disabled && styles.disabled,
     style,
   ] as ViewStyle[];
@@ -112,6 +116,8 @@ export const Button = React.memo(({
     isSecondary && styles.textSecondary,
     isIndigo && styles.textIndigo,
     isGhost && styles.textGhost,
+    isMint && styles.textMint,
+    isPeach && styles.textPeach,
     disabled && styles.textDisabled,
     textStyle,
   ] as TextStyle[];

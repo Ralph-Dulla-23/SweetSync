@@ -61,9 +61,16 @@ export const styles = StyleSheet.create({
   sectionCard: {
     backgroundColor: colors.white,
     borderRadius: radius.lg,
-    borderWidth: 2,
+    borderWidth: 1.5,
     borderColor: colors.borderDefault,
     overflow: 'hidden',
+  },
+  engineCard: {
+    borderColor: colors.indigoSoft,
+    backgroundColor: colors.indigoBase,
+  },
+  engineRow: {
+    backgroundColor: 'transparent',
   },
   row: {
     ...globalStyles.rowBetween,
@@ -96,8 +103,43 @@ export const styles = StyleSheet.create({
   },
   signOutRow: {
     borderTopWidth: 0,
-    marginTop: spacing[4],
     backgroundColor: 'transparent',
+  },
+  dangerZone: {
+    gap: spacing[3],
+    marginTop: spacing[4],
+  },
+  dangerZoneLabel: {
+    fontFamily: fonts.bodySemibold,
+    fontSize: 12,
+    color: colors.voteCantText,
+    letterSpacing: 1.5,
+    marginLeft: 4,
+    textTransform: 'uppercase',
+  },
+  dangerZoneCard: {
+    backgroundColor: colors.voteCantBg,
+    borderRadius: radius.lg,
+    borderWidth: 2,
+    borderColor: colors.voteCantBorder,
+    overflow: 'hidden',
+  },
+  dangerZoneText: {
+    fontFamily: fonts.bodySemibold,
+    fontSize: 15,
+    color: colors.voteCantText,
+  },
+  badge: {
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: radius.sm,
+    backgroundColor: colors.indigoBase,
+  },
+  badgeText: {
+    fontFamily: fonts.bodySemibold,
+    fontSize: 10,
+    color: colors.indigoPunch,
+    textTransform: 'uppercase',
   },
   backButton: {
     ...globalStyles.row,
@@ -175,6 +217,117 @@ export const styles = StyleSheet.create({
     fontSize: 13,
     textDecorationLine: 'underline',
   },
+  // Modal Styles
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.4)',
+    justifyContent: 'flex-end',
+  },
+  modalContent: {
+    backgroundColor: colors.white,
+    borderTopLeftRadius: radius.xl,
+    borderTopRightRadius: radius.xl,
+    paddingBottom: spacing[12],
+    ...globalStyles.shadowMd,
+  },
+  modalHeader: {
+    alignItems: 'center',
+    paddingVertical: spacing[4],
+  },
+  modalHandle: {
+    width: 40,
+    height: 4,
+    backgroundColor: colors.borderDefault,
+    borderRadius: 2,
+  },
+  modalBody: {
+    paddingHorizontal: spacing[6],
+    paddingTop: spacing[2],
+  },
+  modalTitle: {
+    fontFamily: fonts.display,
+    fontSize: 22,
+    color: colors.textPrimary,
+    marginBottom: spacing[6],
+  },
+  modalOption: {
+    ...globalStyles.row,
+    paddingVertical: spacing[5],
+    borderBottomWidth: 1,
+    borderBottomColor: colors.borderDefault,
+    gap: spacing[4],
+  },
+  modalOptionText: {
+    flex: 1,
+  },
+  modalOptionTitle: {
+    fontFamily: fonts.bodySemibold,
+    fontSize: 16,
+    color: colors.textPrimary,
+  },
+  modalOptionDescription: {
+    fontFamily: fonts.body,
+    fontSize: 13,
+    color: colors.textSecondary,
+    marginTop: 2,
+  },
+  modalCloseBtn: {
+    marginTop: spacing[8],
+    height: 56,
+  },
+
+  // Support & Policy Styles
+  contentHeader: {
+    marginBottom: spacing[6],
+  },
+  contentTitle: {
+    fontFamily: fonts.display,
+    fontSize: 32,
+    color: colors.textPrimary,
+    marginBottom: spacing[2],
+  },
+  contentSubtitle: {
+    fontFamily: fonts.body,
+    fontSize: 16,
+    color: colors.textSecondary,
+    lineHeight: 24,
+  },
+  articleSection: {
+    gap: spacing[6],
+    marginBottom: spacing[10],
+  },
+  articleTitle: {
+    fontFamily: fonts.bodySemibold,
+    fontSize: 18,
+    color: colors.textPrimary,
+    marginBottom: spacing[2],
+  },
+  articleBody: {
+    fontFamily: fonts.body,
+    fontSize: 15,
+    color: colors.textSecondary,
+    lineHeight: 22,
+  },
+  faqItem: {
+    backgroundColor: colors.white,
+    padding: spacing[5],
+    borderRadius: radius.lg,
+    borderWidth: 1.5,
+    borderColor: colors.borderDefault,
+    gap: spacing[2],
+  },
+  faqQuestion: {
+    fontFamily: fonts.bodySemibold,
+    fontSize: 15,
+    color: colors.textPrimary,
+  },
+  faqAnswer: {
+    fontFamily: fonts.body,
+    fontSize: 14,
+    color: colors.textSecondary,
+    lineHeight: 20,
+  },
+
   emptyFileCard: {
     padding: spacing[8],
     ...globalStyles.center,

@@ -1,5 +1,5 @@
 import React from "react";
-import { View, Text, TouchableOpacity } from "react-native";
+import { View, Text, Pressable } from "react-native";
 import { useRouter } from "expo-router";
 import { CaretLeft } from "phosphor-react-native";
 import { colors } from "@/constants/theme";
@@ -55,16 +55,15 @@ export const Header = React.memo(({
     <View style={styles.container}>
       <View style={styles.leftContainer}>
         {showBack && (
-          <TouchableOpacity 
-            style={styles.backButton} 
+          <Pressable 
+            style={({ pressed }) => [styles.backButton, pressed && { opacity: 0.7 }]} 
             onPress={handleBack}
-            activeOpacity={0.7}
             accessibilityRole="button"
             accessibilityLabel={`Go back to ${backLabel}`}
           >
             <CaretLeft size={18} color={colors.peachPunch} weight="bold" />
             <Text style={styles.backLabel}>{backLabel}</Text>
-          </TouchableOpacity>
+          </Pressable>
         )}
         
         {subtitle && subtitlePosition === "above" && (
@@ -80,23 +79,22 @@ export const Header = React.memo(({
         <View style={styles.rightContainer}>
           {rightElement}
           {userAvatar && (
-            <TouchableOpacity 
+            <Pressable 
               onPress={() => {
                 if (Haptics) {
                   Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
                 }
                 router.push("/profile");
               }}
-              activeOpacity={0.8}
+              style={({ pressed }) => [pressed && { opacity: 0.8 }]}
               accessibilityRole="button"
               accessibilityLabel="View profile"
             >
               <Avatar name="Raphael" size={38} color={colors.peachSoft} />
-            </TouchableOpacity>
+            </Pressable>
           )}
         </View>
       )}
     </View>
   );
 });
-

@@ -71,16 +71,16 @@ const styles = StyleSheet.create({
     maxWidth: 400,
   },
   successContainer: {
-    backgroundColor: `${colors.mintPunch}0D`, // 5% background wash
-    borderColor: `${colors.mintPunch}33`, // 20% border glow
+    backgroundColor: colors.mintBase,
+    borderColor: colors.mintSoft,
   },
   errorContainer: {
-    backgroundColor: `${colors.voteCantText}0D`, // 5% background wash
-    borderColor: `${colors.voteCantText}33`, // 20% border glow
+    backgroundColor: colors.voteCantBg,
+    borderColor: colors.voteCantBorder,
   },
   infoContainer: {
-    backgroundColor: `${colors.indigoPunch}0D`, // 5% background wash
-    borderColor: `${colors.indigoPunch}33`, // 20% border glow
+    backgroundColor: colors.indigoBase,
+    borderColor: colors.indigoSoft,
   },
   textContainer: {
     marginLeft: spacing[3],

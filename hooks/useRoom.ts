@@ -21,18 +21,18 @@ export function useRoom(roomId: string) {
     });
     return () => {
       unsubscribe();
+      simulator.stopSimulation();
     };
   }, [fetchRoomDetails]);
 
-  const updateMemberStatus = useCallback(async (userId: string, status: Member['status']) => {
+  const updateMemberStatus = useCallback((userId: string, status: Member['status']) => {
     simulator.updateMemberStatus(roomId, userId, status);
   }, [roomId]);
 
-  const nudgeMember = useCallback(async (userId: string) => {
+  const nudgeMember = useCallback((userId: string) => {
     try {
-      console.log(`Nudging member ${userId}...`);
       // Simulated behavior: nudged member uploads after 2 seconds
-      setTimeout(() => {
+      const timeoutId = setTimeout(() => {
         simulator.updateMemberStatus(roomId, userId, 'uploaded');
       }, 2000);
       
@@ -41,6 +41,8 @@ export function useRoom(roomId: string) {
         text1: 'Squad nudged! 🍑',
         text2: 'Waiting for them to sync their calendar.'
       });
+
+      return () => clearTimeout(timeoutId);
     } catch (error) {
       toast.show({
         type: 'error',

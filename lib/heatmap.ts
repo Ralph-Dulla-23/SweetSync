@@ -26,11 +26,16 @@ export function getHeatShade(freeCount: number, preferredCount: number, totalMem
 }
 
 /**
- * Returns a shade index from 0 (least free) to 4 (most free) for animated transitions.
+ * Returns a shade index from 0 (least free) to 5 (most preferred) for animated transitions.
  */
-export function getHeatShadeIndex(freeCount: number, totalMembers: number): number {
+export function getHeatShadeIndex(freeCount: number, preferredCount: number, totalMembers: number): number {
   const ratio = freeCount / totalMembers;
-  if (ratio === 1) return 4;
+  const prefRatio = freeCount > 0 ? preferredCount / freeCount : 0;
+  
+  if (ratio === 1) {
+    return prefRatio > 0.5 ? 5 : 4;
+  }
+  
   if (ratio >= 0.8) return 3;
   if (ratio >= 0.6) return 2;
   if (ratio >= 0.4) return 1;

@@ -1,5 +1,6 @@
 import React, { useMemo } from 'react';
-import { View, Image, Text, ViewStyle } from 'react-native';
+import { View, Text, ViewStyle } from 'react-native';
+import { Image } from 'expo-image';
 import { colors, radius, fonts } from '@/constants/theme';
 
 import { styles } from './Avatar.styles';
@@ -18,7 +19,7 @@ export const Avatar = React.memo(({ uri, name, size = 40, color, style }: Avatar
       ? name
           .trim()
           .split(/\s+/)
-          .map((n) => n[0])
+          .map((n) => (n ? n[0] : ''))
           .join('')
           .toUpperCase()
           .slice(0, 2)

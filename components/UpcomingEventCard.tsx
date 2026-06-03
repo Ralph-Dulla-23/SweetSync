@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet } from 'react-native';
 import { colors, fonts, spacing, radius } from '@/constants/theme';
 import { Card } from './Card';
 import { Calendar, MapPin, Users, Clock } from 'phosphor-react-native';

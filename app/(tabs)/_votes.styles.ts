@@ -89,15 +89,15 @@ export const styles = StyleSheet.create({
     gap: spacing[3],
   },
   optionRow: {
-    ...globalStyles.rowBetween,
+    flexDirection: 'column',
+    alignItems: 'flex-start',
     width: '100%',
-    gap: spacing[4],
+    gap: spacing[2],
   },
   optionLabel: {
     fontFamily: fonts.bodySemibold,
     fontSize: 14,
     color: colors.textPrimary,
-    flex: 1,
   },
   activityInputContainer: {
     flexDirection: 'row',

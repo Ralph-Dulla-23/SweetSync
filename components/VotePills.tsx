@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, TouchableOpacity, Text } from 'react-native';
+import { View, Pressable, Text } from 'react-native';
 import { colors } from '@/constants/theme';
 import { springConfigs } from '@/constants/animation';
 
@@ -10,8 +10,6 @@ import Animated, {
   withTiming, 
   withSpring,
   Easing,
-  SlideInUp,
-  SlideOutUp
 } from 'react-native-reanimated';
 import { styles } from './VotePills.styles';
 
@@ -24,13 +22,23 @@ try {
 }
 
 const AnimatedCount = React.memo(({ count, color }: { count: number; color: string }) => {
+  const scale = useSharedValue(1);
+
+  React.useEffect(() => {
+    scale.value = withSequence(
+      withTiming(1.2, { duration: 100 }),
+      withSpring(1, springConfigs.snappy)
+    );
+  }, [count]);
+
+  const animatedStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: scale.value }],
+  }));
+
   return (
-    <View style={{ height: 20, overflow: 'hidden', justifyContent: 'center' }}>
+    <View style={{ height: 20, justifyContent: 'center' }}>
       <Animated.Text
-        key={count}
-        entering={SlideInUp.duration(180).easing(Easing.out(Easing.cubic))}
-        exiting={SlideOutUp.duration(180).easing(Easing.in(Easing.cubic))}
-        style={[styles.text, { color, marginLeft: 4 }]}
+        style={[styles.text, animatedStyle, { color, marginLeft: 4 }]}
       >
         ({count})
       </Animated.Text>
@@ -102,11 +110,13 @@ const AnimatedVotePill = React.memo(({
   };
 
   return (
-    <TouchableOpacity
+    <Pressable
       onPress={handlePress}
       disabled={!onPress}
-      activeOpacity={0.7}
-      style={styles.pillWrapper}
+      style={({ pressed }) => [
+        styles.pillWrapper,
+        pressed && !(!onPress) && { opacity: 0.7 }
+      ]}
     >
       <Animated.View
         style={[
@@ -129,7 +139,7 @@ const AnimatedVotePill = React.memo(({
         <Text style={[styles.text, { color: text }]}>{label}</Text>
         {count !== undefined && <AnimatedCount count={count} color={text} />}
       </Animated.View>
-    </TouchableOpacity>
+    </Pressable>
   );
 });
 

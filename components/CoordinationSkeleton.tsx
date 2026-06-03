@@ -1,12 +1,13 @@
 import React from 'react';
-import { View, StyleSheet, ScrollView, SafeAreaView } from 'react-native';
+import { View, StyleSheet, ScrollView } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { Skeleton } from './Skeleton';
 import { spacing, radius, colors } from '@/constants/theme';
 import { Header } from './Header';
 
 export const CoordinationSkeleton = ({ type = 'time' }: { type?: 'time' | 'activity' }) => {
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
       <Header showBack title="" subtitle="" />
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
         {/* Hero Section Skeleton */}

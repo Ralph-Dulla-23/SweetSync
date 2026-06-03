@@ -21,6 +21,7 @@
     "expo-document-picker": "~14.0.8",
     "expo-font": "~14.0.11",
     "expo-haptics": "^56.0.3",
+    "expo-image": "~3.0.11",
     "expo-image-picker": "~17.0.11",
     "expo-linear-gradient": "~15.0.8",
     "expo-linking": "~8.0.12",
@@ -46,7 +47,9 @@
     "@expo/ngrok": "^4.1.3",
     "@playwright/test": "^1.59.1",
     "@types/react": "~19.1.0",
+    "aicop": "^1.0.8",
     "babel-preset-expo": "~54.0.10",
+    "react-doctor": "^0.2.16",
     "typescript": "~5.9.2"
   },
   "private": true

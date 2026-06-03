@@ -43,6 +43,29 @@ export const styles = StyleSheet.create({
     fontFamily: fonts.bodySemibold,
     fontSize: 11,
   },
+  roomCardStale: {
+    borderColor: colors.peachPunch,
+    borderWidth: 1.5,
+  },
+  roomNameRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+  updateBadge: {
+    backgroundColor: colors.peachPunch,
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: radius.sm,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+  },
+  updateBadgeText: {
+    color: colors.white,
+    fontSize: 10,
+    fontFamily: fonts.bodySemibold,
+  },
   horizontalScroll: {
     paddingHorizontal: spacing[5],
     gap: spacing[3],
@@ -110,5 +133,11 @@ export const styles = StyleSheet.create({
     paddingVertical: 0,
     paddingHorizontal: spacing[4],
     borderRadius: radius.md,
+  },
+  flex1: {
+    flex: 1,
+  },
+  listItem: {
+    paddingHorizontal: spacing[5],
   },
 });

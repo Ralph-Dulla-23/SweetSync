@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, ViewStyle, TouchableOpacity } from 'react-native';
+import { View, ViewStyle, Pressable } from 'react-native';
 import { colors } from '@/constants/theme';
 import { springConfigs } from '@/constants/animation';
 import Animated, { 
@@ -55,7 +55,7 @@ const AnimatedCard = React.memo(({
   const AnimatedView = Animated.View as any;
 
   return (
-    <TouchableOpacity 
+    <Pressable 
       onPress={onPress}
       onPressIn={handlePressIn}
       onPressOut={handlePressOut}
@@ -73,7 +73,7 @@ const AnimatedCard = React.memo(({
       >
         {children}
       </AnimatedView>
-    </TouchableOpacity>
+    </Pressable>
   );
 });
 

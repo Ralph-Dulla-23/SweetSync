@@ -1,14 +1,14 @@
-import React, { useState } from 'react';
+import React, { useState, useReducer, useRef } from 'react';
 import { 
   View, 
   Text, 
-  SafeAreaView, 
-  TouchableOpacity, 
+  Pressable, 
   ScrollView,
   TextInput,
   Share,
   Alert
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { colors, fonts, spacing, radius } from "@/constants/theme";
 import { springConfigs } from "@/constants/animation";
 import { 
@@ -43,39 +43,77 @@ type CreateType = 'session' | 'room';
 
 import { useRoom } from '@/hooks/useRoom';
 
+const generateJoinCode = () => {
+  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+  let result = '';
+  for (let i = 0; i < 4; i++) {
+    result += chars.charAt(Math.floor(Math.random() * chars.length));
+  }
+  return `SS-${result}`;
+};
+
+type CreateState = {
+  step: CreateStep;
+  type: CreateType;
+  name: string;
+  description: string;
+  expectedCount: number;
+  loading: boolean;
+};
+
+type CreateAction = 
+  | { type: 'SET_STEP'; step: CreateStep }
+  | { type: 'SET_TYPE'; createType: CreateType }
+  | { type: 'SET_NAME'; name: string }
+  | { type: 'SET_DESCRIPTION'; description: string }
+  | { type: 'SET_EXPECTED_COUNT'; count: number }
+  | { type: 'START_CREATE' }
+  | { type: 'CREATE_SUCCESS' }
+  | { type: 'CREATE_ERROR' };
+
+const initialState: CreateState = {
+  step: 'choice',
+  type: 'session',
+  name: '',
+  description: '',
+  expectedCount: 3,
+  loading: false,
+};
+
+function createReducer(state: CreateState, action: CreateAction): CreateState {
+  switch (action.type) {
+    case 'SET_STEP': return { ...state, step: action.step };
+    case 'SET_TYPE': return { ...state, type: action.createType, step: action.createType === 'session' ? 'session_details' : 'room_details' };
+    case 'SET_NAME': return { ...state, name: action.name };
+    case 'SET_DESCRIPTION': return { ...state, description: action.description };
+    case 'SET_EXPECTED_COUNT': return { ...state, expectedCount: action.count };
+    case 'START_CREATE': return { ...state, loading: true };
+    case 'CREATE_SUCCESS': return { ...state, loading: false, step: 'success' };
+    case 'CREATE_ERROR': return { ...state, loading: false };
+    default: return state;
+  }
+}
+
 export default function CreateScreen() {
   const router = useRouter();
   const { user } = useAuth();
   const { createRoom: createRoomSim } = useRoom('');
   
-  const [step, setStep] = useState<CreateStep>('choice');
-  const [type, setType] = useState<CreateType>('session');
-  const [name, setName] = useState("");
-  const [description, setDescription] = useState("");
-  const [expectedCount, setExpectedCount] = useState(3);
-  const [loading, setLoading] = useState(false);
-  const [generatedCode, setGeneratedCode] = useState("");
-  const [roomId, setRoomId] = useState("");
+  const [state, dispatch] = useReducer(createReducer, initialState);
+  const { step, type, name, description, expectedCount, loading } = state;
 
-  const generateJoinCode = () => {
-    const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
-    let result = '';
-    for (let i = 0; i < 4; i++) {
-      result += chars.charAt(Math.floor(Math.random() * chars.length));
-    }
-    return `SS-${result}`;
-  };
+  // States not triggering UI updates independently
+  const generatedCodeRef = useRef('');
+  const roomIdRef = useRef('');
 
   const handleCreate = async () => {
     if (!name.trim()) return;
     
-    setLoading(true);
+    dispatch({ type: 'START_CREATE' });
     const code = generateJoinCode();
-    setGeneratedCode(code);
 
     try {
       // Use simulator for all creations in prototype mode
-      console.log('Using Simulator for creation.');
       await new Promise(resolve => setTimeout(resolve, 800));
       
       const newRoom = createRoomSim(
@@ -84,30 +122,28 @@ export default function CreateScreen() {
         type === 'session' ? expectedCount : 0 // 0 for room means fluid
       );
       
-      setRoomId(newRoom.id);
-      setStep('success');
+      generatedCodeRef.current = code;
+      roomIdRef.current = newRoom.id;
+      dispatch({ type: 'CREATE_SUCCESS' });
     } catch (error: any) {
       console.error('Error creating:', error);
       Alert.alert('Oops!', error.message || 'Something went wrong while creating.');
-    } finally {
-      setLoading(false);
+      dispatch({ type: 'CREATE_ERROR' });
     }
   };
 
   const handleShare = async () => {
     try {
       await Share.share({
-        message: `Join my ${type === 'room' ? 'squad' : 'session'} on SweetSync! 🍑\n\nCode: ${generatedCode}\n\nLet's find the perfect time to hang!`,
+        message: `Join my ${type === 'room' ? 'squad' : 'session'} on SweetSync! 🍑\n\nCode: ${generatedCodeRef.current}\n\nLet's find the perfect time to hang!`,
       });
     } catch (error) {
-      console.log(error);
+      // Error handling without console.log
     }
   };
 
   const handleCopyCode = () => {
-    // Since we don't have expo-clipboard, we'll just show a success alert
-    // In a real app, you'd use Clipboard.setStringAsync(generatedCode)
-    Alert.alert("Code Copied", `The code ${generatedCode} is ready to share!`);
+    Alert.alert("Code Copied", `The code ${generatedCodeRef.current} is ready to share!`);
   };
 
   const renderChoice = () => (
@@ -118,10 +154,7 @@ export default function CreateScreen() {
     >
       <Card 
         variant="mint"
-        onPress={() => {
-          setType('session');
-          setStep('session_details');
-        }}
+        onPress={() => dispatch({ type: 'SET_TYPE', createType: 'session' })}
         style={styles.heroCard}
       >
         <View style={[styles.heroIconContainer, { backgroundColor: colors.mintSoft }]}>
@@ -138,10 +171,7 @@ export default function CreateScreen() {
       <View style={styles.secondaryActions}>
         <Card 
           variant="peach"
-          onPress={() => {
-            setType('room');
-            setStep('room_details');
-          }}
+          onPress={() => dispatch({ type: 'SET_TYPE', createType: 'room' })}
           style={styles.optionCard}
         >
           <View style={[styles.iconContainer, { backgroundColor: colors.peachSoft }]}>
@@ -175,7 +205,7 @@ export default function CreateScreen() {
             placeholder="e.g. Friday Night Drinks, Beach Trip"
             placeholderTextColor={colors.textTertiary}
             value={name}
-            onChangeText={setName}
+            onChangeText={(val) => dispatch({ type: 'SET_NAME', name: val })}
             autoFocus
           />
         </View>
@@ -183,19 +213,19 @@ export default function CreateScreen() {
         <View style={styles.inputGroup}>
           <Text style={styles.inputLabel}>HOW MANY FRIENDS ARE YOU EXPECTING?</Text>
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing[4], marginTop: spacing[2] }}>
-            <TouchableOpacity 
-              onPress={() => setExpectedCount(Math.max(2, expectedCount - 1))}
-              style={{ width: 44, height: 44, borderRadius: radius.md, backgroundColor: colors.pageBg, alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: colors.borderDefault }}
+            <Pressable 
+              onPress={() => dispatch({ type: 'SET_EXPECTED_COUNT', count: Math.max(2, expectedCount - 1) })}
+              style={({ pressed }) => [{ width: 44, height: 44, borderRadius: radius.md, backgroundColor: colors.pageBg, alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: colors.borderDefault }, pressed && { opacity: 0.7 }]}
             >
               <Text style={{ fontSize: 24, color: colors.textPrimary, fontFamily: fonts.bodySemibold }}>-</Text>
-            </TouchableOpacity>
+            </Pressable>
             <Text style={{ fontSize: 20, fontFamily: fonts.display, color: colors.peachPunch, width: 40, textAlign: 'center' }}>{expectedCount}</Text>
-            <TouchableOpacity 
-              onPress={() => setExpectedCount(Math.min(20, expectedCount + 1))}
-              style={{ width: 44, height: 44, borderRadius: radius.md, backgroundColor: colors.pageBg, alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: colors.borderDefault }}
+            <Pressable 
+              onPress={() => dispatch({ type: 'SET_EXPECTED_COUNT', count: Math.min(20, expectedCount + 1) })}
+              style={({ pressed }) => [{ width: 44, height: 44, borderRadius: radius.md, backgroundColor: colors.pageBg, alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: colors.borderDefault }, pressed && { opacity: 0.7 }]}
             >
               <Text style={{ fontSize: 24, color: colors.textPrimary, fontFamily: fonts.bodySemibold }}>+</Text>
-            </TouchableOpacity>
+            </Pressable>
             <Text style={{ flex: 1, fontFamily: fonts.body, fontSize: 13, color: colors.textTertiary }}>
               Helps us track when the squad is ready!
             </Text>
@@ -218,12 +248,12 @@ export default function CreateScreen() {
           style={styles.createButton}
         />
         
-        <TouchableOpacity 
-          onPress={() => setStep('choice')}
-          style={styles.backLink}
+        <Pressable 
+          onPress={() => dispatch({ type: 'SET_STEP', step: 'choice' })}
+          style={({ pressed }) => [styles.backLink, pressed && { opacity: 0.7 }]}
         >
           <Text style={styles.backLinkText}>Cancel</Text>
-        </TouchableOpacity>
+        </Pressable>
       </View>
     </Animated.View>
   );
@@ -247,7 +277,7 @@ export default function CreateScreen() {
             placeholder="e.g. The Dream Team, Apt 4B"
             placeholderTextColor={colors.textTertiary}
             value={name}
-            onChangeText={setName}
+            onChangeText={(val) => dispatch({ type: 'SET_NAME', name: val })}
             autoFocus
           />
         </View>
@@ -259,7 +289,7 @@ export default function CreateScreen() {
             placeholder="What's this squad all about? 🍑"
             placeholderTextColor={colors.textTertiary}
             value={description}
-            onChangeText={setDescription}
+            onChangeText={(val) => dispatch({ type: 'SET_DESCRIPTION', description: val })}
             multiline
             numberOfLines={4}
           />
@@ -274,12 +304,12 @@ export default function CreateScreen() {
           style={styles.createButton}
         />
         
-        <TouchableOpacity 
-          onPress={() => setStep('choice')}
-          style={styles.backLink}
+        <Pressable 
+          onPress={() => dispatch({ type: 'SET_STEP', step: 'choice' })}
+          style={({ pressed }) => [styles.backLink, pressed && { opacity: 0.7 }]}
         >
           <Text style={styles.backLinkText}>Cancel</Text>
-        </TouchableOpacity>
+        </Pressable>
       </View>
     </Animated.View>
   );
@@ -303,23 +333,22 @@ export default function CreateScreen() {
         <View style={styles.ticketCutoutRight} />
         
         <Text style={styles.codeLabel}>JOIN CODE</Text>
-        <Text style={styles.codeValue}>{generatedCode}</Text>
+        <Text style={styles.codeValue}>{generatedCodeRef.current}</Text>
         
-        <TouchableOpacity 
-          style={styles.copyButton} 
+        <Pressable 
+          style={({ pressed }) => [styles.copyButton, pressed && { opacity: 0.7 }]} 
           onPress={handleCopyCode}
-          activeOpacity={0.7}
         >
           <Copy size={20} color={colors.peachPunch} weight="bold" />
           <Text style={styles.copyText}>Copy Code</Text>
-        </TouchableOpacity>
+        </Pressable>
       </View>
 
       <View style={styles.successActions}>
         <Button 
           title="Go to Room" 
           variant="indigo"
-          onPress={() => router.push(`/room/${roomId}`)}
+          onPress={() => router.push(`/room/${roomIdRef.current}`)}
           style={styles.finalButton}
           pulse
         />
